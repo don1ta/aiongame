@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>技能效果展示與屬性統計 - 示例</title>
+
+    <!-- 引入技能資料庫 -->
+    <script src="skill-database.js"></script>
+    <!-- 引入統計整合模組 -->
+    <script src="skill-stats-integration.js"></script>
+
+    <style>
+        body {
+            background: #0a0e17;
+            color: #e6edf3;
+            font-family: "Segoe UI", "Microsoft JhengHei", sans-serif;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .demo-section {
+            background: linear-gradient(145deg, rgba(26, 35, 50, 0.6), rgba(15, 25, 34, 0.4));
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border: 2px solid #2d3748;
+        }
+
+        h1 {
+            color: #ffd93d;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            color: #00d4ff;
+            margin-top: 0;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        input,
+        select,
+        button {
+            padding: 10px 15px;
+            border-radius: 6px;
+            border: 2px solid #2d3748;
+            background: rgba(26, 35, 50, 0.8);
+            color: #e6edf3;
+            font-size: 14px;
+        }
+
+        button {
+            background: linear-gradient(135deg, #00d4ff, #0099cc);
+            border-color: #00d4ff;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            background: linear-gradient(135deg, #33ddff, #00d4ff);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 212, 255, 0.3);
+        }
+
+        .skill-container {
+            margin-top: 20px;
+        }
+
+        code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #ffd93d;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>🎮 技能效果展示與屬性統計系統</h1>
+
+    <!-- 示例1: 單個技能顯示 -->
+    <div class="demo-section">
+        <h2>📝 示例1: 顯示單個技能效果</h2>
+        <div class="input-group">
+            <select id="skillSelect1">
+                <option value="17710000">溫暖加護</option>
+                <option value="17720000">主神加護</option>
+                <option value="17730000">主神恩寵</option>
+                <option value="17740000">治癒力強化</option>
+                <option value="17750000">不死帳幕</option>
+                <option value="17760000">恢復阻斷</option>
+                <option value="17770000">集中祈禱</option>
+                <option value="17780000">大地恩寵</option>
+                <option value="17790000">生存意志</option>
+                <option value="17800000">燦爛加護</option>
+            </select>
+            <input type="number" id="levelInput1" value="10" min="1" max="40" placeholder="等級">
+            <button onclick="showSingleSkill()">顯示技能</button>
+        </div>
+        <div id="singleSkillDisplay" class="skill-container"></div>
+    </div>
+
+    <!-- 示例2: 多個技能統計 -->
+    <div class="demo-section">
+        <h2>📊 示例2: 多個技能效果 + 屬性統計</h2>
+        <p style="color: #8b949e; margin-bottom: 15px;">
+            選擇多個技能及其等級,系統會自動顯示效果並計算常駐被動屬性總和
+        </p>
+
+        <div id="skillInputs">
+            <!-- 動態生成的技能輸入 -->
+        </div>
+
+        <button onclick="addSkillInput()" style="margin-bottom: 15px;">➕ 添加技能</button>
+        <button onclick="calculateAll()"
+            style="background: linear-gradient(135deg, #ffd93d, #d4af37); color: #0a0e17;">🔢 計算統計</button>
+
+        <div id="multiSkillDisplay" class="skill-container"></div>
+    </div>
+
+    <!-- 示例3: 預設角色配置 -->
+    <div class="demo-section">
+        <h2>🎯 示例3: 預設角色配置</h2>
+        <p style="color: #8b949e; margin-bottom: 15px;">
+            點擊按鈕載入預設的治癒星技能配置
+        </p>
+        <button onclick="loadPresetConfig()">載入預設配置 (所有技能 Lv.17)</button>
+        <div id="presetDisplay" class="skill-container"></div>
+    </div>
+
+    <script>
+        // ========== 示例1: 顯示單個技能 ==========
+        function showSingleSkill() {
+            const skillId = document.getElementById('skillSelect1').value;
+            const level = parseInt(document.getElementById('levelInput1').value);
+
+            const html = displaySkillEffect(skillId, level);
+            document.getElementById('singleSkillDisplay').innerHTML = html;
+        }
+
+        // ========== 示例2: 多技能統計 ==========
+        let skillInputCount = 0;
+
+        function addSkillInput() {
+            const container = document.getElementById('skillInputs');
+            const id = ++skillInputCount;
+
+            const div = document.createElement('div');
+            div.className = 'input-group';
+            div.id = `skill-input-${id}`;
+            div.innerHTML = `
+                <select id="skill-${id}">
+                    <option value="17710000">溫暖加護</option>
+                    <option value="17720000">主神加護</option>
+                    <option value="17730000">主神恩寵</option>
+                    <option value="17740000">治癒力強化</option>
+                    <option value="17750000">不死帳幕</option>
+                    <option value="17760000">恢復阻斷</option>
+                    <option value="17770000">集中祈禱</option>
+                    <option value="17780000">大地恩寵</option>
+                    <option value="17790000">生存意志</option>
+                    <option value="17800000">燦爛加護</option>
+                </select>
+                <input type="number" id="level-${id}" value="1" min="1" max="40" placeholder="等級">
+                <button onclick="removeSkillInput(${id})" style="background: linear-gradient(135deg, #ff6b6b, #cc5555);">❌ 移除</button>
+            `;
+            container.appendChild(div);
+        }
+
+        function removeSkillInput(id) {
+            const element = document.getElementById(`skill-input-${id}`);
+            if (element) element.remove();
+        }
+
+        function calculateAll() {
+            const skillList = [];
+            for (let i = 1; i <= skillInputCount; i++) {
+                const skillSelect = document.getElementById(`skill-${i}`);
+                const levelInput = document.getElementById(`level-${i}`);
+
+                if (skillSelect && levelInput) {
+                    skillList.push({
+                        id: skillSelect.value,
+                        level: parseInt(levelInput.value)
+                    });
+                }
+            }
+
+            if (skillList.length === 0) {
+                document.getElementById('multiSkillDisplay').innerHTML =
+                    '<div style="color: #ff6b6b; text-align: center; padding: 20px;">請先添加技能!</div>';
+                return;
+            }
+
+            renderSkillsWithStats(skillList, 'multiSkillDisplay');
+        }
+
+        // ========== 示例3: 預設配置 ==========
+        function loadPresetConfig() {
+            const presetSkills = [
+                { id: "17710000", level: 17 }, // 溫暖加護
+                { id: "17720000", level: 17 }, // 主神加護
+                { id: "17730000", level: 17 }, // 主神恩寵
+                { id: "17740000", level: 17 }, // 治癒力強化
+                { id: "17750000", level: 17 }, // 不死帳幕
+                { id: "17790000", level: 17 }, // 生存意志
+                { id: "17770000", level: 17 }, // 集中祈禱 (觸發型)
+                { id: "17780000", level: 17 }, // 大地恩寵 (觸發型)
+            ];
+
+            renderSkillsWithStats(presetSkills, 'presetDisplay');
+        }
+
+        // 初始化
+        window.onload = function () {
+            // 示例1預設顯示
+            showSingleSkill();
+
+            // 示例2添加兩個技能輸入
+            addSkillInput();
+            addSkillInput();
+        };
+    </script>
+</body>
+
+</html>
