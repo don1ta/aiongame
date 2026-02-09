@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>測試歷史趨勢曲線</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script
+        src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+    <style>
+        body {
+            background: #0d1117;
+            color: #e6edf3;
+            font-family: Arial;
+            padding: 20px;
+        }
+
+        .card {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        button {
+            margin: 5px;
+            padding: 8px 16px;
+            cursor: pointer;
+            border-radius: 6px;
+            border: 1px solid #30363d;
+        }
+
+        .active {
+            background: #58a6ff !important;
+            color: #fff !important;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>📊 歷史趨勢曲線測試</h1>
+
+    <div class="card">
+        <h3>測試圖表</h3>
+        <div>
+            <button class="trend-tab active" data-type="itemLevel">裝備等級</button>
+            <button class="trend-tab" data-type="1">深淵</button>
+        </div>
+        <div style="position: relative; height: 350px; margin-top: 15px;">
+            <canvas id="trend-chart"></canvas>
+        </div>
+        <div id="trend-info" style="margin-top: 15px; text-align: center;"></div>
+    </div>
+
+    <script>
+        // 模擬資料
+        const mockData = {
+            itemLevelHistory: [
+                { date: '2026-01-22T16:00:00.000Z', itemLevel: 850, modelType: 'PVE' },
+                { date: '2026-01-25T16:00:00.000Z', itemLevel: 860, modelType: 'PVE' },
+                { date: '2026-01-29T16:00:00.000Z', itemLevel: 870, modelType: 'PVE' },
+                { date: '2026-02-05T16:00:00.000Z', itemLevel: 875, modelType: 'PVE' },
+                { date: '2026-02-08T16:00:00.000Z', itemLevel: 882, modelType: 'PVE' }
+            ],
+            gameRankingHistory: {
+                '1': {
+                    history: [
+                        { date: '2026-01-22T16:00:00.000Z', rank: 1818, score: 16263 },
+                        { date: '2026-02-08T16:00:00.000Z', rank: 1241, score: 562070 }
+                    ]
+                }
+            }
+        };
+
+        let trendChartInstance = null;
+
+        function renderTrendChart(json, type = 'itemLevel') {
+            const canvas = document.getElementById('trend-chart');
+            const infoDiv = document.getElementById('trend-info');
+
+            if (!canvas) {
+                console.error('Canvas not found!');
+                return;
+            }
+
+            if (trendChartInstance) {
+                trendChartInstance.destroy();
+            }
+
+            if (type === 'itemLevel') {
+                const history = json.itemLevelHistory.slice(-5);
+                const labels = history.map(r => {
+                    const d = new Date(r.date);
+                    return `${d.getMonth() + 1}/${d.getDate()}`;
+                });
+                const values = history.map(r => r.itemLevel);
+                const colors = values.map((v, i) => i === values.length - 1 ? '#ffd93d' : '#58a6ff');
+
+                infoDiv.innerHTML = `<b>目前裝備等級: ${values[values.length - 1]}</b>`;
+
+                const ctx = canvas.getContext('2d');
+                trendChartInstance = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: '道具等級',
+                            data: values,
+                            borderColor: '#58a6ff',
+                            backgroundColor: 'rgba(88, 166, 255, 0.1)',
+                            pointBackgroundColor: colors,
+                            pointBorderColor: colors,
+                            pointRadius: 6,
+                            tension: 0.3,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            datalabels: {
+                                display: true,
+                                align: 'top',
+                                anchor: 'end',
+                                backgroundColor: function (context) {
+                                    return context.dataIndex === context.dataset.data.length - 1
+                                        ? 'rgba(255, 217, 61, 0.9)'
+                                        : 'rgba(88, 166, 255, 0.9)';
+                                },
+                                borderRadius: 4,
+                                color: '#fff',
+                                font: { weight: 'bold', size: 11 },
+                                padding: 4,
+                                formatter: function (value) {
+                                    return value.toLocaleString();
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: false,
+                                grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                                ticks: { color: '#8b949e' }
+                            },
+                            x: {
+                                grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                                ticks: { color: '#8b949e' }
+                            }
+                        }
+                    }
+                });
+            } else {
+                const history = json.gameRankingHistory[type].history;
+                const labels = history.map(r => {
+                    const d = new Date(r.date);
+                    return `${d.getMonth() + 1}/${d.getDate()}`;
+                });
+                const values = history.map(r => r.rank);
+                const colors = values.map((v, i) => i === values.length - 1 ? '#ffd93d' : '#58a6ff');
+
+                infoDiv.innerHTML = `<b>目前排名: #${values[values.length - 1].toLocaleString()}</b>`;
+
+                const ctx = canvas.getContext('2d');
+                trendChartInstance = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: '排名',
+                            data: values,
+                            borderColor: '#58a6ff',
+                            backgroundColor: 'rgba(88, 166, 255, 0.1)',
+                            pointBackgroundColor: colors,
+                            pointBorderColor: colors,
+                            pointRadius: 6,
+                            tension: 0.3,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            datalabels: {
+                                display: true,
+                                align: 'top',
+                                anchor: 'end',
+                                backgroundColor: function (context) {
+                                    return context.dataIndex === context.dataset.data.length - 1
+                                        ? 'rgba(255, 217, 61, 0.9)'
+                                        : 'rgba(88, 166, 255, 0.9)';
+                                },
+                                borderRadius: 4,
+                                color: '#fff',
+                                font: { weight: 'bold', size: 11 },
+                                padding: 4,
+                                formatter: function (value) {
+                                    return '#' + value.toLocaleString();
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                reverse: true,
+                                beginAtZero: false,
+                                grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                                ticks: { color: '#8b949e' }
+                            },
+                            x: {
+                                grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                                ticks: { color: '#8b949e' }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // 初始化
+        renderTrendChart(mockData, 'itemLevel');
+
+        // 按鈕事件
+        document.querySelectorAll('.trend-tab').forEach(btn => {
+            btn.addEventListener('click', function () {
+                document.querySelectorAll('.trend-tab').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                renderTrendChart(mockData, this.getAttribute('data-type'));
+            });
+        });
+    </script>
+</body>
+
+</html>
