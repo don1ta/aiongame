@@ -99,6 +99,7 @@
             background: var(--glow-gradient);
             opacity: 0.05;
             animation: rotate 20s linear infinite;
+            pointer-events: none;
         }
 
         @keyframes rotate {
@@ -366,6 +367,7 @@
             height: 100%;
             background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.1), transparent);
             animation: shimmer 3s infinite;
+            pointer-events: none;
         }
 
         @keyframes shimmer {
@@ -465,7 +467,7 @@
             background: var(--card-bg);
             border: 2px solid var(--border);
             border-radius: 16px;
-            padding: 25px 25px 80px 25px;
+            padding: 25px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5),
                 inset 0 1px 0 rgba(255, 255, 255, 0.05);
             margin-bottom: 40px;
@@ -542,9 +544,6 @@
             filter: drop-shadow(0 0 10px var(--gold-glow));
         }
 
-        .main-layout-wrapper {
-            align-items: flex-start;
-        }
 
         .skill-list {
             display: grid;
@@ -988,6 +987,18 @@
             opacity: 0.5;
         }
 
+        .rank-card-new.active-rank {
+            background: rgba(88, 166, 255, 0.15);
+            border-color: var(--primary);
+            box-shadow: 0 0 15px rgba(88, 166, 255, 0.3);
+        }
+
+        .rank-card-new.active-rank::before {
+            opacity: 1;
+            width: 4px;
+            background: var(--primary);
+        }
+
         .rc-label {
             font-size: 11px;
             color: #94a3b8;
@@ -1037,7 +1048,7 @@
 
         .pt-header {
             display: flex;
-            justify-content: space-between;
+            /*  justify-content: space-between; */
             align-items: center;
             margin-bottom: 6px;
         }
@@ -1272,6 +1283,11 @@
             border-radius: 10px;
             padding: 15px;
             backdrop-filter: blur(5px);
+            height: 100%;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
         }
 
         .box-header {
@@ -1389,7 +1405,7 @@
         }
 
         .equip-left-section {
-            flex: 4;
+            flex: 5;
             padding: 12px;
             display: flex;
             flex-direction: column;
@@ -1398,10 +1414,93 @@
         }
 
         .equip-right-section {
-            flex: 6;
+            flex: 5;
             background: rgba(0, 0, 0, 0.2);
             padding: 12px;
-            font-size: 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        /* 機體健檢報告樣式 */
+        .health-check-container {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .health-score-box {
+            flex: 1;
+            background: linear-gradient(135deg, rgba(30, 30, 40, 0.8), rgba(20, 20, 20, 0.9));
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .health-score-val {
+            font-size: 48px;
+            font-weight: 900;
+            background: linear-gradient(to bottom, #fff, #ffd700);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+            line-height: 1;
+        }
+
+        .health-score-label {
+            color: #8b949e;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        .health-details-box {
+            flex: 2;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .advice-item {
+            background: rgba(255, 255, 255, 0.03);
+            border-left: 3px solid #8b949e;
+            padding: 10px 15px;
+            border-radius: 4px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .advice-item.critical {
+            border-left-color: #ff4757;
+            background: rgba(255, 71, 87, 0.1);
+        }
+
+        .advice-item.warning {
+            border-left-color: #ffa502;
+            background: rgba(255, 165, 2, 0.1);
+        }
+
+        .advice-item.good {
+            border-left-color: #2ed573;
+            background: rgba(46, 213, 115, 0.1);
+        }
+
+        .stat-highlight-row {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 5px;
+            font-size: 13px;
+            color: #ccc;
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
+            padding-bottom: 5px;
         }
 
         .equip-img-container {
@@ -1440,7 +1539,7 @@
             display: flex;
             align-items: center;
             color: var(--blue-bright);
-            white-space: nowrap;
+            white-space: normal;
         }
 
         .base-stat-row {
@@ -1504,12 +1603,33 @@
             text-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
         }
 
+        .charts-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 25px;
+            align-items: start;
+        }
+
+        .charts-row>div {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .charts-row .grid-box-container {
+            flex: 1;
+            align-content: start;
+        }
+
         /* RWD 調整 */
-        @media (min-width: 1400px) {
+        /* RWD 調整 */
+        @media (min-width: 1024px) {
             .main-layout-wrapper {
                 display: grid;
-                grid-template-columns: 4.4fr 5.6fr;
+                grid-template-columns: 1fr 2fr;
                 gap: 20px;
+                align-items: stretch;
             }
         }
 
@@ -1583,9 +1703,14 @@
                 grid-template-columns: 1fr;
             }
 
-            /* 手機版：基礎數據分析改為 2 欄 */
+            /* 手機版：健檢與數據分析改為垂直排列 */
+            .health-combat-wrapper {
+                flex-direction: column !important;
+            }
+
+            /* 手機版：基礎數據分析改為 1 欄 */
             #combat-stats-grid {
-                grid-template-columns: repeat(2, 1fr) !important;
+                grid-template-columns: 1fr !important;
                 gap: 8px !important;
             }
 
@@ -1595,6 +1720,10 @@
 
             .rank-badge {
                 width: 100%
+            }
+
+            .charts-row {
+                grid-template-columns: 1fr;
             }
 
         }
@@ -1612,6 +1741,68 @@
             /* 手機版：表頭需黏在容器頂部 */
             thead th {
                 top: 0 !important;
+            }
+
+            /* 手機版個人資訊優化 */
+            .profile-new-header {
+                flex-direction: column !important;
+                align-items: center !important;
+                gap: 15px !important;
+                padding: 20px 15px !important;
+            }
+
+            .profile-left {
+                flex-direction: column !important;
+                justify-content: center !important;
+                text-align: center !important;
+                gap: 15px !important;
+                width: 100% !important;
+            }
+
+            .profile-img-lg {
+                width: 100px !important;
+                height: 100px !important;
+                margin: 0 auto !important;
+            }
+
+            .profile-info {
+                align-items: center !important;
+                width: 100% !important;
+            }
+
+            .profile-name-row {
+                flex-direction: column !important;
+                gap: 5px !important;
+                align-items: center !important;
+                margin-bottom: 10px !important;
+            }
+
+            .p-name-lg {
+                font-size: 28px !important;
+            }
+
+            .p-title-sm {
+                font-size: 14px !important;
+                padding: 4px 10px !important;
+            }
+
+            .profile-badges {
+                justify-content: center !important;
+                flex-wrap: wrap !important;
+                gap: 8px !important;
+            }
+
+            .profile-right {
+                width: 100% !important;
+                justify-content: center !important;
+                border-left: none !important;
+                border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+                padding-top: 15px !important;
+                padding-left: 0 !important;
+            }
+
+            .item-score-box {
+                margin-bottom: 10px !important;
             }
         }
 
@@ -1700,7 +1891,7 @@
         /* 12. Toast Notification */
         .toast-wrapper-right {
             position: absolute;
-            top: 20px;
+            bottom: 80px;
             right: 25px;
             width: auto;
             max-width: 70%;
@@ -1718,18 +1909,18 @@
             padding: 8px 15px;
             border-radius: 6px;
             font-size: 13px;
-            transform: translateX(110%);
-            /* 確保完全移出 */
+            transform: translateY(150%);
+            /* 從下方滑入 */
             transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
             pointer-events: auto;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
             margin-right: 0;
             width: auto;
-            white-space: nowrap;
+            white-space: normal;
             /* 強制一行不截斷 */
             box-sizing: border-box;
             line-height: 1.5;
-            display: inline-flex;
+            /* display: inline-flex; */
             /* 改為 inline-flex 以適應內容寬度 */
             align-items: center;
             gap: 8px;
@@ -1737,7 +1928,7 @@
         }
 
         .combat-toast.show {
-            transform: translateX(0);
+            transform: translateY(0);
         }
     </style>
 
@@ -1814,12 +2005,40 @@
                 <div id="p-percentile-new" class="percentile-grid-new"></div>
             </div>
 
+            <div class="card" style="padding: 15px 25px;">
+                <div id="equipment-header" class="collapsible-header collapsed" onclick="toggleEquipmentList()"
+                    style="margin-top: 0; background: transparent; border: none; padding: 0;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <h3 style="margin: 0; border: none; padding: 0;">🛡️ 武器防具與飾品清單</h3>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 12px; color: #8b949e;">(點擊展開/收合)</span>
+                        <span id="equipment-toggle-icon" class="toggle-icon" style="transform: rotate(-90deg);">▼</span>
+                    </div>
+                </div>
+
+                <div id="equipment-wrapper" class="collapsible-content collapsed" style="margin-top: 20px;">
+                    <div class="section-header" id="armor-header">🛡️ 武器與防具</div>
+                    <div id="equip-armor-list"></div>
+                    <div class="section-header" id="accessory-header">💍 飾品與配件</div>
+                    <div id="equip-accessory-list"></div>
+                </div>
+            </div>
+
             <div class="main-layout-wrapper">
                 <div class="left-column">
-                    <div class="card">
-                        <h3>📊 主要能力值概覽</h3>
-                        <h5>(含:萬神殿+石柱)</h5>
-                        <div id="stat-main-grid" class="stat-grid-main"></div>
+
+                    <div class="stats-source-wrapper"
+                        style="display:flex; gap:15px; align-items:stretch; flex-direction:column;">
+                        <div class="card" style="flex:1;">
+                            <h3>📊 主要能力值概覽</h3>
+                            <div id="stat-main-grid" class="stat-grid-main"></div>
+                        </div>
+
+                        <div class="card" style="flex:1;">
+                            <h3>📊 裝備來源比例</h3>
+                            <div id="equip-source-grid"></div>
+                        </div>
                     </div>
                     <div class="card">
                         <h3>⚔️ 技能等級分解</h3>
@@ -1830,26 +2049,31 @@
                         <div class="sk-label">▶ 特殊/烙印技能</div>
                         <div id="sk-stigma" class="skill-list"></div>
                     </div>
-                    <div class="card">
-                        <h3>🎴 魔力聖物系統細項</h3>
-                        <div id="arcana-grid" class="grid-box-container"></div>
-                        <h3>🔱 套裝效果全覽</h3>
-                        <div id="set-bonus-grid" class="grid-box-container" style="grid-template-columns: 1fr;"></div>
 
-                    </div>
                 </div>
                 <div class="right-column">
-                    <!-- 戰鬥數據分析區塊 -->
-                    <div class="card">
-                        <h3>⚔️ 基礎數據分析</h3>
-                        <!-- Toast Wrapper -->
-                        <div class="toast-wrapper-right">
-                            <div id="combat-toast" class="combat-toast">
-                                ⚠️ <div>無法計算寵物理解與持有及外觀效果，數據僅吃抓的到的API</div>
+                    <div class="health-combat-wrapper" style="display:flex; gap:15px; align-items:stretch;">
+                        <!-- 機體健檢報告 -->
+                        <div id="health-check-card" class="card" style="display:none; flex:1; margin-top:0;"></div>
+
+                        <!-- 戰鬥數據分析區塊 -->
+                        <div class="card" style="flex:1;">
+                            <h3>⚔️ 基礎數據分析</h3>
+                            <!-- 靜態提示框 -->
+                            <div
+                                style="background: rgba(244, 67, 54, 0.15); border: 1px solid rgba(244, 67, 54, 0.4); border-radius: 6px; padding: 10px 15px; margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+                                <span style="font-size: 18px;">⚠️</span>
+                                <div style="flex: 1;">
+                                    <div
+                                        style="color: #f44336; font-weight: bold; font-size: 13px; margin-bottom: 3px;">
+                                        數據說明</div>
+                                    <div style="color: #e0e0e0; font-size: 12px;">無法計算寵物理解與持有及外觀效果，屬於沒有公開的API資料</div>
+                                </div>
                             </div>
+                            <!-- 改為三欄排列 -->
+                            <div id="combat-stats-grid" class="grid-box-container"
+                                style="display:grid; grid-template-columns: repeat(3, 1fr); gap:6px;"></div>
                         </div>
-                        <div id="combat-stats-grid" class="grid-box-container"
-                            style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;"></div>
                     </div>
                     <div class="card" style="padding:0">
                         <h3 style="padding: 25px 25px 0 25px;">🛡️ 屬性全來源對帳總表</h3>
@@ -1899,70 +2123,63 @@
                     </div>
 
                     <div class="card">
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px;">
-                            <div>
-                                <h3>📊 裝備來源比例</h3>
-                                <div id="equip-source-grid"></div>
-                            </div>
-                            <div>
-                                <h3>🐾 寵物與翅膀</h3>
-                                <div id="petwing-grid" class="grid-box-container" style="grid-template-columns: 1fr;">
-                                </div>
-                            </div>
-                        </div>
-                        <h3>🎖️ 稱號系統加成細項</h3>
-                        <div id="title-grid" class="title-grid"></div>
+                        <h3>🎴 魔力聖物系統細項</h3>
+                        <div id="arcana-grid" class="grid-box-container"
+                            style="grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));"></div>
+                        <h3>🔱 套裝效果全覽</h3>
+                        <div id="set-bonus-grid" class="grid-box-container"
+                            style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));"></div>
+                        <h3>🐾 寵物與翅膀</h3>
+                        <div id="petwing-grid" class="grid-box-container"
+                            style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));"></div>
+                    </div>
+                    <h3>🎖️ 稱號系統加成細項</h3>
+                    <div id="title-grid" class="title-grid"></div>
 
-                        <h3 id="pet-insight-header" style="margin-top: 25px;">🧠 寵物洞察力</h3>
-                        <div id="pet-insight-grid" class="grid-box-container"></div>
+                    <h3 id="pet-insight-header" style="margin-top: 25px;">🧠 寵物洞察力</h3>
+                    <div id="pet-insight-grid" class="grid-box-container"></div>
 
-                        <!-- 翅膀收藏系統摺疊區塊 -->
-                        <div id="wing-collection-header" class="collapsible-header collapsed"
-                            onclick="toggleWingCollection()">
-                            <h3>🪽 翅膀收藏系統</h3>
-                            <div style="display: flex; align-items: center; gap: 10px;">
-                                <span style="font-size: 12px; color: #8b949e;">(點擊展開/收合)</span>
-                                <span id="wing-toggle-icon" class="toggle-icon"
-                                    style="transform: rotate(-90deg);">▼</span>
-                            </div>
+                    <!-- 翅膀收藏系統摺疊區塊 -->
+                    <div id="wing-collection-header" class="collapsible-header collapsed"
+                        onclick="toggleWingCollection()">
+                        <h3>🪽 翅膀收藏系統</h3>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span style="font-size: 12px; color: #8b949e;">(點擊展開/收合)</span>
+                            <span id="wing-toggle-icon" class="toggle-icon" style="transform: rotate(-90deg);">▼</span>
                         </div>
-                        <div id="wing-collection-wrapper" class="collapsible-content collapsed">
-                            <div style="font-size:12px; color:#8b949e; margin-bottom:15px; padding-left: 5px;">
-                                💡 勾選您持有的翅膀，系統將自動計算「持有效果」並加入對帳總表
-                            </div>
-                            <div id="wing-collection-grid"
-                                style="display:grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap:10px;">
-                            </div>
+                    </div>
+                    <div id="wing-collection-wrapper" class="collapsible-content collapsed">
+                        <div style="font-size:12px; color:#8b949e; margin-bottom:15px; padding-left: 5px;">
+                            💡 勾選您持有的翅膀，系統將自動計算「持有效果」並加入對帳總表
                         </div>
+                        <div id="wing-collection-grid"
+                            style="display:grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap:10px;">
+                        </div>
+                    </div>
 
-                        <!-- 增益效果區塊 -->
-                        <div id="gain-effect-header" class="collapsible-header collapsed"
-                            onclick="toggleGainEffectConfig()">
-                            <h3>💊 增益效果</h3>
-                            <div style="display: flex; align-items: center; gap: 10px;">
-                                <span style="font-size: 12px; color: #8b949e;">(點擊展開/收合)</span>
-                                <span id="gain-effect-toggle-icon" class="toggle-icon"
-                                    style="transform: rotate(-90deg);">▼</span>
-                            </div>
+                    <!-- 增益效果區塊 -->
+                    <div id="gain-effect-header" class="collapsible-header collapsed"
+                        onclick="toggleGainEffectConfig()">
+                        <h3>💊 增益效果</h3>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span style="font-size: 12px; color: #8b949e;">(點擊展開/收合)</span>
+                            <span id="gain-effect-toggle-icon" class="toggle-icon"
+                                style="transform: rotate(-90deg);">▼</span>
                         </div>
-                        <div id="gain-effect-wrapper" class="collapsible-content collapsed">
-                            <div style="font-size:12px; color:#8b949e; margin-bottom:15px; padding-left: 5px;">
-                                💡 勾選適用的增益效果，系統將自動加入對帳總表
-                            </div>
-                            <div id="gain-effect-grid"
-                                style="display:grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap:10px;">
-                            </div>
+                    </div>
+                    <div id="gain-effect-wrapper" class="collapsible-content collapsed">
+                        <div style="font-size:12px; color:#8b949e; margin-bottom:15px; padding-left: 5px;">
+                            💡 勾選適用的增益效果，系統將自動加入對帳總表
+                        </div>
+                        <div id="gain-effect-grid"
+                            style="display:grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap:10px;">
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="card">
-                <div class="section-header" id="armor-header">🛡️ 武器與防具</div>
-                <div id="equip-armor-list"></div>
-                <div class="section-header" id="accessory-header">💍 飾品與配件</div>
-                <div id="equip-accessory-list"></div>
-            </div>
         </div>
+
+    </div>
     </div>
 
     <script>
@@ -2508,14 +2725,46 @@
                 isActive: true // 預設選中
             });
 
-            // 1. 合併 API 排名
+            // 1. 定義排名類型名稱對照表（必須在使用前定義）
+            const rankingTypeNames = {
+                1: '深淵',
+                3: '惡夢',
+                4: '超越',
+                6: '協力競技場',
+                20: '討伐戰',
+                21: '覺醒戰'
+            };
+
+            // 2. 合併 API 排名
             if (gameRankings && gameRankings.length > 0) {
-                gameRankings.forEach(r => allRankings.push(r));
+                gameRankings.forEach(r => {
+                    // 確保有 rankingContentsName 和 trendId
+                    const typeId = r.rankingContentsType || r.type;
+                    const typeName = rankingTypeNames[typeId] || r.rankingContentsName || r.contentsName;
+
+                    allRankings.push({
+                        rankingContentsName: typeName,
+                        rank: r.rank || r.ranking,
+                        rankChange: r.rankChange,
+                        trendId: typeId // 使用數字 ID 作為 trendId
+                    });
+                });
             } else if (rankingList && rankingList.length > 0) {
-                rankingList.forEach(r => allRankings.push(r));
+                rankingList.forEach(r => {
+                    const typeId = r.rankingContentsType || r.type;
+                    const typeName = r.rankingContentsName || rankingTypeNames[typeId];
+
+                    allRankings.push({
+                        rankingContentsName: typeName,
+                        rank: r.rank || r.ranking,
+                        rankChange: r.rankChange,
+                        trendId: typeId
+                    });
+                });
             }
 
-            // 2. 定義 ID 對照表
+            // 3. 定義 ID 對照表（保持向後兼容）
+
             const trendMap = {
                 '裝備等級': 'itemLevel',
                 '深淵': 1, 'Abyss': 1,
@@ -2797,7 +3046,7 @@
                 if (t.equipCategory) {
                     let catName = t.equipCategory === "Attack" ? "⚔️ 攻擊稱號" : "🛡️ 防禦稱號";
                     let gradeColor = getGradeColor(t.grade);
-                    titleHtml += `<div class="title-box"><span class="title-label">${catName}</span><span class="title-val" style="color:${gradeColor}">${t.name}</span><div class="title-desc">${(t.equipStatList || []).map(ef => `▹ ${ef.desc}`).join('<br>')}</div></div>`;
+                    titleHtml += `<div class="title-box" style="border: 2px solid ${gradeColor};"><span class="title-label">${catName}</span><span class="title-val" style="color:${gradeColor}">${t.name}</span><div class="title-desc">${(t.equipStatList || []).map(ef => `▹ ${ef.desc}`).join('<br>')}</div></div>`;
                     (t.equipStatList || []).forEach(ef => {
                         let parts = ef.desc.split(' +'); if (parts.length < 2) return;
                         let n = parts[0], vS = parts[1];
@@ -2820,12 +3069,22 @@
                     const petLevel = pet.level ? `Lv.${pet.level}` : "暫無";
                     const petIcon = pet.icon ? getCorrectIcon(pet.icon) : "";
 
-                    petwingHtml += `<div class="info-box" style="border-left: 4px solid var(--blue); display: flex; gap: 10px;">
-                        ${petIcon ? `<img src="${petIcon}" style="width: 64px; height: 64px; border-radius: 8px; border: 2px solid var(--blue);">` : ''}
-                        <div style="flex-grow: 1;">
-                            <div class="box-header" style="color:var(--blue)">🐾 寵物</div>
-                            <div style="font-size:14px; font-weight:bold; color:#fff; margin-top:5px;">${petName}</div>
-                            <div style="font-size:12px; color:var(--gold); margin-top:3px;">等級: ${petLevel}</div>
+                    // 獲取寵物品質顏色（如果有grade屬性）
+                    const petGradeColor = pet.grade ? getGradeColor(pet.grade) : "var(--blue)";
+
+                    // 品質翻譯
+                    const gradeTranslation = {
+                        'Myth': '神話', 'Unique': '唯一', 'Legend': '傳說', 'Epic': '史詩', 'Rare': '稀有', 'Ancient': '古代'
+                    };
+                    const petGrade = pet.grade ? (gradeTranslation[pet.grade] || pet.grade) : "";
+
+                    petwingHtml += `<div class="info-box" style="border: 2px solid ${petGradeColor}; height: 100%;">
+                        <div class="box-header" style="color:${petGradeColor};">🐾 寵物：${petName}</div>
+                        <div style="display: flex; gap: 12px; align-items: flex-start;">
+                            ${petIcon ? `<img src="${petIcon}" style="width: 64px; height: 64px; border-radius: 8px; border: 2px solid ${petGradeColor}; flex-shrink: 0;">` : ''}
+                            <div style="flex: 1;">
+                                <div style="font-size:12px; color:#8b949e;">等級: ${petLevel}${petGrade ? ` | 品質: ${petGrade}` : ''}</div>
+                            </div>
                         </div>
                     </div>`;
                 }
@@ -2889,13 +3148,14 @@
                         wingBonusHtml = `<div style="font-size:11px; color:#8b949e">⚡ 此翅膀暫無資料庫加成 (僅外型)</div>`;
                     }
 
-                    petwingHtml += `<div class="info-box" style="border-left: 4px solid ${gradeColor}; display: flex; gap: 10px;">
-                        ${wingIcon ? `<img src="${wingIcon}" style="width: 64px; height: 64px; border-radius: 8px; border: 2px solid ${gradeColor};">` : ''}
-                        <div style="flex-grow: 1;">
-                            <div class="box-header" style="color:${gradeColor}">🪽 翅膀</div>
-                            <div style="font-size:14px; font-weight:bold; color:${gradeColor}; margin-top:5px;">${wingEnchant} ${wingName}</div>
-                            <div style="font-size:12px; color:#8b949e; margin-top:3px;">品質: ${wingGrade}</div>
-                            ${wingBonusHtml}
+                    petwingHtml += `<div class="info-box" style="border: 2px solid ${gradeColor}; height: 100%;">
+                        <div class="box-header" style="color:${gradeColor};">🪽 翅膀：${wingEnchant} ${wingName}</div>
+                        <div style="display: flex; gap: 12px; align-items: flex-start;">
+                            ${wingIcon ? `<img src="${wingIcon}" style="width: 64px; height: 64px; border-radius: 8px; border: 2px solid ${gradeColor}; flex-shrink: 0;">` : ''}
+                            <div style="flex: 1;">
+                                <div style="font-size:12px; color:#8b949e; margin-bottom:5px;">品質: ${wingGrade}</div>
+                                ${wingBonusHtml}
+                            </div>
                         </div>
                     </div>`;
                 }
@@ -2990,7 +3250,7 @@
             if (gridEl) {
                 gridEl.className = ''; // 移除原本的 skill-list 類別干擾
                 gridEl.style.display = 'grid';
-                gridEl.style.gridTemplateColumns = `repeat(${Math.max(1, insights.length)}, 1fr)`;
+                gridEl.style.gridTemplateColumns = `repeat(auto-fit, minmax(145px, 1fr))`;
                 gridEl.style.gap = '12px';
                 gridEl.style.marginBottom = '25px';
                 gridEl.innerHTML = petInsightHtml || "<div style='color:#8b949e; padding:10px;'>無寵物洞察力資料</div>";
@@ -3113,6 +3373,7 @@
             let armorBreakCount = 0; // 初始化武器防具突破件數統計
             let accessoryBreakCount = 0; // 初始化飾品突破件數統計
             let sourceStats = { armor: { crafted: 0, dungeon: 0, other: 0, total: 0 }, accessory: { crafted: 0, dungeon: 0, other: 0, total: 0 } };
+            const setCountMap = new Map(); // 用於計算套裝件數
 
             (data.equipment ? data.equipment.equipmentList : []).forEach(item => { equipMap[item.slotPos] = item; });
             (data.itemDetails || []).forEach(i => {
@@ -3143,9 +3404,13 @@
                     sourceStats[typeKey].total++;
                 }
 
-                if (d.set && !processedSets.has(d.set.name)) {
-                    processedSets.add(d.set.name);
-                    document.getElementById('set-bonus-grid').innerHTML += `<div class="info-box"><div class="box-header">🔱 套裝：${d.set.name}</div>${d.set.bonuses.map(b => `<div style="margin-bottom:8px; padding-left:10px; border-left:2px solid var(--blue)"><span style="color:var(--blue); font-weight:bold;">[${b.degree}件效果]</span><br><span style="color:#e6edf3; font-size:12px;">${b.descriptions.join('、')}</span></div>`).join('')}</div>`;
+                // 計算套裝件數
+                if (d.set) {
+                    const setName = d.set.name;
+                    if (!setCountMap.has(setName)) {
+                        setCountMap.set(setName, { count: 0, bonuses: d.set.bonuses });
+                    }
+                    setCountMap.get(setName).count++;
                 }
 
                 if (isArcana) {
@@ -3154,7 +3419,7 @@
                     let arcanaSubStatsHtml = (d.subStats || []).map(ss => `<div style="color:var(--green); margin-bottom:2px;">刻印: ${ss.name} +${ss.value}</div>`).join('');
                     let arcanaSkillsHtml = (d.subSkills || []).map(sk => `<div style="color:var(--blue); font-weight:500; margin-bottom:2px;">${sk.name} Lv.${sk.level}</div>`).join('');
                     document.getElementById('arcana-grid').innerHTML += `
-                    <div class="info-box" style="border-left: 4px solid ${gradeColor}; padding: 12px;">
+                    <div class="info-box" style="border: 2px solid ${gradeColor}; padding: 12px;">
                         <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px;">
                             <img src="${getCorrectIcon(originalItem.icon)}" style="width: 44px; height: 44px; border-radius: 6px;">
                             <div class="box-header" style="color:${gradeColor}; font-size:16px; align-self: center; margin: 0;">+${i.enchantLevel} ${d.name}</div>
@@ -3284,6 +3549,17 @@
                 }
             });
 
+            // 渲染套裝效果（在計算完所有件數後）
+            setCountMap.forEach((setData, setName) => {
+                const actualCount = setData.count;
+                document.getElementById('set-bonus-grid').innerHTML += `<div class="info-box"><div class="box-header">🔱 套裝：${setName}</div>${setData.bonuses.map(b => {
+                    const isActivated = b.degree <= actualCount;
+                    const checkmark = isActivated ? '✓ ' : '';
+                    const opacity = isActivated ? '1' : '0.5';
+                    return `<div style="margin-bottom:8px; padding-left:10px; border-left:2px solid var(--blue); opacity:${opacity}"><span style="color:var(--blue); font-weight:bold;">${checkmark}[${b.degree}件效果]</span><br><span style="color:#e6edf3; font-size:12px;">${b.descriptions.join('、')}</span></div>`;
+                }).join('')}</div>`;
+            });
+
             // 更新突破件數到標題 (武器防具)
             const armorHeader = document.getElementById('armor-header');
             if (armorHeader) {
@@ -3341,8 +3617,56 @@
                 </div>`;
             };
 
+            // 🆕 計算裝備來源評分
+            const scoreResult = calculateEquipmentScore(data.itemDetails || []);
+
+            // 生成評分卡片 HTML
+            const gradeColor = getGradeColor(scoreResult.grade);
+            const scoreCardHtml = `
+            <div class="info-box" style="border-top: 3px solid ${gradeColor}; padding: 15px; margin-bottom: 10px;">
+                <div style="text-align: center; margin-bottom: 15px;">
+                    <div style="font-size: 14px; color: #8b949e; margin-bottom: 5px;">🏆 裝備來源評分</div>
+                    <div style="font-size: 36px; font-weight: bold; color: ${gradeColor}; text-shadow: 0 0 20px ${gradeColor};">
+                        ${scoreResult.totalScore}
+                    </div>
+                    <div style="font-size: 12px; color: #8b949e; margin-top: 2px;">/ ${scoreResult.maxScore}</div>
+                </div>
+                
+                <!-- 進度條 -->
+                <div style="background: rgba(0,0,0,0.3); border-radius: 10px; height: 20px; overflow: hidden; margin-bottom: 10px;">
+                    <div style="background: linear-gradient(90deg, ${gradeColor}, ${gradeColor}aa); height: 100%; width: ${scoreResult.percentage}%; transition: width 0.5s ease; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; color: #fff;">
+                        ${scoreResult.percentage}%
+                    </div>
+                </div>
+                
+                <!-- 等級顯示 -->
+                <div style="text-align: center; margin-bottom: 15px;">
+                    <span style="background: ${gradeColor}22; border: 2px solid ${gradeColor}; color: ${gradeColor}; padding: 5px 15px; border-radius: 20px; font-size: 16px; font-weight: bold; text-shadow: 0 0 10px ${gradeColor};">
+                        ${scoreResult.grade} 級玩家
+                    </span>
+                </div>
+                
+                <!-- 分數分解 -->
+                <div style="font-size: 12px; color: #bdc3c7; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 6px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                        <span>📦 基礎分數</span>
+                        <span style="color: #3498db; font-weight: bold;">${scoreResult.breakdown.baseScore}</span>
+                    </div>
+                    ${scoreResult.setBonus > 0 ? `
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                        <span>🎁 套裝加成 (${scoreResult.maxSetCount}件)</span>
+                        <span style="color: #2ecc71; font-weight: bold;">+${scoreResult.setBonus}</span>
+                    </div>
+                    <div style="font-size: 11px; color: #7f8c8d; margin-top: 5px; padding-top: 5px; border-top: 1px solid rgba(255,255,255,0.1);">
+                        💡 ${scoreResult.maxSetSource} ×${scoreResult.setBonusMultiplier.toFixed(1)}
+                    </div>
+                    ` : ''}
+                </div>
+            </div>`;
+
             let sourceAnalysisHtml = `
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+            ${scoreCardHtml}
+            <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:10px;">
                 ${generateSourceCard('⚔️ 武防', sourceStats.armor.total, sourceStats.armor, 'chart-source-armor', '#e67e22')}
                 ${generateSourceCard('💍 飾品', sourceStats.accessory.total, sourceStats.accessory, 'chart-source-accessory', '#9b59b6')}
             </div>`;
@@ -3445,12 +3769,12 @@
         let trendChartInstance = null;
 
         const rankingTypeNames = {
-            '1': '深淵',
-            '3': '惡夢',
-            '4': '超越',
-            '6': '協力競技場',
-            '20': '討伐戰',
-            '21': '覺醒戰'
+            1: '深淵',
+            3: '惡夢',
+            4: '超越',
+            6: '協力競技場',
+            20: '討伐戰',
+            21: '覺醒戰'
         };
 
         function renderTrendChart(json, type = 'itemLevel') {
@@ -4089,25 +4413,8 @@
             document.getElementById('sk-pas').innerHTML = pas || "<div style='color:#8b949e; padding:10px;'>無被動技能</div>";
             document.getElementById('sk-stigma').innerHTML = sti || "<div style='color:#8b949e; padding:10px;'>無特殊技能</div>";
         }
-        function showCombatToast() {
-            const toast = document.getElementById('combat-toast');
-            if (toast) {
-                // 先移除 show class (若已存在)，並強制 reflow 以重啟動畫
-                toast.classList.remove('show');
-                void toast.offsetWidth;
-
-                // 添加顯示 class
-                toast.classList.add('show');
-
-                // 10秒後自動移除
-                setTimeout(() => {
-                    toast.classList.remove('show');
-                }, 10000);
-            }
-        }
 
         function renderCombatAnalysis(stats, data) {
-            showCombatToast(); // 觸發彈窗提示
             const grid = document.getElementById('combat-stats-grid');
             if (!grid) return;
 
@@ -4375,12 +4682,9 @@
                     baseDiff = officialFlat - calculatedFlat;
                 }
 
-                // 渲染主數值顯示 (加入 isDisplayPercent 參數)
-                if (hasOfficial) {
-                    mainValueHtml = `<div style="font-size:32px; font-weight:bold; color:var(--gold); text-align:center; display:flex; align-items:center; justify-content:center;">${fmt(officialVal, isDisplayPercent)}</div>`;
-                } else {
-                    mainValueHtml = `<div style="font-size:32px; font-weight:bold; color:var(--gold); text-align:center; display:flex; align-items:center; justify-content:center;">${fmt(estimated, isDisplayPercent)}</div>`;
-                }
+                // 渲染主數值顯示 (改為適合列表的小字體)
+                const displayVal = hasOfficial ? officialVal : estimated;
+                mainValueHtml = `<div style="font-size:16px; font-weight:bold; color:var(--gold); text-align:right;">${fmt(displayVal, isDisplayPercent)}</div>`;
 
                 // 恢復綠色計算介面 (顯示基礎 x 倍率的公式)
                 if (item.percKey && base.total > 0 && perc.total > 0) {
@@ -4419,14 +4723,14 @@
                 if (perc.total > 0) formulaHtml += getBreakdown(perc, item.percKey);
                 formulaHtml += `</div>`;
 
+                // 列表樣式 Item
                 return `
-                    <div class="stat-mini-card hover-calc" style="height:auto; min-height:110px; cursor:help; padding:20px 15px; background:rgba(255,255,255,0.02); text-align:center; display:flex; flex-direction:column; justify-content:center;">
-                        <div style="font-size:18px;color:#8b949e;display:flex;align-items:center;justify-content:center;gap:6px; margin-bottom:12px;">
+                    <div class="stat-mini-card hover-calc" style="cursor:help; padding:8px 12px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.05); border-radius:4px; display:flex; align-items:center; justify-content:space-between; width:100%; box-sizing:border-box; transition:background 0.2s;">
+                        <div style="font-size:14px; color:#8b949e; display:flex; align-items:center; gap:8px;">
                             ${item.icon} ${item.title}
                         </div>
                         ${mainValueHtml}
-                        ${subValueHtml}
-                        <div class="tooltip" style="bottom:100px; top:auto; width:300px; text-align:left; padding:15px; background:rgba(33, 39, 54, 0.98); backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,0.15); box-shadow:0 10px 30px rgba(0,0,0,0.5);">
+                        <div class="tooltip" style="bottom:auto; top:50%; right:105%; transform:translateY(-50%); width:300px; text-align:left; padding:15px; background:rgba(33, 39, 54, 0.98); backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,0.15); box-shadow:0 10px 30px rgba(0,0,0,0.5); z-index:100;">
                             <button class="tooltip-close-btn" onclick="this.parentElement.classList.remove('tooltip-pinned'); event.stopPropagation();">✕</button>
                             <b style="color:var(--gold); border-bottom:2px solid var(--gold); display:block; margin-bottom:12px; font-size:16px; padding-bottom:4px;">📊 ${item.title} 深度分析</b>
                             <div style="font-size:13px; color:#eee; margin-bottom:12px; line-height:1.6; background:rgba(255,255,255,0.03); padding:8px; border-radius:4px;">${item.desc}</div>
@@ -4691,8 +4995,29 @@
                     }
                 }
             });
+
         });
+
+        function toggleEquipmentList() {
+            const wrapper = document.getElementById('equipment-wrapper');
+            const header = document.getElementById('equipment-header');
+            const icon = document.getElementById('equipment-toggle-icon');
+
+            if (wrapper.classList.contains('collapsed')) {
+                wrapper.classList.remove('collapsed');
+                header.classList.remove('collapsed');
+                icon.style.transform = 'rotate(0deg)';
+                localStorage.setItem('equipmentListCollapsed', 'false');
+            } else {
+                wrapper.classList.add('collapsed');
+                header.classList.add('collapsed');
+                icon.style.transform = 'rotate(-90deg)';
+                localStorage.setItem('equipmentListCollapsed', 'true');
+            }
+        }
     </script>
 </body>
 
 </html>
+<script src="equipment-score.js"></script>
+<script src="health_check.js"></script>
