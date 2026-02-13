@@ -71,7 +71,8 @@
         }
 
         .container {
-            max-width: 1400px;
+            width: 1400px;
+            min-width: 1400px;
             margin: auto;
         }
 
@@ -1291,7 +1292,7 @@
         }
 
         .box-header {
-            border-bottom: 2px solid var(--border);
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
             padding-bottom: 8px;
             margin-bottom: 10px;
             font-weight: 700;
@@ -1308,38 +1309,26 @@
             margin-top: 15px;
         }
 
-        .title-box {
-            background: linear-gradient(145deg, rgba(0, 212, 255, 0.12), rgba(0, 212, 255, 0.05));
-            border: 2px solid var(--primary);
-            border-radius: 10px;
-            padding: 12px;
-            backdrop-filter: blur(5px);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .title-box:hover {
-            border-color: var(--blue-bright);
-            box-shadow: 0 4px 15px var(--blue-glow);
-            transform: translateY(-2px);
-        }
-
         .title-label {
-            font-size: 11px;
-            color: var(--primary);
-            display: block;
-            border-bottom: 1px solid rgba(0, 212, 255, 0.3);
-            margin-bottom: 5px;
-            padding-bottom: 3px;
+            font-size: 12px;
+            color: inherit;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 8px;
+            padding-bottom: 5px;
             font-weight: 600;
+            opacity: 0.9;
         }
 
         .title-val {
-            font-size: 15px;
+            font-size: 16px;
             font-weight: bold;
             color: var(--blue-bright);
             display: block;
-            margin-bottom: 5px;
-            text-shadow: 0 0 10px var(--blue-glow);
+            margin-bottom: 8px;
+            text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
         }
 
         .title-desc {
@@ -1370,11 +1359,13 @@
 
         .equip-item-card {
             background: linear-gradient(145deg, rgba(26, 35, 50, 0.4), rgba(15, 25, 34, 0.2));
-            border: 2px solid var(--border);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-top-width: 3px;
+            border-top-style: solid;
+            border-top-color: rgba(255, 255, 255, 0.2);
             border-radius: 12px;
             display: flex;
             min-height: 120px;
-            border-top: 3px solid var(--gold);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
             overflow: hidden;
@@ -1448,6 +1439,7 @@
             font-size: 48px;
             font-weight: 900;
             background: linear-gradient(to bottom, #fff, #ffd700);
+            background-clip: text;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             text-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
@@ -1624,7 +1616,7 @@
 
         /* RWD 調整 */
         /* RWD 調整 */
-        @media (min-width: 1024px) {
+        @media (min-width: 0px) {
             .main-layout-wrapper {
                 display: grid;
                 grid-template-columns: 1fr 2fr;
@@ -1633,7 +1625,7 @@
             }
         }
 
-        @media (max-width: 768px) {
+        @media (max-width: 0px) {
             .profile-card {
                 flex-direction: column;
                 text-align: center;
@@ -1731,7 +1723,7 @@
 
 
         /* 手機版：針對表格設置固定高度與內部捲動 */
-        @media (max-width: 768px) {
+        @media (max-width: 0px) {
             .table-wrapper {
                 max-height: 500px;
                 /* 手機版通常螢幕較小，縮減最大高度 */
@@ -2031,23 +2023,26 @@
                     <div class="stats-source-wrapper"
                         style="display:flex; gap:15px; align-items:stretch; flex-direction:column;">
                         <div class="card" style="flex:1;">
-                            <h3>📊 主要能力值概覽</h3>
-                            <div id="stat-main-grid" class="stat-grid-main"></div>
+                            <h3>📊 綜合評分</h3>
+                            <div id="equip-source-grid"></div>
                         </div>
 
                         <div class="card" style="flex:1;">
-                            <h3>📊 裝備來源比例</h3>
-                            <div id="equip-source-grid"></div>
+                            <h3>📊 主要能力值概覽</h3>
+                            <div id="stat-main-grid" class="stat-grid-main"></div>
                         </div>
                     </div>
+
+
+                    <!-- 歷史趨勢曲線圖 -->
                     <div class="card">
-                        <h3>⚔️ 技能等級分解</h3>
-                        <div class="sk-label">▶ 主動技能</div>
-                        <div id="sk-act" class="skill-list"></div>
-                        <div class="sk-label">▶ 被動技能</div>
-                        <div id="sk-pas" class="skill-list"></div>
-                        <div class="sk-label">▶ 特殊/烙印技能</div>
-                        <div id="sk-stigma" class="skill-list"></div>
+                        <h3>📊 歷史趨勢曲線</h3>
+                        <div id="p-ranking-new" class="rank-grid-new" style="margin-top:15px;"></div>
+                        <div id="trend-chart-container" style="position: relative; height: 350px; margin-top: 15px;">
+                            <canvas id="trend-chart"></canvas>
+                        </div>
+                        <div id="trend-info"
+                            style="margin-top: 15px; font-size: 13px; color: #8b949e; text-align: center;"></div>
                     </div>
 
                 </div>
@@ -2111,15 +2106,14 @@
                         </div>
                     </div>
 
-                    <!-- 歷史趨勢曲線圖 -->
                     <div class="card">
-                        <h3>📊 歷史趨勢曲線</h3>
-                        <div id="p-ranking-new" class="rank-grid-new" style="margin-top:15px;"></div>
-                        <div id="trend-chart-container" style="position: relative; height: 350px; margin-top: 15px;">
-                            <canvas id="trend-chart"></canvas>
-                        </div>
-                        <div id="trend-info"
-                            style="margin-top: 15px; font-size: 13px; color: #8b949e; text-align: center;"></div>
+                        <h3>⚔️ 技能等級分解</h3>
+                        <div class="sk-label">▶ 主動技能</div>
+                        <div id="sk-act" class="skill-list"></div>
+                        <div class="sk-label">▶ 被動技能</div>
+                        <div id="sk-pas" class="skill-list"></div>
+                        <div class="sk-label">▶ 特殊/烙印技能</div>
+                        <div id="sk-stigma" class="skill-list"></div>
                     </div>
 
                     <div class="card">
@@ -2189,7 +2183,21 @@
             const savedServer = localStorage.getItem('last_server');
             if (savedName) document.getElementById('charNameInput').value = savedName;
             if (savedServer) document.getElementById('serverSelect').value = savedServer;
+
+            // 啟動 QuestLog 資料庫同步 (強化評分準確度)
+            if (typeof fetchItemDetailsFromQuestLog === 'function') {
+                fetchItemDetailsFromQuestLog();
+            }
         }
+
+        // 供外部腳本呼叫的重繪函數 (例如 QuestLog 資料庫載入完成後)
+        window.renderEquipment = function () {
+            if (window.__LAST_DATA_JSON__) {
+                console.log("觸發重新渲染: 裝備與評分");
+                // skipScroll=true, skipWingRender=true (僅更新裝備與評分)
+                processData(window.__LAST_DATA_JSON__, true, true);
+            }
+        };
 
         // Proxy 函數
         function getProxyUrl(url) {
@@ -2199,103 +2207,128 @@
         // 翅膀手工維護資料庫 (根據使用者提供資料表)
         const WING_DATABASE = {
             '黑暗帳幕翅膀': {
+                grade: 'epic',
                 equip: { '額外攻擊力': 60, '傷害增幅': 0.025, '首領防禦力': 500, '首領傷害耐性': 0.035 },
                 hold: { '飛行力': 200, '傷害增幅': 0.01, '首領防禦力': 300 }
             },
             '燦爛的愛之翅膀': {
+                grade: 'epic',
                 equip: { '額外防禦力': 400, '額外迴避': 35, '精神力自然恢復': 90, '生命力藥水恢復增加': 0.055 },
                 hold: { '飛行力': 200, '額外防禦力': 100, '精神力': 100 }
             },
             '守護者下級翅膀': {
+                grade: 'common',
                 equip: { '生命力': 200 },
                 hold: { '飛行力': 2000, '生命力': 50 }
             },
             '守護者中級翅膀': {
+                grade: 'rare',
                 equip: { '額外防禦力': 200, '生命力': 300 },
                 hold: { '飛行力': 500, '額外攻擊力': 10 }
             },
             '守護者上級翅膀': {
+                grade: 'legend',
                 equip: { '額外防禦力': 300, '精神力': 200, '生命力': 400 },
                 hold: { '飛行力': 500, '額外防禦力': 100 }
             },
             '守護者最上級翅膀': {
+                grade: 'unique',
                 equip: { '額外防禦力': 400, '生命力': 500, '精神力': 250, '貫穿': 500 },
                 hold: { '飛行力': 500, '額外命中': 20, '貫穿': 100 }
             },
             '阿爾拉烏翅膀': {
+                grade: 'unique',
                 equip: { '額外迴避': 25, '生命力': 300 },
                 hold: { '飛行力': 200, '生命力': 50 }
             },
             '征服者翅膀': {
+                grade: 'unique',
                 equip: { '首領攻擊力': 80, '首領防禦力': 400, '額外防禦力': 300, },
                 hold: { '飛行力': 200, '首領攻擊力': 10, }
             },
             '封印翅膀': {
+                grade: 'unique',
                 equip: { '生命力': 400, '生命力自然恢復': 200, '所受治癒量': 0.05, },
                 hold: { '飛行力': 200, '生命力': 50, }
             },
             '光榮翅膀': {
+                grade: 'unique',
                 equip: { '精神力消耗量減少': 0.03, '精神力': 200, '精神力自然恢復': 80, },
                 hold: { '飛行力': 200, '精神力消耗量減少': 0.01, }
             },
             '克羅梅德翅膀': {
+                grade: 'unique',
                 equip: { '額外防禦力': 200, '暴擊': 35, '生命力': 500, '生命力自然恢復': 250, },
                 hold: { '飛行力': 200, '生命力': 50, '生命力自然恢復': 50, }
 
             },
             '紫花蝴蝶翅膀': {
+                grade: 'unique',
                 equip: { '額外攻擊力': 40, '額外防禦力': 200, },
                 hold: { '飛行力': 200, '生命力': 50 }
             },
             '妖精之夢翅膀': {
+                grade: 'unique',
                 equip: { '生命力自然恢復': 0.05, '生命力藥水恢復': 300, },
                 hold: { '飛行力': 200, '額外攻擊力': 10, }
             },
             '勇士翅膀': {
+                grade: 'unique',
                 equip: { '額外防禦力': 300, '精神力': 200, '衝擊系擊中': 0.04, },
                 hold: { '飛行力': 200, '衝擊系抵抗': 0.025 }
             },
             '奧德翅膀': {
+                grade: 'unique',
                 equip: { '生命力': 400, '精神力自然恢復': 80, '精神力': 200 },
                 hold: { '飛行力': 200, '額外防禦力': 100 }
             },
             '精靈翅膀': {
+                grade: 'unique',
                 equip: { '額外防禦力': 300, '生命力': 400, '格擋': 50, },
                 hold: { '飛行力': 200, '額外防禦力': 100 }
             },
             '古代阿爾拉屋翅膀': {
+                grade: 'myth',
                 equip: { '額外攻擊力': 60, '額外防禦力': 400, '生命力': 500, '生命力自然恢復': 250 },
                 hold: { '飛行力': 200, '額外命中': 20, '後方攻擊力': 10 }
             },
             '闇黑碎片翅膀': {
+                grade: 'myth',
                 equip: { '暴擊': 35, '暴擊攻擊力': 95, '生命力': 500, '生命力自然恢復': 250 },
                 hold: { '飛行力': 200, '額外迴避': 20, '格擋': 10 }
             },
             '藍色波濤翅膀': {
+                grade: 'unique',
                 equip: { '額外迴避': 35, '暴擊抵抗': 35, '精神力': 250, '精神力自然恢復': 90 },
                 hold: { '飛行力': 200, '暴擊抵抗': 20, '後方暴擊抵抗': 40 }
             },
             '森林精靈翅膀': {
+                grade: 'myth',
                 equip: { '首領攻擊力': 95, '首領傷害增幅': 0.035, '傷害耐性': 0.025, '額外防禦力': 400 },
                 hold: { '飛行力': 200, '傷害耐性': 0.01, '首領攻擊力': 30 },
             },
             '惡夢翅膀': {
+                grade: 'myth',
                 equip: { '額外攻擊力': 60, '傷害增幅': 0.035, '暴擊': 35, '首領傷害增幅': 0.035 },
                 hold: { '飛行力': 200, '首領攻擊力': 30, '首領防禦力': 250 }
             },
             '鬥士翅膀': {
+                grade: 'myth',
                 equip: { '額外防禦力': 400, '生命力': 500, '衝擊系擊中': 0.03, '異常狀態擊中': 0.03 },
                 hold: { '飛行力': 200, '傷害耐性': 0.01, '衝擊系擊中': 0.025 }
             },
             '藍蝴蝶翅膀': {
+                grade: 'unique',
                 equip: { '額外防禦力': 400, '生命力藥水恢復': 300, '生命力藥水恢復增加': 0.05, '生命力': 500 },
                 hold: { '飛行力': 200, '額外命中': 20, '額外迴避': 20 }
             },
             '春花蝴蝶翅膀': {
+                grade: 'unique',
                 equip: { '額外攻擊力': 60, '額外命中': 35, '格擋貫穿': 60, '貫穿': 500 },
                 hold: { '飛行力': 200, '額外攻擊力': 10, '格擋貫穿': 10 }
             },
             '空虛塔里斯拉翅膀': {
+                grade: 'epic',
                 equip: { '額外攻擊力': 60, '額外防禦力': 400, '額外命中': 35, '冷卻時間減少': 0.04 },
                 hold: { '飛行力': 200, '額外命中': 20, '額外防禦力': 100 }
             }
@@ -2489,18 +2522,18 @@
             return getProxyUrl(cleanPath);
         }
 
+        // 獲取品階顏色 (根據使用者最新指定對照表)
         function getGradeColor(grade) {
-            if (!grade) return '#fff';
-            switch (grade.toLowerCase()) {
-                case 'ancient': return '#ff3e3e'; // 古代 (紅)
-                case 'myth': return '#ff3e3e';    // 神話 (同紅)
-                case 'unique': return '#f1c40f';  // 獨特 (金)
-                case 'legend': return '#3498db';  // 傳承 (藍)
-                case 'epic': return '#9b59b6';    // 史詩 (紫)
-                case 'rare': return '#2ecc71';    // 稀有 (綠)
-                case 'special': return '#2ecc71'; // 特殊 (綠)
-                case 'common': return '#bdc3c7';  // 一般 (灰)
-                default: return '#fff';
+            if (!grade) return '#ffffff';
+            const g = String(grade).toLowerCase();
+            switch (g) {
+                case 'myth': case '神話': case 'ancient': case '古代': return '#e67e22'; // 神話/古代 (橙)
+                case 'unique': case '唯一': case '獨特': return '#f1c40f'; // 唯一/獨特/傳說 (金)
+                case 'special': return '#00ffcc';             // 特殊 (青)
+                case 'legend': case '傳說': case '傳承': case 'epic': case '史詩': return '#3498db'; // 史詩/傳承 (藍)
+                case 'rare': case '稀有': return '#2ecc71';    // 稀有 (綠)
+                case 'common': case '一般': case 'normal': case '普通': return '#ffffff'; // 一般/普通 (白)
+                default: return '#ffffff';
             }
         }
 
@@ -2618,9 +2651,14 @@
             const wingCollapsed = localStorage.getItem('wingCollectionCollapsed') !== 'false';
             const wrapper = document.getElementById('wing-collection-wrapper');
             const header = document.getElementById('wing-collection-header');
-            if (wingCollapsed && wrapper && header) {
-                wrapper.classList.add('collapsed');
-                header.classList.add('collapsed');
+            if (wrapper && header) {
+                if (wingCollapsed) {
+                    wrapper.classList.add('collapsed');
+                    header.classList.add('collapsed');
+                } else {
+                    wrapper.classList.remove('collapsed');
+                    header.classList.remove('collapsed');
+                }
             }
 
             // 從 API 回傳的結果中抓取時間
@@ -2631,11 +2669,13 @@
             if (!data || !data.profile) { alert("無法在結果中找到有效的角色數據!"); return; }
 
             document.getElementById('main-content').style.display = 'flex';
-            document.getElementById('arcana-grid').innerHTML = "";
-            document.getElementById('set-bonus-grid').innerHTML = "";
-            const equipSourceGrid = document.getElementById('equip-source-grid');
-            if (equipSourceGrid) equipSourceGrid.innerHTML = "";
-            document.getElementById('stat-body').innerHTML = "";
+
+            // 使用變數暫存 HTML，避免直接操作 DOM 造成抖動
+            let arcanaGridHtml = "";
+            let setBonusGridHtml = "";
+            let equipSourceGridHtml = "";
+            let equipSourceGrid = document.getElementById('equip-source-grid');
+            // document.getElementById('stat-body').innerHTML = ""; // 改為在 renderStatTable 中處理
 
             // --- 更新 Header UI ---
             const pH = document.getElementById('new-profile-header');
@@ -3044,9 +3084,15 @@
 
             (data.title?.titleList || []).forEach(t => {
                 if (t.equipCategory) {
-                    let catName = t.equipCategory === "Attack" ? "⚔️ 攻擊稱號" : "🛡️ 防禦稱號";
-                    let gradeColor = getGradeColor(t.grade);
-                    titleHtml += `<div class="title-box" style="border: 2px solid ${gradeColor};"><span class="title-label">${catName}</span><span class="title-val" style="color:${gradeColor}">${t.name}</span><div class="title-desc">${(t.equipStatList || []).map(ef => `▹ ${ef.desc}`).join('<br>')}</div></div>`;
+                    let catName = t.equipCategory === "Attack" ? "⚔️ 攻擊稱號" : (t.equipCategory === "Defense" ? "🛡️ 防禦稱號" : "📘 其他稱號");
+                    let gradeColor = getGradeColor(t.grade || t.gradeName || t.quality || 'common');
+
+                    titleHtml += `<div class="equip-item-card" style="border-color: ${gradeColor}; border-top-color: ${gradeColor}; box-shadow: 0 0 10px ${gradeColor}44; display:block; padding:12px; min-height:auto;">
+                        <span class="title-label" style="color:${gradeColor}; border-color:${gradeColor}44;">${catName}</span>
+                        <span class="title-val" style="color:${gradeColor}">${t.name}</span>
+                        <div class="title-desc">${(t.equipStatList || []).map(ef => `▹ ${ef.desc}`).join('<br>')}</div>
+                    </div>`;
+
                     (t.equipStatList || []).forEach(ef => {
                         let parts = ef.desc.split(' +'); if (parts.length < 2) return;
                         let n = parts[0], vS = parts[1];
@@ -3069,8 +3115,7 @@
                     const petLevel = pet.level ? `Lv.${pet.level}` : "暫無";
                     const petIcon = pet.icon ? getCorrectIcon(pet.icon) : "";
 
-                    // 獲取寵物品質顏色（如果有grade屬性）
-                    const petGradeColor = pet.grade ? getGradeColor(pet.grade) : "var(--blue)";
+                    const petGradeColor = getGradeColor(pet.grade || 'legend');
 
                     // 品質翻譯
                     const gradeTranslation = {
@@ -3078,8 +3123,8 @@
                     };
                     const petGrade = pet.grade ? (gradeTranslation[pet.grade] || pet.grade) : "";
 
-                    petwingHtml += `<div class="info-box" style="border: 2px solid ${petGradeColor}; height: 100%;">
-                        <div class="box-header" style="color:${petGradeColor};">🐾 寵物：${petName}</div>
+                    petwingHtml += `<div class="equip-item-card" style="border-color: ${petGradeColor}; border-top-color: ${petGradeColor}; box-shadow: 0 0 10px ${petGradeColor}44; display:block; padding:15px; height:100%;">
+                        <div class="box-header" style="color:${petGradeColor}; border-bottom:1px solid rgba(255,255,255,0.1); margin-bottom:10px; padding-bottom:5px;">🐾 寵物：${petName}</div>
                         <div style="display: flex; gap: 12px; align-items: flex-start;">
                             ${petIcon ? `<img src="${petIcon}" style="width: 64px; height: 64px; border-radius: 8px; border: 2px solid ${petGradeColor}; flex-shrink: 0;">` : ''}
                             <div style="flex: 1;">
@@ -3100,7 +3145,7 @@
                     };
                     const wingGrade = wing.grade ? (gradeTranslation[wing.grade] || wing.grade) : "暫無";
                     const wingEnchant = (wing.enchantLevel !== undefined && wing.enchantLevel !== null) ? `+${wing.enchantLevel}` : "";
-                    const gradeColor = wing.grade ? getGradeColor(wing.grade) : "var(--gold)";
+                    const gradeColor = getGradeColor(wing.grade || 'epic');
                     const wingIcon = wing.icon ? getCorrectIcon(wing.icon) : "";
 
                     // 比對資料庫獲取屬性
@@ -3140,7 +3185,7 @@
 
                                 const unit = normName.includes('%') ? '%' : '';
                                 entry.detailGroups.wing.push(`[${wingName}](${typeLabel}): +${parseFloat(val.toFixed(2))}${unit}`);
-                                wingBonusHtml += `<div style="font-size:11px; color:var(--green)">⚡ ${typeLabel}-${normName}: +${parseFloat(val.toFixed(2))}${unit}</div>`;
+                                wingBonusHtml += `<div class="random-row"><span>${typeLabel}-${normName}</span><span style="color:#fff;">+${parseFloat(val.toFixed(2))}${unit}</span></div>`;
                             }
                         };
                         if (matchedWing.equip) applyStats(matchedWing.equip, "裝備");
@@ -3148,12 +3193,12 @@
                         wingBonusHtml = `<div style="font-size:11px; color:#8b949e">⚡ 此翅膀暫無資料庫加成 (僅外型)</div>`;
                     }
 
-                    petwingHtml += `<div class="info-box" style="border: 2px solid ${gradeColor}; height: 100%;">
-                        <div class="box-header" style="color:${gradeColor};">🪽 翅膀：${wingEnchant} ${wingName}</div>
+                    petwingHtml += `<div class="equip-item-card" style="border-color: ${gradeColor}; border-top-color: ${gradeColor}; box-shadow: 0 0 10px ${gradeColor}44; display:block; padding:15px; height:100%;">
+                        <div class="box-header" style="color:${gradeColor}; border-bottom:1px solid rgba(255,255,255,0.1); margin-bottom:10px; padding-bottom:5px;">🪽 翅膀：${wingEnchant} ${wingName}</div>
                         <div style="display: flex; gap: 12px; align-items: flex-start;">
                             ${wingIcon ? `<img src="${wingIcon}" style="width: 64px; height: 64px; border-radius: 8px; border: 2px solid ${gradeColor}; flex-shrink: 0;">` : ''}
                             <div style="flex: 1;">
-                                <div style="font-size:12px; color:#8b949e; margin-bottom:5px;">品質: ${wingGrade}</div>
+                                <div style="font-size:12px; color:#8b949e; margin-bottom:px;"></div>
                                 ${wingBonusHtml}
                             </div>
                         </div>
@@ -3162,14 +3207,22 @@
             }
             document.getElementById('petwing-grid').innerHTML = petwingHtml || "<div style='color:#8b949e; padding:10px;'>無寵物或翅膀資料</div>";
 
-            // 處理寵物洞察力 (Pet Insight) - 獨立區塊
+            // 處理寵物洞察力 (Pet Insight) - 準備數據供後續使用
             // petInsight 可能在不同層級: json.petInsight 或 json.queryResult.petInsight 或 data.petInsight
             const petInsight = json.petInsight || (json.queryResult ? json.queryResult.petInsight : null) || data.petInsight;
 
-            let petInsightHtml = "";
+            // 隱藏原本的寵物洞察力 Grid (因為要搬家了)
+            const oldPetGrid = document.getElementById('pet-insight-grid');
+            if (oldPetGrid) {
+                oldPetGrid.style.display = 'none';
+                oldPetGrid.innerHTML = '';
+            }
+            const oldPetHeader = document.getElementById('pet-insight-header');
+            if (oldPetHeader) oldPetHeader.style.display = 'none';
+
+            // 準備寵物數據物件
+            let petStats = [];
             let totalPets = 0;
-            // 用於儲存待繪製的圖表數據
-            let petChartsConfig = [];
 
             if (petInsight) {
                 const insightTypes = [
@@ -3179,132 +3232,10 @@
                     { key: 'trans', name: '變形', color: '#d63aff' }
                 ];
 
-                insights = insightTypes.map(t => ({ ...t, data: petInsight[t.key] })).filter(t => t.data && t.data.totalInGame > 0);
-
-                // 計算總數
-                insights.forEach(i => totalPets += i.data.totalInGame);
-
-                insights.forEach(t => {
-                    const d = t.data;
-                    const cvsId = `chart-pet-${t.key}`;
-
-                    // 數據計算 (Lv4, Lv3僅限(扣除Lv4), 未達標)
-                    // 注意: atLeastLv4MaxCount 是區間最大值，這裡用於視覺化展示樂觀情況
-                    const lv4 = d.atLeastLv4MaxCount || 0;
-                    const lv3Total = d.atLeastLv3Count || 0;
-                    const lv3Only = Math.max(0, lv3Total - lv4);
-                    const others = Math.max(0, d.totalInGame - lv3Total);
-
-                    // 顏色處理: Lv4原色, Lv3半透明, 其他深灰
-                    const cLv4 = t.color;
-                    const cLv3 = t.color + '66'; // 40% opacity
-                    const cOther = '#4a5568';
-
-                    petChartsConfig.push({
-                        id: cvsId,
-                        data: [lv4, lv3Only, others],
-                        colors: [cLv4, cLv3, cOther],
-                        labels: ['Lv4', 'Lv3', '其他'],
-                        total: d.totalInGame
-                    });
-
-                    // 卡片 HTML
-                    petInsightHtml += `
-                        <div class="info-box" style="border-top: 3px solid ${t.color}; display:flex; flex-direction:column; padding:10px;">
-                            <div class="box-header" style="color: ${t.color}; text-align:center; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:5px; margin-bottom:10px; font-size:14px;">
-                                ${t.name} <span style="font-size:11px; color:#8b949e;">(共 ${d.totalInGame})</span>
-                            </div>
-                            
-                            <div style="height:120px; position:relative; margin-bottom:10px; display:flex; justify-content:center;">
-                                <div style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); font-size:24px; font-weight:bold; color:#fff; z-index:1;">
-                                    ${((lv3Total / d.totalInGame) * 100).toFixed(0)}%
-                                    <div style="font-size:13px; color:#8b949e; text-align:center;">Lv3+</div>
-                                </div>
-                                <canvas id="${cvsId}" style="position:relative; z-index:2;"></canvas>
-                            </div>
-                            
-                            <div style="font-size:14px; color:#bdc3c7; background:rgba(0,0,0,0.2); padding:8px; border-radius:6px;">
-                                <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
-                                    <span>💎 Lv4</span> <span style="color:${t.color}; font-weight:bold;">${lv4}</span>
-                                </div>
-                                <div style="display:flex; justify-content:space-between;">
-                                    <span>✨ Lv3+</span> <span style="color:${t.color}; opacity:0.8;">${lv3Total}</span>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                });
-            }
-
-            // 更新標題顯示總寵物數
-            const petInsightHeader = document.getElementById('pet-insight-header');
-            if (petInsightHeader) {
-                if (totalPets > 0) {
-                    petInsightHeader.innerHTML = `🧠 寵物洞察力 <span style="font-size:15px; color:#00d4ff; margin-left:15px; background:rgba(0, 212, 255, 0.1); padding:2px 10px; border-radius:12px; border:1px solid rgba(0, 212, 255, 0.3); text-shadow:0 0 10px rgba(0, 212, 255, 0.5);">🐾 總共: ${totalPets} 隻</span>`;
-                } else {
-                    petInsightHeader.innerHTML = `🧠 寵物洞察力`;
-                }
-            }
-
-            const gridEl = document.getElementById('pet-insight-grid');
-            if (gridEl) {
-                gridEl.className = ''; // 移除原本的 skill-list 類別干擾
-                gridEl.style.display = 'grid';
-                gridEl.style.gridTemplateColumns = `repeat(auto-fit, minmax(145px, 1fr))`;
-                gridEl.style.gap = '12px';
-                gridEl.style.marginBottom = '25px';
-                gridEl.innerHTML = petInsightHtml || "<div style='color:#8b949e; padding:10px;'>無寵物洞察力資料</div>";
-            }
-
-            // 繪製多個甜甜圈圖
-            if (petChartsConfig.length > 0) {
-                if (!window.petChartInstances) window.petChartInstances = {};
-
-                petChartsConfig.forEach(config => {
-                    const ctx = document.getElementById(config.id);
-                    if (!ctx) return;
-
-                    // 銷毀舊實例
-                    if (window.petChartInstances[config.id] instanceof Chart) {
-                        window.petChartInstances[config.id].destroy();
-                    }
-
-                    window.petChartInstances[config.id] = new Chart(ctx, {
-                        type: 'doughnut',
-                        data: {
-                            labels: config.labels,
-                            datasets: [{
-                                data: config.data,
-                                backgroundColor: config.colors,
-                                borderWidth: 0,
-                                hoverOffset: 4
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            cutout: '65%', // 甜甜圈中間挖空大小
-                            plugins: {
-                                legend: { display: false },
-                                datalabels: { display: false }, // 隱藏餅圖上的標籤，太擠了
-                                tooltip: {
-                                    backgroundColor: 'rgba(15, 20, 25, 1)', // 不透明背景
-                                    titleColor: '#fff',
-                                    bodyColor: '#fff',
-                                    borderColor: 'rgba(255,255,255,0.2)',
-                                    borderWidth: 1,
-                                    displayColors: true,
-                                    callbacks: {
-                                        label: function (context) {
-                                            let val = context.raw;
-                                            let pct = Math.round((val / config.total) * 100);
-                                            return ` ${context.label}: ${val} (${pct}%)`;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    });
+                petStats = insightTypes.map(t => {
+                    const d = petInsight[t.key] || { totalInGame: 0 };
+                    if (d.totalInGame > 0) totalPets += d.totalInGame;
+                    return { ...t, data: d };
                 });
             }
 
@@ -3414,15 +3345,18 @@
                 }
 
                 if (isArcana) {
-                    const gradeColor = getGradeColor(d.grade);
-                    let arcanaStatsHtml = (d.mainStats || []).map(ms => `<div style="margin-bottom:2px;">${ms.name} +${ms.value}</div>`).join('');
-                    let arcanaSubStatsHtml = (d.subStats || []).map(ss => `<div style="color:var(--green); margin-bottom:2px;">刻印: ${ss.name} +${ss.value}</div>`).join('');
-                    let arcanaSkillsHtml = (d.subSkills || []).map(sk => `<div style="color:var(--blue); font-weight:500; margin-bottom:2px;">${sk.name} Lv.${sk.level}</div>`).join('');
-                    document.getElementById('arcana-grid').innerHTML += `
-                    <div class="info-box" style="border: 2px solid ${gradeColor}; padding: 12px;">
+                    const gradeColor = getGradeColor(d.grade || originalItem.grade || d.gradeName || originalItem.gradeName || d.quality || originalItem.quality || 'special');
+                    let arcanaStatsHtml = (d.mainStats || []).map(ms => `<div class="base-stat-row"><b>${ms.name}</b> <span>+${ms.value}</span></div>`).join('');
+                    let arcanaSubStatsHtml = (d.subStats || []).map(ss => `<div class="random-row"><span>${ss.name}</span><span style="color:#fff;">+${ss.value}</span></div>`).join('');
+                    let arcanaSkillsHtml = (d.subSkills || []).map(sk => `<div class="skill-badge-mini" style="border-color:${gradeColor};">${sk.name} Lv.${sk.level}</div>`).join('');
+
+                    arcanaGridHtml += `
+                    <div class="equip-item-card" style="border-color: ${gradeColor}; border-top-color: ${gradeColor}; box-shadow: 0 0 10px ${gradeColor}44; display: block; padding: 12px; height: auto; min-height: auto;">
                         <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px;">
-                            <img src="${getCorrectIcon(originalItem.icon)}" style="width: 44px; height: 44px; border-radius: 6px;">
-                            <div class="box-header" style="color:${gradeColor}; font-size:16px; align-self: center; margin: 0;">+${i.enchantLevel} ${d.name}</div>
+                            <div class="equip-img-container" style="border-color: ${gradeColor}; width: 44px; height: 44px;">
+                                <img src="${getCorrectIcon(originalItem.icon)}" style="width: 100%; height: 100%; object-fit: cover;">
+                            </div>
+                            <div class="equip-name" style="color:${gradeColor}; font-weight:bold; text-shadow:0 0 5px ${gradeColor}44; font-size:16px;">+${i.enchantLevel} ${d.name}</div>
                         </div>
                         <div style="font-size:14px; margin-bottom:6px; padding-left: 2px;">${arcanaStatsHtml}</div>
                         <div style="font-size:13px; margin-bottom:6px; padding-left: 2px;">${arcanaSubStatsHtml}</div>
@@ -3447,7 +3381,9 @@
                 }
 
                 if (isArmor || isAccessory) {
-                    let gradeColor = getGradeColor(d.grade);
+                    const rarityInfo = getEquipmentRarityInfo(i);
+                    let gradeColor = rarityInfo ? rarityInfo.color : getGradeColor(d.grade);
+
                     let exceedBadge = (originalItem.exceedLevel || 0) > 0 ? `<div class="exceed-badge">${originalItem.exceedLevel}</div>` : "";
                     let mainStatsD = (d.mainStats || []).map(s => `<div class="base-stat-row"><b>${s.name} ${(parseFloat(s.value) || 0) + (parseFloat(s.extra) || 0)}</b>${(parseFloat(s.extra) > 0) ? ` <span style="color:var(--green);">(+${s.extra})</span>` : ""}</div>`).join('');
                     let godStoneHtml = (d.godStoneStat || []).map(gs => {
@@ -3457,7 +3393,8 @@
                     let sourcesHtml = (d.sources || []).map(src => `<span style="color:#fff; font-size:12px; margin-left:4px;">[${src}]</span>`).join('');
                     let sbRate = d.soulBindRate || originalItem.soulBindRate;
                     let soulBindHtml = (sbRate !== undefined) ? `<span style="float:right; color:#bdc3c7;">靈魂刻印 ${sbRate}%</span>` : "";
-                    let cardHtml = `<div class="equip-item-card" style="border-top-color: ${gradeColor}; border-left: 4px solid ${gradeColor};"><div class="equip-left-section"><div style="display:flex; align-items:center; gap:10px;"><div class="equip-img-container"><img src="${finalIcon}">${exceedBadge}</div><div><span class="equip-name" style="color:${gradeColor}">${d.name}</span>${sourcesHtml}<div><span style="color:#fff; font-weight:bold;">+${i.enchantLevel}</span></div></div></div><div style="margin-top:8px;">${mainStatsD}</div></div><div class="equip-right-section"><div style="color:#8b949e; font-size:13px; font-weight:bold; border-bottom:1px solid rgba(255,255,255,0.1); margin-bottom:5px;">附加屬性/神石 ${soulBindHtml}</div>${(d.subStats || []).map(s => `<div class="random-row"><span>${s.name}</span><span>+${s.value}</span></div>`).join('')}${(d.subSkills || []).map(sk => `<div class="skill-badge-mini">${sk.name} Lv.${sk.level}</div>`).join('')}${godStoneHtml}${(d.magicStoneStat || []).map(ms => {
+                    // 更新卡片樣式: 使用新的 gradeColor 並確保邊框顯示明顯 (全框包覆)
+                    let cardHtml = `<div class="equip-item-card" style="border-color: ${gradeColor}; border-top-color: ${gradeColor}; box-shadow: 0 0 10px ${gradeColor}44;"><div class="equip-left-section"><div style="display:flex; align-items:center; gap:10px;"><div class="equip-img-container" style="border-color: ${gradeColor};"><img src="${finalIcon}">${exceedBadge}</div><div style="flex:1;"><span class="equip-name" style="color:${gradeColor}; font-weight:bold; text-shadow:0 0 5px ${gradeColor}44;">${d.name}</span>${sourcesHtml}<div><span style="color:#fff; font-weight:bold;">+${i.enchantLevel}</span></div></div></div><div style="margin-top:8px;">${mainStatsD}</div></div><div class="equip-right-section"><div style="color:#8b949e; font-size:13px; font-weight:bold; border-bottom:1px solid rgba(255,255,255,0.1); margin-bottom:5px;">附加屬性/神石 ${soulBindHtml}</div>${(d.subStats || []).map(s => `<div class="random-row"><span>${s.name}</span><span style="color:#fff;">+${s.value}</span></div>`).join('')}${(d.subSkills || []).map(sk => `<div class="skill-badge-mini" style="border-color:${gradeColor};">${sk.name} Lv.${sk.level}</div>`).join('')}${godStoneHtml}${(d.magicStoneStat || []).map(ms => {
                         let msColor = getGradeColor(ms.grade);
                         return `<div class="random-row" style="color:${msColor}; font-size:12px;"><span>[磨石] ${ms.name}</span><span>${ms.value}</span></div>`;
                     }).join('')}</div></div>`;
@@ -3552,7 +3489,7 @@
             // 渲染套裝效果（在計算完所有件數後）
             setCountMap.forEach((setData, setName) => {
                 const actualCount = setData.count;
-                document.getElementById('set-bonus-grid').innerHTML += `<div class="info-box"><div class="box-header">🔱 套裝：${setName}</div>${setData.bonuses.map(b => {
+                setBonusGridHtml += `<div class="info-box"><div class="box-header">🔱 套裝：${setName}</div>${setData.bonuses.map(b => {
                     const isActivated = b.degree <= actualCount;
                     const checkmark = isActivated ? '✓ ' : '';
                     const opacity = isActivated ? '1' : '0.5';
@@ -3583,161 +3520,526 @@
             document.getElementById('equip-armor-list').innerHTML = armorHtml || "<div>無資料</div>";
             document.getElementById('equip-accessory-list').innerHTML = accessoryHtml || "<div>無資料</div>";
 
-            // 生成來源分析 HTML (圓餅圖模式 -> 甜甜圈卡片模式: 風格統一)
-            const generateSourceCard = (title, count, stats, chartId, color) => {
-                const craftedPct = count > 0 ? Math.round((stats.crafted / count) * 100) : 0;
-                const dungeonPct = count > 0 ? Math.round((stats.dungeon / count) * 100) : 0;
-                const otherPct = count > 0 ? Math.round((stats.other / count) * 100) : 0;
+            // 生成來源分析 HTML (改為橫向堆疊長條圖)
+            // 生成來源分析 HTML (改為橫向堆疊長條圖)
+            const generateSourceCard = (title, count, stats, color) => {
+                if (count === 0) return `<div class="info-box" style="border-left:3px solid ${color}; padding:10px; color:#8b949e; font-size:13px;">${title}: 無數據</div>`;
+
+                const craftedPct = Math.round((stats.crafted / count) * 100);
+                const dungeonPct = Math.round((stats.dungeon / count) * 100);
+                const otherPct = 100 - craftedPct - dungeonPct; // 確保總和 100%
 
                 return `
-                <div class="info-box" style="border-top: 3px solid ${color}; display:flex; flex-direction:column; padding:10px;">
-                    <div class="box-header" style="color: ${color}; text-align:center; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:5px; margin-bottom:10px; font-size:14px;">
-                        ${title} <span style="font-size:11px; color:#8b949e;">(共 ${count})</span>
+                <div style="background:rgba(255,255,255,0.03); border-radius:6px; padding:10px; border:1px solid rgba(255,255,255,0.05); margin-bottom:10px;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                        <span style="color:${color}; font-weight:bold; font-size:14px;">${title}</span>
+                        <span style="font-size:12px; color:#8b949e;">共 ${count} 件</span>
                     </div>
                     
-                    <div style="height:120px; position:relative; margin-bottom:10px; display:flex; justify-content:center;">
-                        <div style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); font-size:24px; font-weight:bold; color:#fff; z-index:1;">
-                            ${craftedPct}%
-                            <div style="font-size:13px; color:#e67e22; text-align:center;">手作</div>
-                        </div>
-                        <canvas id="${chartId}" style="position:relative; z-index:2;"></canvas>
+                    <!-- 進度條容器 -->
+                    <div style="height:12px; width:100%; background:rgba(0,0,0,0.4); border-radius:6px; overflow:hidden; display:flex; margin-bottom:8px;">
+                        ${craftedPct > 0 ? `<div style="width:${craftedPct}%; background:#e67e22; height:100%;" title="手作: ${stats.crafted}件 (${craftedPct}%)"></div>` : ''}
+                        ${dungeonPct > 0 ? `<div style="width:${dungeonPct}%; background:#3498db; height:100%;" title="副本: ${stats.dungeon}件 (${dungeonPct}%)"></div>` : ''}
+                        ${otherPct > 0 ? `<div style="width:${otherPct}%; background:#7f8c8d; height:100%;" title="任務: ${stats.other}件 (${otherPct}%)"></div>` : ''}
                     </div>
-                    
-                    <div style="font-size:14px; color:#bdc3c7; background:rgba(0,0,0,0.2); padding:8px; border-radius:6px;">
-                        <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
-                            <span>⚒️ 手作</span> <span style="color:#e67e22; font-weight:bold;">${stats.crafted}</span>
-                        </div>
-                        <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
-                            <span>🏰 副本</span> <span style="color:#3498db; opacity:0.8;">${stats.dungeon}</span>
-                        </div>
-                        <div style="display:flex; justify-content:space-between;">
-                            <span>📜 其他</span> <span style="color:#7f8c8d; opacity:0.8;">${stats.other}</span>
-                        </div>
+
+                    <!-- 數值標示 -->
+                    <div style="display:flex; justify-content:space-between; font-size:11px; color:#bdc3c7;">
+                        <span style="color:#e67e22;">⚒️ 手作 ${stats.crafted}件 (${craftedPct}%)</span>
+                        <span style="color:#3498db;">🏰 副本 ${stats.dungeon}件 (${dungeonPct}%)</span>
+                        <span style="color:#7f8c8d;">📜 任務 ${stats.other}件 (${otherPct}%)</span>
                     </div>
                 </div>`;
             };
 
-            // 🆕 計算裝備來源評分
-            const scoreResult = calculateEquipmentScore(data.itemDetails || []);
+            // 生成寵物洞察力橫向條圖
+            const generatePetBar = () => {
+                if (petStats.length === 0) return `<div style="padding:10px; color:#8b949e;">無寵物數據</div>`;
 
-            // 生成評分卡片 HTML
-            const gradeColor = getGradeColor(scoreResult.grade);
+                let html = `<div style="margin-top:10px;">`;
+
+                petStats.forEach(p => {
+                    const d = p.data;
+                    if (d.totalInGame === 0) return;
+
+                    const title = p.name;
+                    const total = d.totalInGame;
+                    const lv4 = d.atLeastLv4MaxCount || 0;
+                    const lv3Total = d.atLeastLv3Count || 0;
+                    const lv3Only = Math.max(0, lv3Total - lv4);
+                    const others = Math.max(0, total - lv3Total);
+
+                    // 計算百分比
+                    const p4 = Math.round((lv4 / total) * 100);
+                    const p3 = Math.round((lv3Only / total) * 100);
+                    const pOther = 100 - p4 - p3;
+
+                    html += `
+                    <div style="margin-bottom:12px;">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:4px; font-size:12px;">
+                            <span style="color:${p.color}; font-weight:bold;">${title}</span>
+                            <span style="color:#8b949e;">${total} 隻</span>
+                        </div>
+                        <div style="height:10px; width:100%; background:rgba(0,0,0,0.4); border-radius:5px; overflow:hidden; display:flex;">
+                            ${p4 > 0 ? `<div style="width:${p4}%; background:${p.color}; height:100%; box-shadow:0 0 5px ${p.color};" title="Lv4: ${lv4} (${p4}%)"></div>` : ''}
+                            ${p3 > 0 ? `<div style="width:${p3}%; background:${p.color}; opacity:0.6; height:100%;" title="Lv3: ${lv3Only} (${p3}%)"></div>` : ''}
+                            ${pOther > 0 ? `<div style="width:${pOther}%; background:#4a5568; height:100%;" title="未達標: ${others} (${pOther}%)"></div>` : ''}
+                        </div>
+                        <div style="display:flex; justify-content:end; gap:10px; margin-top:2px; font-size:10px; color:#8b949e;">
+                            <span>💎 L4: ${lv4}</span>
+                            <span>✨ L3+: ${lv3Total}</span>
+                        </div>
+                    </div>
+                    `;
+                });
+                html += `</div>`;
+                return html;
+            }
+
+            // 最後一次性更新 grid 內容以防止重排
+            document.getElementById('arcana-grid').innerHTML = arcanaGridHtml || "";
+            document.getElementById('set-bonus-grid').innerHTML = setBonusGridHtml || "";
+
+
+
+            // 🆕 計算角色實力綜合評分
+            // 準備評分所需的數據
+            // 準備評分所需的數據
+            // 修正: 根據使用者提供的 API 結構，目標是 daevanionBoardList 陣列
+            // 嘗試從多個可能路徑獲取 (直接在 data 下，或在 board/divinityBoard 下)
+            const boardData = data.daevanionBoardList ||
+                (data.board ? data.board.daevanionBoardList : null) ||
+                (data.divinityBoard ? data.divinityBoard.daevanionBoardList : null) ||
+                data.board ||
+                [];
+            const petInsightData = petInsight; // 寵物洞察力數據
+            // 嘗試從多個來源獲取烙印技能數據
+            let stigmaList = [];
+            // API 分析顯示正確路徑通常為 data.skill.skillList
+            if (data.skill && data.skill.skillList) {
+                stigmaList = data.skill.skillList;
+            } else {
+                // 兼容性Fallback
+                stigmaList = data.stigma || data.stigmaList || data.skills || data.specialSkill || data.abyssSkill || [];
+            }
+
+            // 如果是在 equipment 下
+            if (stigmaList.length === 0 && data.equipment && data.equipment.stigmaList) {
+                stigmaList = data.equipment.stigmaList;
+            }
+            // 部分 API 可能回傳 object 而非 array
+            if (typeof stigmaList === 'object' && !Array.isArray(stigmaList)) {
+                stigmaList = Object.values(stigmaList);
+            }
+            const skillData = { stigma: stigmaList }; // 技能烙印數據
+            const titleData = data.title || {}; // 稱號數據
+
+            const scoreResult = calculateEquipmentScore(
+                data.itemDetails || [],
+                boardData,
+                petInsightData,
+                skillData,
+                titleData
+            );
+
+            // 生成評分卡片 HTML (分頁設計)
+            const gradeColor = getScoreGradeColor(scoreResult.grade);
+
             const scoreCardHtml = `
-            <div class="info-box" style="border-top: 3px solid ${gradeColor}; padding: 15px; margin-bottom: 10px;">
-                <div style="text-align: center; margin-bottom: 15px;">
-                    <div style="font-size: 14px; color: #8b949e; margin-bottom: 5px;">🏆 裝備來源評分</div>
-                    <div style="font-size: 36px; font-weight: bold; color: ${gradeColor}; text-shadow: 0 0 20px ${gradeColor};">
-                        ${scoreResult.totalScore}
-                    </div>
-                    <div style="font-size: 12px; color: #8b949e; margin-top: 2px;">/ ${scoreResult.maxScore}</div>
-                </div>
+            <div class="info-box" style="border-top: 3px solid ${gradeColor}; padding: 0; margin-bottom: 10px; overflow: hidden;">
                 
-                <!-- 進度條 -->
-                <div style="background: rgba(0,0,0,0.3); border-radius: 10px; height: 20px; overflow: hidden; margin-bottom: 10px;">
-                    <div style="background: linear-gradient(90deg, ${gradeColor}, ${gradeColor}aa); height: 100%; width: ${scoreResult.percentage}%; transition: width 0.5s ease; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; color: #fff;">
-                        ${scoreResult.percentage}%
+                <!-- 分頁按鈕列 -->
+                <div style="display: flex; border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2);">
+                    <button id="btn-tab-score-1" class="score-tab-btn" onclick="switchScoreTab('tab-score-1')" style="flex: 1; padding: 12px 5px; border: none; background: transparent; color: var(--gold); border-bottom: 2px solid var(--gold); cursor: pointer; font-weight: bold; font-size: 13px;">📊 綜合評分</button>
+                    <button id="btn-tab-score-2" class="score-tab-btn" onclick="switchScoreTab('tab-score-2')" style="flex: 1; padding: 12px 5px; border: none; background: transparent; color: #8b949e; border-bottom: 2px solid transparent; cursor: pointer; font-weight: bold; font-size: 13px;">📝 計算明細</button>
+                    <button id="btn-tab-score-3" class="score-tab-btn" onclick="switchScoreTab('tab-score-3')" style="flex: 1; padding: 12px 5px; border: none; background: transparent; color: #8b949e; border-bottom: 2px solid transparent; cursor: pointer; font-weight: bold; font-size: 13px;">🏆 榜首比較</button>
+                    <button id="btn-tab-score-4" class="score-tab-btn" onclick="switchScoreTab('tab-score-4')" style="flex: 1; padding: 12px 5px; border: none; background: transparent; color: #8b949e; border-bottom: 2px solid transparent; cursor: pointer; font-weight: bold; font-size: 13px;">⚖️ 職業比較</button>
+                </div>
+
+                <!-- 分頁 1: 綜合評分 (原本的主視覺) -->
+                <div id="tab-score-1" class="score-tab-content" style="padding: 20px;">
+                    <div style="text-align: center; margin-bottom: 15px;">
+                        <div style="font-size: 18px; color: #8b949e; margin-bottom: 10px; font-weight: bold;">🏆 角色實力綜合評分</div>
+                        <div style="display: flex; align-items: center; justify-content: center; gap: 15px;">
+                            <div style="font-size: 52px; font-weight: bold; color: ${gradeColor}; text-shadow: 0 0 20px ${gradeColor}; line-height: 1;">
+                                ${scoreResult.totalScore}
+                            </div>
+                            <span style="background: ${gradeColor}22; border: 2px solid ${gradeColor}; color: ${gradeColor}; padding: 6px 20px; border-radius: 20px; font-size: 16px; font-weight: bold; text-shadow: 0 0 10px ${gradeColor}; display: inline-block;">
+                                ${scoreResult.grade} 級
+                            </span>
+                        </div>
+                       
+                    </div>
+                    
+                    <!-- 進度條 -->
+                    <!-- 進度條 (優化: 文字置中不被切斷) -->
+                    <div style="background: rgba(0,0,0,0.3); border-radius: 10px; height: 24px; overflow: hidden; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.05); position: relative;">
+                        <!-- 背景條/填充條 -->
+                        <div style="background: linear-gradient(90deg, ${gradeColor}, ${gradeColor}aa); height: 100%; width: ${scoreResult.percentage}%; transition: width 0.5s ease; position: absolute; top: 0; left: 0;"></div>
+                        <!-- 文字層 (永遠置中) -->
+                        <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; color: #fff; text-shadow: 0 0 2px rgba(0,0,0,0.8); z-index: 2;">
+                            達標率 ${scoreResult.percentage}%
+                        </div>
+                    </div>
+                      <!-- 項目細節列表 (移至首頁) -->
+                    <div style="font-size: 14px; color: #bdc3c7; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 6px; margin-bottom: 10px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px; border-bottom: 1px dashed rgba(255,255,255,0.1); padding-bottom: 5px;">
+                            <span>🔎 項目細節</span>
+                            <span>得分 / 上限</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                            <span>🔥 裝備品階分數</span>
+                            <div style="text-align: right;">
+                                <span style="color: #ff6b35; font-weight: bold;">
+                                    ${scoreResult.breakdown.rarity.score}
+                                    <span style="font-size: 11px; color: #7f8c8d; opacity: 0.8;">/ ${scoreResult.breakdown.rarity.maxScore}</span>
+                                </span>
+                                <div style="font-size: 10px; color: #7f8c8d; margin-top: -2px;">(${scoreResult.breakdown.rarity.rawScore} / 500+ 點)</div>
+                            </div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                            <span>💎 古文石強化等級</span>
+                            <div style="text-align: right;">
+                                <span style="color: #9b59b6; font-weight: bold;">
+                                    ${scoreResult.breakdown.magicStone.score}
+                                    <span style="font-size: 10px; color: #7f8c8d; opacity: 0.8;">/ ${scoreResult.breakdown.magicStone.maxScore}</span>
+                                </span>
+                                <div style="font-size: 9px; color: #7f8c8d; margin-top: -2px;">(${scoreResult.breakdown.magicStone.rawScore} / 60 點)</div>
+                            </div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                            <span>📋 板塊數量</span>
+                            <div style="text-align: right;">
+                                <span style="color: #3498db; font-weight: bold;">
+                                    ${scoreResult.breakdown.board.score}
+                                    <span style="font-size: 10px; color: #7f8c8d; opacity: 0.8;">/ ${scoreResult.breakdown.board.maxScore}</span>
+                                </span>
+                                <div style="font-size: 9px; color: #7f8c8d; margin-top: -2px;">(${scoreResult.breakdown.board.totalBoards} / 684)</div>
+                            </div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                            <span>🐾 寵物理解度</span>
+                            <span style="color: #2ecc71; font-weight: bold;">
+                                ${scoreResult.breakdown.petInsight.score}
+                                <span style="font-size: 10px; color: #7f8c8d; opacity: 0.8;">/ ${scoreResult.breakdown.petInsight.maxScore}</span>
+                            </span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                            <span>⚔️ 技能烙印分數</span>
+                            <div style="text-align: right;">
+                                <span style="color: #f39c12; font-weight: bold;">
+                                    ${scoreResult.breakdown.stigma.score}
+                                    <span style="font-size: 10px; color: #7f8c8d; opacity: 0.8;">/ ${scoreResult.breakdown.stigma.maxScore}</span>
+                                </span>
+                                <div style="font-size: 9px; color: #7f8c8d; margin-top: -2px;">(${scoreResult.breakdown.stigma.rawScore} / ${scoreResult.breakdown.stigma.maxRawScore}+ 點)</div>
+                            </div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span>🏅 稱號擁有數量</span>
+                            <div style="text-align: right;">
+                                <span style="color: #9b59b6; font-weight: bold;">
+                                    ${scoreResult.breakdown.title.score}
+                                    <span style="font-size: 10px; color: #7f8c8d; opacity: 0.8;">/ ${scoreResult.breakdown.title.maxScore}</span>
+                                </span>
+                                <div style="font-size: 9px; color: #7f8c8d; margin-top: -2px;">(${scoreResult.breakdown.title.ownedCount} / ${scoreResult.breakdown.title.totalCount})</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                
-                <!-- 等級顯示 -->
-                <div style="text-align: center; margin-bottom: 15px;">
-                    <span style="background: ${gradeColor}22; border: 2px solid ${gradeColor}; color: ${gradeColor}; padding: 5px 15px; border-radius: 20px; font-size: 16px; font-weight: bold; text-shadow: 0 0 10px ${gradeColor};">
-                        ${scoreResult.grade} 級玩家
-                    </span>
+
+                <!-- 分頁 2: 計算明細 -->
+                <div id="tab-score-2" class="score-tab-content" style="display: none; padding: 15px;">
+                    <!-- 1. 裝備來源分析 (橫向長條) -->
+                    <div style="margin-bottom: 20px;">
+                        <div style="color:#ffd93d; font-weight:bold; margin-bottom:10px; font-size:14px;">📊 裝備來源結構</div>
+                        ${generateSourceCard('⚔️ 武器/防具', sourceStats.armor.total, sourceStats.armor, '#3498db')}
+                        ${generateSourceCard('💍 飾品/配件', sourceStats.accessory.total, sourceStats.accessory, '#9b59b6')}
+                    </div>
+
+                    <!-- 2. 寵物洞察力分析 (橫向長條) -->
+                    <div style="margin-bottom: 20px;">
+                        <div style="color:#00d4ff; font-weight:bold; margin-bottom:10px; font-size:14px; display:flex; justify-content:space-between;">
+                            <span>🧠 寵物洞察力結構</span>
+                            <span style="font-size:11px; font-weight:normal; color:#8b949e;">共 ${totalPets} 隻</span>
+                        </div>
+                        ${generatePetBar()}
+                    </div>
+                    
+                    <!-- 評分標準說明 (可展開) -->
+                    <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;">
+                        <div onclick="const content = this.nextElementSibling; const isHidden = content.style.display === 'none'; content.style.display = isHidden ? 'block' : 'none'; this.querySelector('.toggle-arrow').textContent = isHidden ? '▲' : '▼';" 
+                             style="cursor: pointer; display: flex; justify-content: space-between; align-items: center; padding: 5px; background: rgba(255,255,255,0.03); border-radius: 4px; margin-bottom: 8px;">
+                            <span style="font-size: 12px; color: #ffd93d; font-weight: bold;">📋 評分標準說明</span>
+                            <span class="toggle-arrow" style="color: #ffd93d; font-size: 10px;">▼</span>
+                        </div>
+                        <div style="display: none; overflow: hidden;">
+                            <div style="font-size: 11px; color: #bdc3c7; line-height: 1.6; padding: 8px; background: rgba(0,0,0,0.2); border-radius: 4px;">
+                                
+                                <!-- 總分說明 -->
+                                <div style="margin-bottom: 12px; padding: 8px; background: rgba(255,215,61,0.1); border-left: 3px solid #ffd93d; border-radius: 3px;">
+                                    <div style="color: #ffd93d; font-weight: bold; margin-bottom: 4px;">📊 總分制度：90分制</div>
+                                    <div style="font-size: 10px; color: #bdc3c7;">各項目分數加總後，目前滿分為90分。根據總分百分比評定等級。</div>
+                                </div>
+
+                                <!-- 分數佔比說明 -->
+                                <div style="margin-bottom: 12px; padding: 6px 8px; background: rgba(0,0,0,0.2); border-radius: 4px; font-size: 10px; line-height: 1.5;">
+                                    <div style="color: #ffd93d; font-weight: bold; margin-bottom: 3px;">📊 各項目分數配置：</div>
+                                    <div style="color: #bdc3c7;">
+                                        裝備品階 30分 | 古文石 10分 | 板塊 15分<br>
+                                        寵物理解度 10分 | 技能烙印 20分 | 稱號 5分<br>
+                                        <span style="color: #ffd93d; font-weight: bold;">總計 90分</span>
+                                    </div>
+                                </div>
+
+                                <!-- 裝備品階 -->
+                                <div style="margin-bottom: 10px;">
+                                    <div style="color: #ff6b35; font-weight: bold; margin-bottom: 4px;">🔥 裝備品階 (30分)</div>
+                                    <div style="padding-left: 10px; font-size: 10px;">
+                                        <div style="margin-bottom: 5px;"><b>品階基礎分：</b></div>
+                                        <div>
+                                            • <span style="color: #ff6600; font-weight: bold;">神話:15</span> | 
+                                            <span style="color: #ff9500; font-weight: bold;">傳說:10</span> | 
+                                            <span style="color: #a335ee; font-weight: bold;">史詩:6</span> | 
+                                            <span style="color: #0070dd; font-weight: bold;">特殊:4</span> | 
+                                            <span style="color: #1eff00; font-weight: bold;">稀有:3</span> | 
+                                            <span style="color: #9d9d9d;">普通:1</span>
+                                        </div>
+                                        <div style="margin-top: 5px; background: rgba(0,0,0,0.3); padding: 4px; border-radius: 2px; font-family: monospace; color: #00d4ff;">
+                                            裝備分 = 基礎分 × (1 + 強化/25 + 閃耀10%)
+                                        </div>
+                                        <div style="margin-top: 5px;"><b>分級制度 (5級分 → 30分)：</b></div>
+                                        <div>• 100-199分 → 1級(6分) | 200-299分 → 2級(12分)</div>
+                                        <div>• 300-399分 → 3級(18分) | 400-499分 → 4級(24分)</div>
+                                        <div>• 500+分 → 5級(30分滿分)</div>
+                                        <div style="margin-top: 3px; color: #8b949e;">範例：神話+25閃耀 = 15×2.1 = 32分 (4捨2入)</div>
+                                    </div>
+                                </div>
+
+                                <!-- 古文石 -->
+                                <div style="margin-bottom: 10px;">
+                                    <div style="color: #9b59b6; font-weight: bold; margin-bottom: 4px;">💎 古文石/護身符 (5分)</div>
+                                    <div style="padding-left: 10px; font-size: 10px;">
+                                        <div><b>4個槽位：</b>激戰古文石、專心古文石、啟示護身符、激戰護身符</div>
+                                        <div style="margin-top: 3px;"><b>古文石（無品階）：</b>直接用強化等級</div>
+                                        <div>• 激戰/專心古文石 +10 = 10分</div>
+                                        <div style="margin-top: 3px;"><b>護身符（有品階）：</b>品階 × (1 + 強化/10)</div>
+                                        <div>
+                                            • <span style="color: #ff9500; font-weight: bold;">傳說:10</span> | 
+                                            <span style="color: #a335ee; font-weight: bold;">史詩:6</span> | 
+                                            <span style="color: #1eff00; font-weight: bold;">稀有:3</span>
+                                        </div>
+                                        <div>• <span style="color: #ff9500;">傳說+10</span> = 10×2 = 20分</div>
+                                        <div style="margin-top: 3px; color: #8b949e;">滿分：2古文石×10 + 2護身符×20 = 60分 → 轉換為5分</div>
+                                    </div>
+                                </div>
+
+                                <!-- 板塊 -->
+                                <div style="margin-bottom: 10px;">
+                                    <div style="color: #3498db; font-weight: bold; margin-bottom: 4px;">📋 板塊數量 (20分)</div>
+                                    <div style="padding-left: 10px; font-size: 10px;">
+                                        <div>• 100個以上: 1級(4分) | 200個以上: 2級(8分)</div>
+                                        <div>• 300個以上: 3級(12分) | 400個以上: 4級(16分)</div>
+                                        <div>• 500個以上: 5級(20分滿分)</div>
+                                        <div style="margin-top: 3px; color: #8b949e;">(總上限: 684個)</div>
+                                    </div>
+                                </div>
+
+                                <!-- 寵物理解度 -->
+                                <div style="margin-bottom: 10px;">
+                                    <div style="color: #2ecc71; font-weight: bold; margin-bottom: 4px;">🐾 寵物理解度 (10分)</div>
+                                    <div style="padding-left: 10px; font-size: 10px;">
+                                        <div>• 該項滿寵(全Lv3+): +1分</div>
+                                        <div>• 該項滿寵(全Lv4+): 再+1分</div>
+                                        <div style="margin-top: 3px; color: #8b949e;">(共4類別，原始8分 → 轉換為10分)</div>
+                                    </div>
+                                </div>
+
+                                <!-- 技能烙印 -->
+                                <div style="margin-bottom: 10px;">
+                                    <div style="color: #f39c12; font-weight: bold; margin-bottom: 4px;">⚔️ 技能烙印 (20分)</div>
+                                    <div style="padding-left: 10px; font-size: 10px;">
+                                        <div>• 將所有技能烙印的等級加總</div>
+                                        <div>• 滿分：12個技能全Lv20（總和240）</div>
+                                        <div style="margin-top: 5px; padding: 4px; background: rgba(241,196,15,0.1); border-left: 2px solid #f1c40f; border-radius: 2px; color: #f1c40f;">
+                                            <b>範例：</b>全部Lv10 = 120分 → 得10分 | 全部Lv20 = 240分 → 得20分(滿分)
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 稱號 -->
+                                <div style="margin-bottom: 10px;">
+                                    <div style="color: #e74c3c; font-weight: bold; margin-bottom: 4px;">🏅 稱號數量 (5分)</div>
+                                    <div style="padding-left: 10px; font-size: 10px;">
+                                        <div>• 每100個稱號 +1分</div>
+                                        <div style="margin-top: 3px; color: #8b949e;">(原始分 × 5 = 最高5分)</div>
+                                    </div>
+                                </div>
+
+                                <!-- 評級標準 -->
+                                <div style="margin-top: 12px; padding-top: 8px; border-top: 1px dashed rgba(255,255,255,0.2);">
+                                    <div style="color: #ffd93d; font-weight: bold; margin-bottom: 4px;">🏆 評級標準 (總分100分)</div>
+                                    <div style="padding-left: 10px; font-size: 10px;">
+                                        <div style="color: #ff0000;">• SSS: 90分以上 (90%+)</div>
+                                        <div style="color: #ff6b35;">• SS: 80-89分 (80-89%)</div>
+                                        <div style="color: #ffa500;">• S: 70-79分 (70-79%)</div>
+                                        <div style="color: #ffd700;">• A: 60-69分 (60-69%)</div>
+                                        <div style="color: #00d4ff;">• B: 50-59分 (50-59%)</div>
+                                        <div style="color: #00ff88;">• C: 40-49分 (40-49%)</div>
+                                        <div style="color: #95a5a6;">• D: 30-39分 (30-39%)</div>
+                                        <div style="color: #7f8c8d;">• E: 15-29分 (15-29%)</div>
+                                        <div style="color: #5a6268;">• F: 15分以下 (0-14%)</div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 詳細資料來源 (可展開) -->
+                    <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;">
+                        <div onclick="const content = this.nextElementSibling; const isHidden = content.style.display === 'none'; content.style.display = isHidden ? 'block' : 'none'; this.querySelector('.toggle-arrow').textContent = isHidden ? '▲' : '▼';" 
+                             style="cursor: pointer; display: flex; justify-content: space-between; align-items: center; padding: 5px; background: rgba(255,255,255,0.03); border-radius: 4px; margin-bottom: 8px;">
+                            <span style="font-size: 12px; color: #ffd93d; font-weight: bold;">📊 詳細資料來源</span>
+                            <span class="toggle-arrow" style="color: #ffd93d; font-size: 10px;">▼</span>
+                        </div>
+                        <div style="display: none; overflow: hidden;">
+                            <div style="font-size: 11px; color: #bdc3c7; line-height: 1.6; padding: 8px; background: rgba(0,0,0,0.2); border-radius: 4px; max-height: 400px; overflow-y: auto;">
+                                
+                                <!-- 裝備 -->
+                                <div style="color: #ffd93d; font-weight:bold; margin-bottom: 8px;">🔥 裝備品階</div>
+                                ${(scoreResult.breakdown.rarity.details || []).map(d => `
+                                    <div style="background: rgba(255,255,255,0.05); border-radius: 4px; padding: 6px 8px; margin-bottom: 6px; border-left: 4px solid ${d.color || '#fff'}; display: flex; justify-content: space-between; align-items: center;">
+                                        <div>
+                                            <div style="color: ${d.color || '#fff'}; font-weight:bold; font-size:12px;">${d.name} <span style="font-size: 10px; opacity:0.7; font-weight:normal;">${d.dragonType}</span></div>
+                                            <div style="font-size: 10px; color: #8b949e;">基礎:${d.baseScore} | 強化:+${d.enchantLevel} | 倍率:x${d.multiplier}</div>
+                                        </div>
+                                        <div style="text-align:right;">
+                                            <span style="color: var(--gold); font-weight: bold;">+${d.score}</span>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                                ${(!scoreResult.breakdown.rarity.details || scoreResult.breakdown.rarity.details.length === 0) ? '<div style="color: #7f8c8d; font-style: italic;">無相關裝備</div>' : ''}
+
+                                <!-- 魔力聖物系統 -->
+                                <div style="color: #ffd93d; font-weight:bold; margin: 15px 0 8px 0;">💎 魔力聖物系統 (4槽總計)</div>
+                                ${(scoreResult.breakdown.magicStone.details || []).map(d => {
+                let color = '#3498db'; // Default Blue
+                if (d.quality) {
+                    if (d.quality.includes('神話')) color = '#e67e22'; // Orange/Red
+                    else if (d.quality.includes('傳說')) color = '#f1c40f'; // Gold/Yellow
+                    else if (d.quality.includes('史詩')) color = '#3498db'; // Blue/Cyan  (User screenshot shows blue-ish for Epic)
+                    else if (d.quality.includes('稀有')) color = '#2ecc71'; // Green
+                    else if (d.quality.includes('普通')) color = '#95a5a6'; // Grey
+                } else {
+                    // Ancient Stone (Runes) -> Cyan/Teal
+                    color = '#00cec9';
+                }
+                return `
+                                    <div style="background: rgba(255,255,255,0.05); border-radius: 4px; padding: 8px 10px; margin-bottom: 6px; border-left: 4px solid ${color}; display: flex; justify-content: space-between; align-items: center;">
+                                        <div style="font-weight: bold; color: #fff;">${d.name} <span style="font-size:10px; opacity:0.7; font-weight:normal;">${d.quality || ''}</span></div>
+                                        <div style="text-align:right;">
+                                            <div style="color: ${color}; font-weight:bold;">+${d.enchantLevel}</div>
+                                            <div style="font-size:10px; color:#8b949e;">+${d.score}分</div>
+                                        </div>
+                                    </div>`;
+            }).join('') || '<div style="color: #7f8c8d; padding:5px;">無裝備古文石</div>'}
+
+                                <!-- 板塊 -->
+                                <div style="color: #ffd93d; font-weight:bold; margin: 15px 0 8px 0;">📋 德巴板塊完成數</div>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                                    ${(scoreResult.breakdown.board.details || []).map(d => `
+                                        <div style="background: rgba(255,255,255,0.05); border-radius: 4px; padding: 8px; border-left: 4px solid #3498db;">
+                                            <div style="color: #fff; font-size: 12px; margin-bottom: 2px;">${d.name}</div>
+                                            <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+                                                <span style="font-size: 14px; font-weight: bold; color: #3498db;">${d.count}</span>
+                                                <span style="font-size: 10px; color: #8b949e;">/ ${d.max}</span>
+                                            </div>
+                                        </div>
+                                    `).join('') || '<div style="color: #7f8c8d;">無板塊數據</div>'}
+                                </div>
+                                <div style="text-align: right; color: #7f8c8d; font-size: 10px; margin-top: 4px;">總計: ${scoreResult.breakdown.board.totalBoards} 個</div>
+
+                                <!-- 寵物 -->
+                                <div style="color: #ffd93d; font-weight:bold; margin: 15px 0 8px 0;">🐾 寵物探險隊 (3/4階佔比)</div>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                                ${(scoreResult.breakdown.petInsight.details || []).map(d => {
+                let pColor = d.lv4 > 0 ? '#e74c3c' : (d.lv3 > 0 ? '#f1c40f' : '#2ecc71');
+                return `
+                                    <div style="background: rgba(255,255,255,0.05); border-radius: 4px; padding: 8px; border-left: 4px solid ${pColor};">
+                                        <div style="color: #fff; font-size: 12px; margin-bottom: 2px;">${d.type === 'intellect' ? '智慧' : (d.type === 'feral' ? '野性' : (d.type === 'nature' ? '自然' : '變身'))}</div>
+                                        <div style="font-size: 11px; color: #ccc;">
+                                            <span style="color:${d.lv4 > 0 ? '#e74c3c' : '#888'}">L4:${d.lv4}</span> | 
+                                            <span style="color:${d.lv3 > 0 ? '#f1c40f' : '#888'}">L3:${d.lv3}</span>
+                                        </div>
+                                        <div style="font-size:10px; color:#8b949e; text-align:right; margin-top:2px;">+${d.score}分</div>
+                                    </div>
+                                `}).join('') || '<div style="color: #7f8c8d;">無寵物數據</div>'}
+                                </div>
+
+                                <!-- 技能 -->
+                                <div style="color: #ffd93d; font-weight:bold; margin: 15px 0 8px 0;">⚔️ 技能烙印 (前12強)</div>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;">
+                                ${(scoreResult.breakdown.stigma.details || []).slice(0, 12).map(d => {
+                    // 顏色邏輯: 高分紅, 中分橘, 低分藍
+                    let sColor = '#3498db';
+                    if (d.level >= 15) sColor = '#e74c3c';
+                    else if (d.level >= 10) sColor = '#e67e22'; // Orange
+                    else if (d.level >= 5) sColor = '#f1c40f'; // Yellow
+
+                    return `
+                                    <div style="background: rgba(255,255,255,0.05); border-radius: 4px; padding: 6px; border-left: 3px solid ${sColor}; text-align:center;">
+                                        <div style="color: #fff; font-size: 11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${d.name}">${d.name}</div>
+                                        <div style="color: ${sColor}; font-weight: bold; font-size: 13px;">Lv.${d.level}</div>
+                                        <div style="font-size: 9px; color: #8b949e;">${d.points}點</div>
+                                    </div>
+                                `}).join('') || '<div style="color: #7f8c8d;">無技能數據</div>'}
+                                </div>
+                                <div style="text-align: right; color: #7f8c8d; font-size: 10px; margin-top: 4px;">總點數: ${scoreResult.breakdown.stigma.totalPoints} 點</div>
+
+                                <!-- 稱號 -->
+                                <div style="color: #ffd93d; font-weight:bold; margin: 15px 0 8px 0;">🏅 稱號 (量表)</div>
+                                <div style="background: rgba(255,255,255,0.05); border-radius: 4px; padding: 10px; border-left: 4px solid #9b59b6; display: flex; justify-content: space-between; align-items: center;">
+                                    <div>
+                                        <div style="font-size: 12px; color: #ccc;">擁有數量</div>
+                                        <div style="font-size: 16px; font-weight: bold; color: #fff;">${scoreResult.breakdown.title.ownedCount} <span style="font-size:12px; font-weight:normal; color:#888;">/ ${scoreResult.breakdown.title.totalCount}</span></div>
+                                    </div>
+                                    <div style="text-align: right;">
+                                        <div style="font-size: 10px; color: #8b949e;">規則: 每100個 +1分</div>
+                                        <div style="color: #f1c40f; font-weight: bold; font-size: 14px;">+${scoreResult.breakdown.title.score} 分</div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
-                
-                <!-- 分數分解 -->
-                <div style="font-size: 12px; color: #bdc3c7; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 6px;">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                        <span>📦 基礎分數</span>
-                        <span style="color: #3498db; font-weight: bold;">${scoreResult.breakdown.baseScore}</span>
-                    </div>
-                    ${scoreResult.setBonus > 0 ? `
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                        <span>🎁 套裝加成 (${scoreResult.maxSetCount}件)</span>
-                        <span style="color: #2ecc71; font-weight: bold;">+${scoreResult.setBonus}</span>
-                    </div>
-                    <div style="font-size: 11px; color: #7f8c8d; margin-top: 5px; padding-top: 5px; border-top: 1px solid rgba(255,255,255,0.1);">
-                        💡 ${scoreResult.maxSetSource} ×${scoreResult.setBonusMultiplier.toFixed(1)}
-                    </div>
-                    ` : ''}
+
+                <!-- 分頁 3: 榜首比較 (預留) -->
+                <div id="tab-score-3" class="score-tab-content" style="display: none; padding: 40px 20px; text-align: center;">
+                    <div style="font-size: 40px; margin-bottom: 10px; opacity: 0.5;">🏆</div>
+                    <div style="color: var(--gold); font-size: 16px; font-weight: bold; margin-bottom: 5px;">與全服第一名比較</div>
+                    <div style="color: #8b949e; font-size: 12px;">此功能開發中，將顯示您與榜首的差距分析。</div>
                 </div>
+
+                <!-- 分頁 4: 職業比較 (預留) -->
+                <div id="tab-score-4" class="score-tab-content" style="display: none; padding: 40px 20px; text-align: center;">
+                    <div style="font-size: 40px; margin-bottom: 10px; opacity: 0.5;">⚖️</div>
+                    <div style="color: var(--blue); font-size: 16px; font-weight: bold; margin-bottom: 5px;">同職業平均比較</div>
+                    <div style="color: #8b949e; font-size: 12px;">此功能開發中，將分析您在同職業玩家中的定位。</div>
+                </div>
+
             </div>`;
 
-            let sourceAnalysisHtml = `
-            ${scoreCardHtml}
-            <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:10px;">
-                ${generateSourceCard('⚔️ 武防', sourceStats.armor.total, sourceStats.armor, 'chart-source-armor', '#e67e22')}
-                ${generateSourceCard('💍 飾品', sourceStats.accessory.total, sourceStats.accessory, 'chart-source-accessory', '#9b59b6')}
-            </div>`;
+            let sourceAnalysisHtml = scoreCardHtml;
 
             // 插入 HTML 到頁面 (專屬容器)
             const equipSourceGridInject = document.getElementById('equip-source-grid');
             if (equipSourceGridInject) equipSourceGridInject.innerHTML = sourceAnalysisHtml;
 
-            // 定義繪圖函式 (Doughnut 風格)
-            const drawSourcePie = (canvasId, stats) => {
-                const canvas = document.getElementById(canvasId);
-                if (!canvas) return null;
-                const ctx = canvas.getContext('2d');
-
-                return new Chart(ctx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: ['手作', '副本', '其他'],
-                        datasets: [{
-                            data: [stats.crafted, stats.dungeon, stats.other],
-                            backgroundColor: ['#e67e22', '#3498db', '#7f8c8d'], // Orange, Blue, Gray
-                            borderWidth: 0,
-                            hoverOffset: 4
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        cutout: '70%',
-                        plugins: {
-                            legend: { display: false },
-                            datalabels: { display: false },
-                            tooltip: {
-                                backgroundColor: 'rgba(15, 20, 25, 1)',
-                                titleColor: '#fff',
-                                bodyColor: '#fff',
-                                borderColor: 'rgba(255,255,255,0.2)',
-                                borderWidth: 1,
-                                displayColors: true,
-                                callbacks: {
-                                    label: function (context) {
-                                        let val = context.raw;
-                                        let total = context.chart._metasets[context.datasetIndex].total;
-                                        let pct = Math.round((val / total) * 100);
-                                        return ` ${context.label}: ${val} (${pct}%)`;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                });
-            };
-
-            // 銷毀舊圖表實例 (因為 renderEquipment 可能被重複呼叫)
-            if (window.srcArmorChart instanceof Chart) window.srcArmorChart.destroy();
-            if (window.srcAccessoryChart instanceof Chart) window.srcAccessoryChart.destroy();
-
-            // 繪製新圖表
-            if (sourceStats.armor.total > 0) {
-                window.srcArmorChart = drawSourcePie('chart-source-armor', sourceStats.armor);
-            } else {
-                const el = document.getElementById('chart-source-armor');
-                if (el) el.parentNode.innerHTML = '<div style="font-size:12px; color:#8b949e; line-height:150px;">無資料</div>';
-            }
-
-            if (sourceStats.accessory.total > 0) {
-                window.srcAccessoryChart = drawSourcePie('chart-source-accessory', sourceStats.accessory);
-            } else {
-                const el = document.getElementById('chart-source-accessory');
-                if (el) el.parentNode.innerHTML = '<div style="font-size:12px; color:#8b949e; line-height:150px;">無資料</div>';
-            }
+            // 渲染新圖表 (已改為 CSS 渲染，移除 Chart.js 相關代碼)
+            // if (sourceStats.armor.total > 0) window.srcArmorChart = drawSourcePie('chart-source-armor', sourceStats.armor);
+            // if (sourceStats.accessory.total > 0) window.srcAccessoryChart = drawSourcePie('chart-source-accessory', sourceStats.accessory);
             renderSkills(data, boardSkillMap, cardSkillMap, { getEntry });
             if (!skipWingRender) renderWingCollection(stats);
             if (!skipWingRender) renderGainEffects(stats);
@@ -3748,17 +4050,11 @@
             if (!skipScroll) {
                 window.scrollTo({ top: document.getElementById('main-content').offsetTop - 20, behavior: 'smooth' });
             }
-        }
 
-        function renderRankings(rankList) {
-            const container = document.getElementById('p-ranking-container');
-            container.innerHTML = "";
-            rankList.forEach(r => {
-                if (!r.rank) return;
-                let changeHtml = r.rankChange > 0 ? `<span class="rank-change up">▲${r.rankChange}</span>` : (r.rankChange < 0 ? `<span class="rank-change down">▼${Math.abs(r.rankChange)}</span>` : "");
-                container.innerHTML += `<div class="rank-badge"><div class="rank-info"><span class="rank-title">${r.rankingContentsName}</span><span class="rank-val">${r.rank} 位 ${changeHtml}</span></div></div>`;
-            });
-        }
+            // 觸發排行榜載入 (強制更新，因為角色已變更)
+            loadClassLeaderboard();
+        } // End of processData
+
 
         // 歷史趨勢曲線圖 (整合裝備等級與排名)
         // 註冊 datalabels 插件
@@ -4154,7 +4450,382 @@
             });
         });
 
-        // 翅膀收藏系統渲染函數
+        // 🏆 榮耀排行榜邏輯
+        let LEADERBOARD_CACHE = {
+            server: null,
+            class: null
+        };
+
+        // 簡化: 直接載入同職業
+        async function loadClassLeaderboard() {
+            const contentEl = document.getElementById('leaderboard-content');
+
+            // 獲取當前角色的職業與種族
+            const currentData = window.__LAST_DATA_JSON__;
+            let className = '';
+            let raceName = '';
+
+            if (currentData) {
+                const p = currentData.data?.profile || currentData.queryResult?.data?.profile;
+                if (p) {
+                    className = p.className;
+                    raceName = p.raceName;
+                }
+            }
+
+            // Aion API seemingly requires Chinese class names for queries?
+            // Test script showed '劍星' works, 'Gladiator' returns nothing.
+            // Map English class names to Traditional Chinese just in case the profile data has English.
+            const classMap = {
+                'Gladiator': '劍星',
+                'Templar': '守護星',
+                'Ranger': '弓星',
+                'Assassin': '殺星',
+                'Sorcerer': '魔道星',
+                'Spiritmaster': '精靈星',
+                'Cleric': '治癒星',
+                'Chanter': '護法星',
+                'Thunderer': '雷擊星' // Just a guess for new class names if any?
+            };
+
+            if (className && classMap[className]) {
+                className = classMap[className];
+            }
+
+            if (!className) {
+                contentEl.innerHTML = '<div style="text-align:center; color:#f85149; padding: 20px;">無法獲取當前角色職業<br>請先查詢角色</div>';
+                return;
+            }
+
+            // 顯示載入中
+            contentEl.innerHTML = '<div style="text-align:center; color:#8b949e; padding: 20px;">正在載入同種族職業排名...</div>';
+
+            // 兩次請求：全服榜首(用於比較)、同職業榜(用於顯示)
+            try {
+                // 1. 取得全服第一 (用於 "榜首比較" Tab) - 不分種族，還是要分? 
+                //    "榜首比較"通常指全伺服器最強。
+                const serverUrl = 'https://aion-api.bnshive.com/ranking/item-level?page=1&size=1';
+                const serverProxy = getProxyUrl(serverUrl);
+                const serverRes = await fetch(serverProxy);
+                const serverJson = await serverRes.json();
+
+                if (serverJson && serverJson.rankings && serverJson.rankings.length > 0) {
+                    LEADERBOARD_CACHE.server = serverJson.rankings[0];
+                    // 觸發榜首比較渲染 (若 Tab 已開啟)
+                    // (稍後在 switchScoreTab 處理)
+                }
+
+                // 2. 取得同職業排名 (用於左側列表 & "職業比較" Tab)
+                //    這裡必須過濾種族！
+                let classUrl = `https://aion-api.bnshive.com/ranking/item-level?page=1&size=3&className=${encodeURIComponent(className)}`;
+
+                // Add Race Filter (Converting to ID for reliability)
+                if (raceName) {
+                    let raceId = 0;
+                    if (raceName.includes('Asmodian') || raceName.includes('魔')) {
+                        raceId = 2; // Asmodian
+                    } else if (raceName.includes('Elyos') || raceName.includes('天')) {
+                        raceId = 1; // Elyos
+                    }
+
+                    if (raceId > 0) {
+                        classUrl += `&raceId=${raceId}`;
+                    } else {
+                        // Fallback to name if ID mapping fails
+                        classUrl += `&raceName=${encodeURIComponent(raceName)}`;
+                    }
+                }
+
+                const classProxy = getProxyUrl(classUrl);
+                const classRes = await fetch(classProxy);
+                const classJson = await classRes.json();
+
+                if (classJson && classJson.rankings) {
+                    LEADERBOARD_CACHE.class = classJson.rankings;
+                    renderLeaderboard('class', classJson.rankings);
+                } else {
+                    throw new Error("無排名資料");
+                }
+
+            } catch (error) {
+                console.error("Fetch Leaderboard Error:", error);
+                contentEl.innerHTML = `<div style="text-align:center; color:#f85149; padding: 20px;">載入失敗<br>${error.message}</div>`;
+            }
+        }
+
+        // 不再需要原本的 switchLeaderboard 
+        // 渲染排行榜 (主要顯示同職業)
+        function renderLeaderboard(type, rankings) {
+            const container = document.getElementById('leaderboard-content');
+            if (!rankings || rankings.length === 0) {
+                container.innerHTML = '<div style="text-align:center; color:#8b949e; padding: 20px;">暫無資料</div>';
+                return;
+            }
+
+            let html = '';
+            rankings.forEach((r, idx) => {
+                const isTop1 = idx === 0;
+                // const medal = isTop1 ? '🥇' : (idx === 1 ? '🥈' : '🥉');
+                const medal = isTop1 ? '👑' : `#${idx + 1}`;
+                const bgStyle = isTop1
+                    ? 'background: linear-gradient(135deg, rgba(255, 217, 61, 0.15), rgba(255, 217, 61, 0.05)); border: 1px solid var(--gold); border-left: 5px solid var(--gold);'
+                    : 'background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border);';
+
+                const textColor = isTop1 ? 'var(--gold-bright)' : '#e6edf3';
+                const shadow = isTop1 ? 'box-shadow: 0 4px 15px rgba(255, 217, 61, 0.2);' : '';
+
+                // 檢查是否是當前查詢的角色
+                let isMe = false;
+                const currentData = window.__LAST_DATA_JSON__;
+                let myName = '';
+                let myServerId = 0;
+                if (currentData) {
+                    const p = currentData.data?.profile || currentData.queryResult?.data?.profile;
+                    if (p) { myName = p.characterName; myServerId = p.serverId; }
+                }
+                if (r.characterName === myName && r.serverId == myServerId) isMe = true;
+
+                html += `
+                    <div style="${bgStyle} ${shadow} border-radius: 8px; padding: 10px; display: flex; align-items: center; gap: 10px; transition: transform 0.2s;">
+                        <div style="font-size: 20px; width: 30px; text-align: center;">${medal}</div>
+                        <div style="flex: 1;">
+                            <div style="font-weight: bold; color: ${textColor}; font-size: ${isTop1 ? '16px' : '14px'}; display: flex; align-items: center; gap: 5px;">
+                                ${r.characterName}
+                                ${isMe ? '<span style="font-size:10px; background:var(--primary); color:#000; padding:1px 4px; border-radius:4px;">ME</span>' : ''}
+                            </div>
+                            <div style="font-size: 12px; color: #8b949e;">
+                                ${getServerNameById(r.serverId)} | <span style="color:var(--gold);">裝分 ${r.itemLevel}</span>
+                            </div>
+                        </div>
+                        <button onclick="quickLoadCharacter('${r.characterName}', '${getServerNameById(r.serverId)}')" 
+                                style="background: rgba(0, 0, 0, 0.3); border: 1px solid var(--border); color: var(--blue-bright); cursor: pointer; padding: 4px 8px; border-radius: 4px; font-size: 12px;">
+                            查看
+                        </button>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        // 比較功能渲染
+        async function renderComparison(type) {
+            const containerId = type === 'server' ? 'tab-score-3' : 'tab-score-4';
+            const container = document.getElementById(containerId);
+            if (!container) return;
+
+            // 確保資料已載入
+            if (type === 'server' && !LEADERBOARD_CACHE.server) {
+                // 若全服榜首尚未載入 (不應該發生，因為 loadClassLeaderboard 會順便載入)
+                container.innerHTML = '<div style="padding:20px; text-align:center; color:#8b949e;">資料載入中...</div>';
+                return;
+            }
+            if (type === 'class' && !LEADERBOARD_CACHE.class) {
+                container.innerHTML = '<div style="padding:20px; text-align:center; color:#8b949e;">資料載入中...</div>';
+                return;
+            }
+
+            const target = type === 'server' ? LEADERBOARD_CACHE.server : LEADERBOARD_CACHE.class[0]; // 職業榜首
+            if (!target) {
+                container.innerHTML = '<div style="padding:20px; text-align:center; color:#8b949e;">無法取得比較對象資料</div>';
+                return;
+            }
+
+            // 取得我們自己的資料
+            const myData = window.__LAST_DATA_JSON__;
+            if (!myData) return;
+            // 這裡我們需要自己的評分細項 (需要重新計算或快取)
+            // 為了方便，我們直接重新計算一次分數 (無開銷)
+            // 嘗試從多個可能路徑獲取
+            const data = myData.data || (myData.queryResult ? myData.queryResult.data : null) || myData;
+            const petInsight = myData.petInsight || (myData.queryResult ? myData.queryResult.petInsight : null) || data.petInsight;
+
+            // 從 processData 複製邏輯取得所有參數
+            const boardData = data.daevanionBoardList || (data.board ? data.board.daevanionBoardList : null) || (data.divinityBoard ? data.divinityBoard.daevanionBoardList : null) || data.board || [];
+            let stigmaList = (data.skill && data.skill.skillList) ? data.skill.skillList : (data.stigma || data.stigmaList || []);
+            if (stigmaList.length === 0 && data.equipment && data.equipment.stigmaList) stigmaList = data.equipment.stigmaList;
+            if (typeof stigmaList === 'object' && !Array.isArray(stigmaList)) stigmaList = Object.values(stigmaList);
+            const titleData = data.title || {};
+            const skillData = { stigma: stigmaList };
+
+            const myScore = calculateEquipmentScore(data.itemDetails || [], boardData, petInsight, skillData, titleData);
+
+            // 抓取對手詳細資料 (需要額外 fetch，因為 ranking API 只有 outline)
+            container.innerHTML = `
+                <div style="text-align:center; padding: 20px;">
+                    <div style="margin-bottom:10px;">正在分析比較對象: <b style="color:var(--gold);">${target.characterName}</b></div>
+                    <div class="loading-spinner"></div>
+                </div>
+            `;
+
+            try {
+                const targetUrl = `https://aion-api.bnshive.com/character/query?serverId=${target.serverId}&characterId=${encodeURIComponent(target.characterId)}`;
+                const proxyUrl = getProxyUrl(targetUrl);
+                const res = await fetch(proxyUrl);
+                const json = await res.json();
+
+                let targetFullData = json.data || (json.queryResult ? json.queryResult.data : null);
+
+                // 計算對手分數
+                let t_board = targetFullData.daevanionBoardList || (targetFullData.board ? targetFullData.board.daevanionBoardList : null) || targetFullData.board || [];
+                let t_pet = json.petInsight || (json.queryResult ? json.queryResult.petInsight : null); // 注意: 有時在外面
+                let t_stigma = (targetFullData.skill && targetFullData.skill.skillList) ? targetFullData.skill.skillList : (targetFullData.stigmaList || []);
+                let t_title = targetFullData.title || {};
+
+                // 此處簡化: 若對手資料不完整(如 petInsight 不在 data 內)，可能會有誤差
+                // 但通常 query API 會回傳完整與上面一致的結構
+
+                const targetScore = calculateEquipmentScore(targetFullData.itemDetails || [], t_board, t_pet, { stigma: t_stigma }, t_title);
+
+                // 生成比較 HTML
+                const scoreDiff = myScore.totalScore - targetScore.totalScore;
+                const diffColor = scoreDiff > 0 ? 'var(--green-bright)' : (scoreDiff < 0 ? '#f85149' : '#8b949e');
+                const diffSign = scoreDiff > 0 ? '+' : '';
+
+                const myGradeColor = getScoreGradeColor(myScore.grade);
+                const targetGradeColor = getScoreGradeColor(targetScore.grade);
+
+                let compareHtml = `
+                    <div style="display: flex; justify-content: center; align-items: center; gap: 20px; margin-bottom: 20px;">
+                        <!-- 我方 -->
+                        <div style="text-align: center;">
+                            <div style="font-size: 12px; color: #8b949e;">YOU</div>
+                            <div style="font-size: 24px; font-weight: bold; color: ${myGradeColor};">${myScore.totalScore}</div>
+                        </div>
+                        
+                        <!-- 差距 -->
+                        <div style="text-align: center;">
+                            <div style="font-size: 12px; color: #8b949e;">VS</div>
+                            <div style="font-size: 16px; font-weight: bold; color: ${diffColor}; background: rgba(255,255,255,0.05); padding: 2px 10px; border-radius: 12px;">
+                                ${diffSign}${scoreDiff}
+                            </div>
+                        </div>
+
+                        <!-- 對手 -->
+                        <div style="text-align: center;">
+                            <div style="font-size: 12px; color: #8b949e;">${target.characterName}</div>
+                            <div style="font-size: 24px; font-weight: bold; color: ${targetGradeColor};">${targetScore.totalScore}</div>
+                            <div style="font-size: 10px; color: #8b949e;">${type === 'server' ? '全服榜首' : '同職榜首'}</div>
+                        </div>
+                    </div>
+
+                    <!-- 詳細比較表 -->
+                    <div style="background: rgba(0,0,0,0.2); border-radius: 8px; padding: 10px; font-size: 13px;">
+                        <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 5px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; margin-bottom: 5px; color: #8b949e; font-size: 12px;">
+                            <div style="text-align: left;">項目</div>
+                            <div style="text-align: center;">我方</div>
+                            <div style="text-align: center;">差距</div>
+                            <div style="text-align: center;">對方</div>
+                        </div>
+                `;
+
+                // 比較項目列表
+                const items = [
+                    { key: 'rarity', name: '🔥 裝備品階' },
+                    { key: 'magicStone', name: '💎 古文石' },
+                    { key: 'board', name: '📋 板塊' },
+                    { key: 'petInsight', name: '🐾 寵物' },
+                    { key: 'stigma', name: '⚔️ 技能' },
+                    { key: 'title', name: '🏅 稱號' }
+                ];
+
+                items.forEach(item => {
+                    const myVal = myScore.breakdown[item.key].score;
+                    const targetVal = targetScore.breakdown[item.key].score;
+                    const diff = myVal - targetVal;
+                    const dColor = diff > 0 ? 'var(--green)' : (diff < 0 ? '#f85149' : '#8b949e');
+                    const dSign = diff > 0 ? '+' : '';
+
+                    compareHtml += `
+                        <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 5px; margin-bottom: 6px; align-items: center;">
+                            <div style="text-align: left; color:#bdc3c7;">${item.name}</div>
+                            <div style="text-align: center; color:#fff;">${myVal}</div>
+                            <div style="text-align: center; color:${dColor}; font-weight:bold;">${diff === 0 ? '-' : dSign + diff}</div>
+                            <div style="text-align: center; color:#bdc3c7;">${targetVal}</div>
+                        </div>
+                    `;
+                });
+
+                compareHtml += `</div>
+                    <div style="font-size:11px; color:#666; margin-top:10px; text-align:right;">* 對手部分數據 (如寵物/稱號隱藏) 可能無法精確獲取</div>
+                `;
+
+                container.innerHTML = compareHtml;
+
+            } catch (e) {
+                console.error(e);
+                container.innerHTML = `<div style="text-align:center; color:#f85149;">分析失敗<br>${e.message}</div>`;
+            }
+
+        }
+
+        function quickLoadCharacter(name, serverName) {
+            document.getElementById('charNameInput').value = name;
+            if (serverName) {
+                const select = document.getElementById('serverSelect');
+                // 嘗試選中對應伺服器
+                for (let i = 0; i < select.options.length; i++) {
+                    if (select.options[i].value === serverName) {
+                        select.selectedIndex = i;
+                        break;
+                    }
+                }
+            }
+            // 觸發查詢
+            fetchFromApi();
+            // 滾動到頂部
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // 伺服器 ID 轉 名稱 (簡單對照表，若不完整可顯示 ID)
+        function getServerNameById(id) {
+            // 這個對照表需要維護，或者從下拉選單反推。
+            // 為了簡化，我們先嘗試匹配下拉選單的值
+            // 也可以擴充此函數
+            // 根據 API 文件或觀察:
+            // 2011: 希埃爾 (範例)
+            // 這裡我們用一個簡單的方法: 遍歷下拉選單尋找
+            // 但我們只有 ID。
+            // 暫時返回 null 讓使用者自己確認? 或者建立常見的對照。
+
+            // 根據觀察:
+            // 2011: Israphel? No
+            // 假設 ID 與我們目前列表有一一對應關係，但我們手邊沒有完整 Map。
+            // 然而，API 查詢時我們需要伺服器名稱。
+            // 下拉選單的值就是中文名稱。
+            // 讓我們做一個簡單的伺服器名稱判斷或讓使用者手動選擇
+
+            // 更好的方式：如果 API 回傳了 serverName (有些 API 會)，直接用。
+            // 但在這個 ranking API 中沒有 serverName 欄位，只有 serverId。
+
+            // 根據經驗或測試 check_api 的結果:
+            // First item: serverId: 2011
+            // 我們可以建立一個常用 ID 表，若找不到則提示使用者。
+
+            const serverMap = {
+                1011: "尤斯迪埃", 1012: "希埃爾", 1013: "奈薩肯", 1014: "白傑爾", 1015: "凱西內爾", 1016: "艾瑞爾", 1017: "普雷奇翁", 1018: "梅斯蘭泰達",
+                1024: "希塔尼耶", 1025: "納尼亞", 1021: "塔哈巴達", 1022: "路特斯", 1023: "菲爾諾斯", 1019: "達彌努", 1020: "卡薩卡", 1026: "巴卡爾摩",
+                1027: "天加隆", 1028: "科奇隆", // 假設的天族 ID 區段
+
+                2011: "伊斯拉佩爾", 2012: "吉凱爾", 2013: "崔妮爾", 2014: "露梅爾", 2015: "瑪爾庫坦", 2016: "阿斯佩爾", 2017: "艾萊修奇卡", 2018: "布里特拉",
+                2024: "奈蒙", 2025: "哈達爾", 2021: "盧德萊", 2022: "鄔爾古倫", 2023: "默尼", 2019: "奧達爾", 2020: "簡卡卡", 2026: "克羅梅德",
+                2027: "奎靈", 2028: "巴巴隆" // 假設的魔族 ID 區段
+            };
+
+            return serverMap[id] || "";
+        }
+
+        // 修改 processData 以初始化排行榜 (載入全服第一)
+        // ... 我們可以把這個放在 processData 最後面，或者獨立調用。
+        // 為避免每次查詢都重置排行榜，我們只在第一次載入或手動切換時更新。
+
+        // 在 processData 結尾加入:
+        // if(window.__LAST_DATA_JSON__) {
+        //    if(document.querySelector('#leaderboard-content').innerHTML.includes('正在載入')) {
+        //        switchLeaderboard('server'); 
+        //    }
+        // }
+
         function renderWingCollection(stats) {
             const grid = document.getElementById('wing-collection-grid');
             if (!grid) return;
@@ -4176,17 +4847,18 @@
                     }).join('');
                 }
 
+                const gradeColor = getGradeColor(wing.grade || 'common');
                 html += `
-                    <div style="background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:8px; padding:12px;">
+                    <div style="background:rgba(255,255,255,0.03); border: 2px solid ${gradeColor}; box-shadow: 0 0 10px ${gradeColor}44; border-radius:8px; padding:12px;">
                         <label style="display:flex; align-items:flex-start; gap:8px; cursor:pointer;">
                             <input type="checkbox" 
                                    id="${checkboxId}" 
                                    value="${wingName}" 
                                    ${isChecked ? 'checked' : ''}
                                    onchange="toggleWingOwnership('${wingName}', this.checked)"
-                                   style="margin-top:2px; cursor:pointer;">
+                                   style="margin-top:2px; cursor:pointer; accent-color: ${gradeColor};">
                             <div style="flex:1;">
-                                <div style="font-weight:bold; color:#fff; margin-bottom:5px;">🪽 ${wingName}</div>
+                                <div style="font-weight:bold; color:${gradeColor}; margin-bottom:5px; text-shadow: 0 0 5px ${gradeColor}44;">🪽 ${wingName}</div>
                                 ${holdStatsHtml || '<div style="font-size:10px; color:#8b949e;">無持有效果</div>'}
                             </div>
                         </label>
@@ -4266,8 +4938,9 @@
                     }).join('');
                 }
 
+                const gradeColor = "#e67e22"; // 增益效果預設橙色
                 html += `
-                    <div style="background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:8px; padding:12px;">
+                    <div style="background:rgba(255,255,255,0.03); border: 2px solid ${gradeColor}; box-shadow: 0 0 10px ${gradeColor}44; border-radius:8px; padding:12px;">
                         <label style="display:flex; align-items:flex-start; gap:8px; cursor:pointer;">
                             <input type="checkbox" 
                                    id="${checkboxId}" 
@@ -5015,6 +5688,35 @@
                 localStorage.setItem('equipmentListCollapsed', 'true');
             }
         }
+
+        // 評分分頁切換功能
+        window.switchScoreTab = function (tabId) {
+            // Hide all contents
+            document.querySelectorAll('.score-tab-content').forEach(el => el.style.display = 'none');
+
+            // Show selected content
+            const target = document.getElementById(tabId);
+            if (target) target.style.display = 'block';
+
+            // Update button styles
+            document.querySelectorAll('.score-tab-btn').forEach(btn => {
+                btn.style.color = '#8b949e';
+                btn.style.borderBottomColor = 'transparent';
+            });
+
+            const activeBtn = document.getElementById(`btn-${tabId}`);
+            if (activeBtn) {
+                activeBtn.style.color = 'var(--gold)';
+                activeBtn.style.borderBottomColor = 'var(--gold)';
+            }
+
+            // Trigger data loading for comparison tabs
+            if (tabId === 'tab-score-3') {
+                renderComparison('server');
+            } else if (tabId === 'tab-score-4') {
+                renderComparison('class');
+            }
+        };
     </script>
 </body>
 
