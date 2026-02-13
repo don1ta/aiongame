@@ -248,7 +248,8 @@
                 .map(s => {
                     // 先嘗試從 API 資料中找到對應的技能類型
                     const userSkillId = s.skillId || s.id;
-                    let skillType = (s.type || '').toLowerCase();
+                    // 增加 s.category 的檢查 (兼容主程式的資料結構)
+                    let skillType = (s.type || s.category || '').toLowerCase();
 
                     if (!skillType && skillsData && skillsData.skills) {
                         const apiSkill = skillsData.skills.find(x => x.skillId === userSkillId);
