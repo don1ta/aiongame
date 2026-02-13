@@ -47,11 +47,20 @@
         return `Skill ${id}`;
     }
 
+    // Proxy function consistent with aion.html
+    function getProxyUrl(url) {
+        return `https://proxy.kk69347321.workers.dev/?url=${encodeURIComponent(url)}`;
+    }
+
     async function fetchAPI(endpoint, params = {}) {
         try {
             const url = new URL(`${API_BASE}/${endpoint}`);
             Object.keys(params).forEach(key => url.searchParams.append(key, params[key]));
-            const res = await fetch(url);
+
+            // Use proxy to avoid CORS issues on GitHub Pages
+            const proxyUrl = getProxyUrl(url.toString());
+            const res = await fetch(proxyUrl);
+
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             return await res.json();
         } catch (e) {
