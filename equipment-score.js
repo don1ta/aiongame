@@ -154,7 +154,7 @@ function getEquipmentRarityInfo(item) {
 
         // 2. 名稱關鍵字判斷 (作為補充)
         if (rarityKey === 'common') {
-            if (lowerName.includes('霸龍') || lowerName.includes('應龍') || lowerName.includes('雙龍王') || lowerName.includes('夔龍') || lowerName.includes('神話') || lowerName.includes('古代') || lowerName.includes('被侵蝕') || lowerName.includes('殘影')) {
+            if (lowerName.includes('霸龍') || lowerName.includes('應龍') || lowerName.includes('雙龍王') || lowerName.includes('夔龍') || lowerName.includes('盧德萊') || lowerName.includes('神話') || lowerName.includes('古代') || lowerName.includes('被侵蝕') || lowerName.includes('殘影')) {
                 rarityKey = 'mythic';
             } else if (lowerName.includes('天龍') || lowerName.includes('鳴龍') || lowerName.includes('白龍') || lowerName.includes('真龍') || lowerName.includes('唯一') || lowerName.includes('獨特') || lowerName.includes('軍團長')) {
                 rarityKey = 'legendary';
