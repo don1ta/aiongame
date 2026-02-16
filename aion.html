@@ -3642,6 +3642,9 @@
                 titleData
             );
 
+            // 儲存評分結果供雷達圖使用
+            window.currentEquipmentScore = scoreResult;
+
             // 生成評分卡片 HTML (分頁設計)
             const gradeColor = getScoreGradeColor(scoreResult.grade);
 
@@ -3653,7 +3656,7 @@
                     <button id="btn-tab-score-1" class="score-tab-btn" onclick="switchScoreTab('tab-score-1')" style="flex: 1; padding: 12px 5px; border: none; background: transparent; color: var(--gold); border-bottom: 2px solid var(--gold); cursor: pointer; font-weight: bold; font-size: 13px;">📊 綜合評分</button>
                     <button id="btn-tab-score-2" class="score-tab-btn" onclick="switchScoreTab('tab-score-2')" style="flex: 1; padding: 12px 5px; border: none; background: transparent; color: #8b949e; border-bottom: 2px solid transparent; cursor: pointer; font-weight: bold; font-size: 13px;">📝 計算明細</button>
                     <button id="btn-tab-score-3" class="score-tab-btn" onclick="switchScoreTab('tab-score-3')" style="flex: 1; padding: 12px 5px; border: none; background: transparent; color: #8b949e; border-bottom: 2px solid transparent; cursor: pointer; font-weight: bold; font-size: 13px;">💡 健檢分析</button>
-                    <button id="btn-tab-score-4" class="score-tab-btn" onclick="switchScoreTab('tab-score-4')" style="flex: 1; padding: 12px 5px; border: none; background: transparent; color: #8b949e; border-bottom: 2px solid transparent; cursor: pointer; font-weight: bold; font-size: 13px;">⚖️ 職業比較</button>
+                    <button id="btn-tab-score-4" class="score-tab-btn" onclick="switchScoreTab('tab-score-4')" style="flex: 1; padding: 12px 5px; border: none; background: transparent; color: #8b949e; border-bottom: 2px solid transparent; cursor: pointer; font-weight: bold; font-size: 13px;">⚖️ 雷達圖</button>
                 </div>
 
                 <!-- 分頁 1: 個人裝備成型度 (原本的主視覺) -->
@@ -4026,10 +4029,24 @@
                 </div>
 
                 <!-- 分頁 4: 職業比較 (預留) -->
-                <div id="tab-score-4" class="score-tab-content" style="display: none; padding: 40px 20px; text-align: center;">
-                    <div style="font-size: 40px; margin-bottom: 10px; opacity: 0.5;">⚖️</div>
-                    <div style="color: var(--blue); font-size: 16px; font-weight: bold; margin-bottom: 5px;">同職業平均比較</div>
-                    <div style="color: #8b949e; font-size: 12px;">此功能開發中，將分析您在同職業玩家中的定位。</div>
+                <div id="tab-score-4" class="score-tab-content" style="display: none; padding: 20px;">
+                    <div style="max-width: 600px; margin: 0 auto;">
+                        <div style="text-align: center; margin-bottom: 20px;">
+                            <div style="color: var(--gold); font-size: 18px; font-weight: bold; margin-bottom: 8px;">📊 角色能力雷達圖</div>
+                            <div style="color: #8b949e; font-size: 13px;">五大維度全方位分析</div>
+                        </div>
+                        <div style="background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 30px;">
+                            <canvas id="radarChart" style="max-height: 400px;"></canvas>
+                        </div>
+                        <div style="margin-top: 20px; padding: 15px; background: var(--panel-elevated); border-radius: 8px; border: 1px solid var(--border);">
+                            <div style="color: var(--blue); font-size: 14px; font-weight: bold; margin-bottom: 10px;">💡 圖表說明</div>
+                            <div style="color: #8b949e; font-size: 12px; line-height: 1.6;">
+                                • 雷達圖顯示您在五個維度的得分百分比<br>
+                                • 圖形越接近外圈代表該項目越完善<br>
+                                • 凹陷的部分是您可以優先提升的方向
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
             </div>`;
@@ -5713,10 +5730,149 @@
                 activeBtn.style.borderBottomColor = 'var(--gold)';
             }
 
-            // Trigger data loading for comparison tabs
+            // Render radar chart for tab-score-4
             if (tabId === 'tab-score-4') {
-                renderComparison('class');
+                renderRadarChart();
             }
+        };
+
+        // 雷達圖繪製函數
+        let radarChartInstance = null;
+
+        window.renderRadarChart = function () {
+            // 獲取當前的評分數據
+            const scoreData = window.currentEquipmentScore;
+            if (!scoreData || !scoreData.breakdown) {
+                console.warn('No score data available for radar chart');
+                return;
+            }
+
+            const breakdown = scoreData.breakdown;
+
+            // 計算各維度的百分比
+            const dimensions = [
+                {
+                    label: '裝備強度',
+                    score: breakdown.rarity.score,
+                    max: breakdown.rarity.maxScore,
+                    percentage: (breakdown.rarity.score / breakdown.rarity.maxScore * 100).toFixed(1)
+                },
+                {
+                    label: '板塊進度',
+                    score: breakdown.board.score,
+                    max: breakdown.board.maxScore,
+                    percentage: (breakdown.board.score / breakdown.board.maxScore * 100).toFixed(1)
+                },
+                {
+                    label: '寵物理解',
+                    score: breakdown.petInsight.score,
+                    max: breakdown.petInsight.maxScore,
+                    percentage: (breakdown.petInsight.score / breakdown.petInsight.maxScore * 100).toFixed(1)
+                },
+                {
+                    label: '技能烙印',
+                    score: breakdown.stigma.score,
+                    max: breakdown.stigma.maxScore,
+                    percentage: (breakdown.stigma.score / breakdown.stigma.maxScore * 100).toFixed(1)
+                },
+                {
+                    label: '稱號收集',
+                    score: breakdown.title.score,
+                    max: breakdown.title.maxScore,
+                    percentage: (breakdown.title.score / breakdown.title.maxScore * 100).toFixed(1)
+                }
+            ];
+
+            // 銷毀舊的圖表實例
+            if (radarChartInstance) {
+                radarChartInstance.destroy();
+            }
+
+            // 獲取 canvas 元素
+            const ctx = document.getElementById('radarChart');
+            if (!ctx) {
+                console.error('Radar chart canvas not found');
+                return;
+            }
+
+            // 創建雷達圖
+            radarChartInstance = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: dimensions.map(d => d.label),
+                    datasets: [{
+                        label: '當前進度',
+                        data: dimensions.map(d => parseFloat(d.percentage)),
+                        backgroundColor: 'rgba(0, 212, 255, 0.2)',
+                        borderColor: 'rgba(0, 212, 255, 1)',
+                        borderWidth: 2,
+                        pointBackgroundColor: 'rgba(0, 212, 255, 1)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgba(0, 212, 255, 1)',
+                        pointRadius: 5,
+                        pointHoverRadius: 7
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            max: 100,
+                            min: 0,
+                            ticks: {
+                                stepSize: 20,
+                                color: '#8b949e',
+                                backdropColor: 'transparent',
+                                font: {
+                                    size: 11
+                                },
+                                callback: function (value) {
+                                    return value + '%';
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(139, 148, 158, 0.2)'
+                            },
+                            angleLines: {
+                                color: 'rgba(139, 148, 158, 0.2)'
+                            },
+                            pointLabels: {
+                                color: '#ffd93d',
+                                font: {
+                                    size: 13,
+                                    weight: 'bold'
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(15, 20, 25, 0.95)',
+                            titleColor: '#ffd93d',
+                            bodyColor: '#fff',
+                            borderColor: '#00d4ff',
+                            borderWidth: 1,
+                            padding: 12,
+                            displayColors: false,
+                            callbacks: {
+                                label: function (context) {
+                                    const dim = dimensions[context.dataIndex];
+                                    return [
+                                        `得分: ${dim.score} / ${dim.max}`,
+                                        `完成度: ${dim.percentage}%`
+                                    ];
+                                }
+                            }
+                        }
+                    }
+                }
+            });
         };
     </script>
 </body>

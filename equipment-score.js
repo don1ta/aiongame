@@ -764,21 +764,20 @@ function getScoreAnalysis(breakdown) {
     let breakthrough5Count = 0;  // 突破達 +5 的件數
 
     equipDetails.forEach(item => {
-        const rarity = item.dragonType || '';
-        // 只統計史詩、傳說、神話
-        if (rarity.includes('史詩') || rarity.includes('Epic') ||
-            rarity.includes('傳說') || rarity.includes('Legendary') ||
-            rarity.includes('神話') || rarity.includes('Mythic')) {
+        // 排除古文石（古文石不計入裝備統計）
+        const itemName = item.name || '';
+        const isMagicStone = itemName.includes('古文石');
+        if (isMagicStone) return;
 
-            totalEquipCount++;
-            const pureEnchantLv = item.pureEnchantLevel || 0;
-            const exceedLv = item.exceedLevel || 0;
+        // equipDetails 已經過濾過了，包含所有武防和飾品
+        totalEquipCount++;
+        const pureEnchantLv = item.pureEnchantLevel || 0;
+        const exceedLv = item.exceedLevel || 0;
 
-            if (pureEnchantLv < 10) underEnchant10++;
-            if (exceedLv > 0) breakthroughCount++;
-            if (exceedLv >= 2) breakthrough2Count++;
-            if (exceedLv >= 5) breakthrough5Count++;
-        }
+        if (pureEnchantLv < 10) underEnchant10++;
+        if (exceedLv > 0) breakthroughCount++;
+        if (exceedLv >= 2) breakthrough2Count++;
+        if (exceedLv >= 5) breakthrough5Count++;
     });
 
     // 階段性目標判定
@@ -929,7 +928,7 @@ function getScoreAnalysis(breakdown) {
     if (breakdown.petInsight.score >= 18) {
         suggestions.push({
             title: '🐾 寵物精通',
-            desc: '寵物理解度已達總數max LV4以上！請持續精進自己的寵物理解度。',
+            desc: '寵物等級已達90%總數LV4以上！請持續精進自己的寵物理解度。',
             priority: '無'
         });
     }
@@ -938,7 +937,7 @@ function getScoreAnalysis(breakdown) {
     if (breakdown.stigma.score >= 27) {
         suggestions.push({
             title: '⚔️ 烙印大師',
-            desc: '您擁有4個LV20技能烙印，強度分數超越 90%，可持續加強拿滿12個LV20技能。',
+            desc: '您擁有4個LV20技能烙印，強度分數超越 90%，可持續加強拿滿12個LV20烙印技能。',
             priority: '無'
         });
     }
