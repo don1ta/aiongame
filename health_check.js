@@ -307,9 +307,9 @@
                 <div style="font-size:13px; color:#aaa; margin-bottom:12px; text-align:center;">
                     <span style="color:#2ed573; font-weight:bold;">綠色名稱</span> 代表該技能也是全服 Top 5 熱門技能
                 </div>
-                <div style="display:flex; font-size:13px; color:#ddd; margin-bottom:12px; border-bottom:1px solid #444; padding-bottom:8px; font-weight:bold;">
-                    <div style="flex:1; text-align:right; padding-right:20px;">全服 Top 5 (最高等級)</div>
-                    <div style="flex:1; padding-left:20px;">我的 Top 5 (目前等級)</div>
+                <div style="display:flex; font-size:12px; color:#aaa; margin-bottom:12px; border-bottom:1px solid #444; padding-bottom:8px; font-weight:bold;">
+                    <div style="flex:0 0 50%; text-align:right; padding-right:12px; box-sizing:border-box;">全服 Top 5 (最高等級)</div>
+                    <div style="flex:0 0 50%; padding-left:12px; box-sizing:border-box;">我的 Top 5 (目前等級)</div>
                 </div>`;
 
             for (let i = 0; i < 5; i++) {
@@ -325,11 +325,11 @@
                 const uInServer = u.id && serverList.some(x => x.id === u.id);
 
                 html += `
-                <div class="skill-row" style="display:flex; align-items:center; min-height:32px;">
+                <div class="skill-row" style="display:flex; align-items:center; min-height:36px; padding: 0 4px; box-sizing: border-box; width: 100%;">
                     <!-- 左邊：全服 [Name Lv] [Bar] -->
-                    <div style="flex:1; display:flex; justify-content:flex-end; align-items:center; border-right:1px solid #444;">
-                        <div style="text-align:right; margin-right:8px;">
-                            <div class="skill-name" style="color:${s.name !== '-' ? (sInUser ? '#2ed573' : '#eee') : '#666'}; font-weight:${sInUser ? 'bold' : 'normal'}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${s.name}</div>
+                    <div style="flex: 1 1 50%; min-width: 0; display:flex; justify-content:flex-end; align-items:center; border-right:1px solid #444; box-sizing:border-box; padding-right:10px;">
+                        <div style="flex: 1; min-width: 0; text-align:right; margin-right:8px;">
+                            <div class="skill-name" style="color:${s.name !== '-' ? (sInUser ? '#2ed573' : '#eee') : '#666'}; font-weight:${sInUser ? 'bold' : 'normal'}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width: 100%;">${s.name}</div>
                             ${s.avgLv > 0 ? `<div style="font-size:11px; color:#4a9eff; margin-top:2px;">Lv.${s.avgLv.toFixed(1)}</div>` : ''}
                         </div>
                         <div class="skill-bar" style="background:#2a2a2a; border-radius:4px; position:relative; overflow:hidden;">
@@ -338,12 +338,12 @@
                     </div>
                     
                     <!-- 右邊：我的 [Bar] [Name Lv] -->
-                    <div style="flex:1; display:flex; justify-content:flex-start; align-items:center;">
-                        <div class="skill-bar" style="background:#2a2a2a; border-radius:4px; position:relative; overflow:hidden;">
+                    <div style="flex: 1 1 50%; min-width: 0; display:flex; justify-content:flex-start; align-items:center; box-sizing:border-box; padding-left:10px;">
+                        <div class="skill-bar" style="background:#2a2a2a; border-radius:4px; position:relative; overflow:hidden; flex-shrink: 0;">
                             <div style="position:absolute; left:0; top:0; height:100%; width:${userWidth}%; background:linear-gradient(90deg, #ff9f43, #ff6b35);"></div>
                         </div>
-                        <div style="text-align:left; margin-left:8px;">
-                            <div class="skill-name" style="color:${u.name !== '-' ? (uInServer ? '#2ed573' : '#eee') : '#666'}; font-weight:${uInServer ? 'bold' : 'normal'}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${u.name}</div>
+                        <div style="flex: 1; min-width: 0; text-align:left; margin-left:8px;">
+                            <div class="skill-name" style="color:${u.name !== '-' ? (uInServer ? '#2ed573' : '#eee') : '#666'}; font-weight:${uInServer ? 'bold' : 'normal'}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width: 100%;">${u.name}</div>
                             ${u.lv > 0 ? `<div style="font-size:11px; color:#ff9f43; margin-top:2px;">Lv.${u.lv}</div>` : ''}
                         </div>
                     </div>

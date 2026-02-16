@@ -227,11 +227,13 @@ function calculateEquipmentRarityScore(itemDetails) {
 
             // 取得強化和突破等級
             const exceedLevel = item.exceedLevel || 0;
-            const enchantLevel = d.enchantLevel || 0;
-            const totalEnchant = exceedLevel + enchantLevel; // 用於顯示
+            // 如果 d.enchantLevel 包含突破等級，則扣除以獲得純強化等級 (上限通常為 20)
+            const rawEnchantLevel = d.enchantLevel || 0;
+            const pureEnchantLevel = Math.max(0, rawEnchantLevel - exceedLevel);
+            const totalEnchant = rawEnchantLevel; // 總等級即為 API 的 enchantLevel
 
-            // 強化加成 = 基礎分 × (強化等級 / 20)^1.2
-            const enchantRatio = enchantLevel / 20;
+            // 強化加成 = 基礎分 × (純強化等級 / 20)^1.2
+            const enchantRatio = pureEnchantLevel / 20;
             const enchantBonus = baseScore * Math.pow(enchantRatio, 1.2);
 
             // 突破加成 = 基礎分 × (突破等級 / 5)^1.5
@@ -254,8 +256,8 @@ function calculateEquipmentRarityScore(itemDetails) {
                 name: d.name,
                 dragonType: info.name,
                 baseScore: baseScore,
-                enchantLevel: totalEnchant,  // 顯示用：強化+突破總和
-                pureEnchantLevel: enchantLevel,  // 分析用：純強化等級
+                enchantLevel: totalEnchant,  // 顯示用：顯示總合等級
+                pureEnchantLevel: pureEnchantLevel,  // 分析用：純強化等級
                 exceedLevel: exceedLevel,
                 isShining: info.isShining,
                 enchantBonus: Math.round(enchantBonus * 10) / 10,
@@ -271,10 +273,11 @@ function calculateEquipmentRarityScore(itemDetails) {
     details.sort((a, b) => b.score - a.score);
 
     // 返回總分（用於最終評分計算）
-    // 滿分：12件神話+20+5突破閃耀 = 12 × 32 = 384分
+    // 滿分修正：540分 (武防8 + 可突破飾品8 + 不可突破飾品4 = 20件)
+    // 依據 calculateEquipmentScore 的基準
     return {
         score: totalConvertedScore,  // 總分
-        maxScore: 384,  // 滿分
+        maxScore: 540,  // 滿分
         rawScore: totalRawScore,  // 原始總分（同總分）
         details: details
     };
@@ -449,6 +452,7 @@ function calculateBoardScore(boardData) {
     return {
         score: finalScore,        // 加權後的總分
         rawScore: totalNodes,     // 原始總板塊數
+        maxRawScore: maxNodes,    // 總節點上限
         maxScore: 15,             // 滿分
         totalBoards: totalNodes,  // 總板塊數 (相容性)
         details: details
@@ -510,6 +514,7 @@ function calculatePetInsightScore(petInsight) {
         score: finalScore,      // 最終分數 (0-20)
         maxScore: 20,           // 滿分
         totalClean: rawScore,   // 達成種類數 (0-8)
+        maxRawScore: 8,         // 達成種類上限
         level3Count: totalLevel3,
         level4Count: totalLevel4,
         details: details
@@ -719,6 +724,8 @@ function calculateEquipmentScore(itemDetails, boardData, petInsight, skillData, 
             board: {
                 score: boardConverted,
                 maxScore: 15,
+                rawScore: board.rawScore,
+                maxRawScore: board.maxRawScore,
                 totalBoards: board.totalBoards,
                 details: board.details
             },
@@ -726,6 +733,7 @@ function calculateEquipmentScore(itemDetails, boardData, petInsight, skillData, 
                 score: petConverted,
                 maxScore: 20,
                 totalClean: petInsightResult.totalClean,
+                maxRawScore: petInsightResult.maxRawScore,
                 details: petInsightResult.details
             },
             stigma: {
@@ -740,6 +748,7 @@ function calculateEquipmentScore(itemDetails, boardData, petInsight, skillData, 
                 score: titleConverted,
                 maxScore: 5,
                 ownedCount: title.ownedCount,
+                maxRawScore: title.totalCount || 400,
                 totalCount: title.totalCount || 400
             }
         }
@@ -750,211 +759,243 @@ function calculateEquipmentScore(itemDetails, boardData, petInsight, skillData, 
 
     return result;
 }
-// 獲取評分分析建議 (優先考量突破與核心進度)
+// 獲取評分分析建議 (基於新評分系統: 裝備30分+板塊15分+寵物20分+技能30分+稱號5分)
+// 獲取評分分析建議 (基於新評分系統: 裝備30分+板塊15分+寵物20分+技能30分+稱號5分)
 function getScoreAnalysis(breakdown) {
     const suggestions = [];
+    if (!breakdown) return suggestions;
 
-    // 1. 裝備強度分析 (階段性突破目標)
-    const equipDetails = breakdown.rarity.details || [];
+    // === 1. 裝備強度分析 (30分,基於指數加權系統) ===
+    const rarity = breakdown.rarity || { score: 0, maxScore: 30, details: [] };
+    const equipScore = rarity.score || 0;
+    const equipMaxScore = 30; // 固定為 30 分
+    const equipPercentage = (equipScore / equipMaxScore) * 100;
+    const equipDetails = Array.isArray(rarity.details) ? rarity.details : [];
 
-    // 統計全身裝備的強化與突破狀況（不分品階）
+    // 統計裝備狀況
     let totalEquipCount = 0;
-    let underEnchant10 = 0;  // 未達 +10
-    let breakthroughCount = 0;  // 有突破的件數（任意等級）
-    let breakthrough2Count = 0;  // 突破達 +2 的件數
-    let breakthrough5Count = 0;  // 突破達 +5 的件數
+    let mythicCount = 0;
+    let legendaryCount = 0;
+    let underEnchant15 = 0;
+    let underEnchant20 = 0;
+    let breakthroughCount = 0;
+    let breakthrough5Count = 0;
+    let shiningCount = 0;
 
     equipDetails.forEach(item => {
-        // 排除古文石（古文石不計入裝備統計）
+        if (!item) return;
         const itemName = item.name || '';
-        const isMagicStone = itemName.includes('古文石');
-        if (isMagicStone) return;
+        // 排除非裝備類
+        if (itemName.includes('古文石') || itemName.includes('護身符')) return;
 
-        // equipDetails 已經過濾過了，包含所有武防和飾品
         totalEquipCount++;
-        const pureEnchantLv = item.pureEnchantLevel || 0;
-        const exceedLv = item.exceedLevel || 0;
+        if (item.rarityKey === 'mythic' || (item.name && (item.name.includes('神話') || item.name.includes('古代')))) mythicCount++;
+        if (item.rarityKey === 'legendary') legendaryCount++;
+        if (item.isShining) shiningCount++;
 
-        if (pureEnchantLv < 10) underEnchant10++;
-        if (exceedLv > 0) breakthroughCount++;
-        if (exceedLv >= 2) breakthrough2Count++;
-        if (exceedLv >= 5) breakthrough5Count++;
+        const pureEnchant = item.pureEnchantLevel || 0;
+        const exceed = item.exceedLevel || 0;
+
+        if (pureEnchant < 15) underEnchant15++;
+        if (pureEnchant < 20) underEnchant20++;
+        if (exceed > 0) breakthroughCount++;
+        if (exceed >= 5) breakthrough5Count++;
     });
 
-    // 階段性目標判定
-    // 階段 1：80% 裝備 +10 + 2 件突破 +2
-    const enchant10Rate = totalEquipCount > 0 ? (totalEquipCount - underEnchant10) / totalEquipCount : 0;
+    // 裝備建議邏輯
+    const breakableTarget = 16; // 核心可突破裝備目標數 (武防8+飾品8)
 
-    if (enchant10Rate < 0.8 || breakthrough2Count < 2) {
-        let desc = '';
-        if (enchant10Rate < 0.8 && breakthrough2Count < 2) {
-            desc = `目前有 ${underEnchant10} 件裝備未達 +10（${totalEquipCount} 件中），且僅有 ${breakthrough2Count} 件達到突破 +2。建議先將 80% 以上裝備強化至 +10，並至少完成 2 件裝備的突破 +2。`;
-        } else if (enchant10Rate < 0.8) {
-            desc = `目前有 ${underEnchant10} 件裝備未達 +10（${totalEquipCount} 件中）。建議優先將 80% 以上裝備強化至 +10 以建立基礎戰力。`;
-        } else {
-            desc = `目前僅有 ${breakthrough2Count} 件裝備達到突破 +2。建議至少完成 2 件核心部位（武器、胸甲）的突破 +2。`;
-        }
-
+    if (equipPercentage < 50) {
+        // 低於50%: 品階與基礎強化問題
         suggestions.push({
-            title: '🎯 階段一：建立基礎',
-            desc: desc,
+            title: '🎯 裝備基礎建設',
+            desc: `裝備評分僅 <b style="color: #ffd700;">${equipScore.toFixed(1)}</b>/30 (<b style="color: #ffd700;">${equipPercentage.toFixed(0)}%</b>)。建議優先：<br>1. 將主要裝備升級至「神話」或「傳說」品階<br>2. 全身裝備強化至 +15 以上<br>3. 神話裝備 <b style="color: #ffd700;">${mythicCount}</b>/<b style="color: #ffd700;">${totalEquipCount}</b> 件，建議至少 10 件`,
             priority: '高'
         });
-    }
-    // 階段 2：4 件以上突破，目標 10 件突破 +2
-    else if (breakthroughCount < 4 || breakthrough2Count < 10) {
-        let desc = '';
-        if (breakthroughCount < 4) {
-            desc = `目前僅有 ${breakthroughCount} 件裝備有突破。建議優先將更多裝備進行突破，目標是至少 10 件達到突破 +2。`;
-        } else {
-            desc = `目前有 ${breakthrough2Count} 件裝備達到突破 +2（目標 10 件）。建議持續擴展突破裝備的數量，全面提升戰力。`;
-        }
-
+    } else if (equipPercentage < 70) {
+        // 50-70%: 強化與突破問題
         suggestions.push({
-            title: '� 階段二：擴展突破',
-            desc: desc,
+            title: '⚡ 裝備強化進階',
+            desc: `裝備評分 <b style="color: #ffd700;">${equipScore.toFixed(1)}</b>/30 (<b style="color: #ffd700;">${equipPercentage.toFixed(0)}%</b>)。建議：<br>1. 將核心裝備強化至 +20 (目前 <b style="color: #ffd700;">${Math.max(0, totalEquipCount - underEnchant20)}</b> 件達標)<br>2. 開始進行突破強化 (目前 <b style="color: #ffd700;">${breakthroughCount}</b> 件有突破)<br>3. 優先突破武器、胸甲等核心部位`,
             priority: '高'
         });
-    }
-    // 階段 3：10 件以上突破 +2，目標突破 +5
-    else if (breakthrough2Count >= 10 && breakthrough5Count < 6) {
+    } else if (equipPercentage < 85) {
+        // 70-85%: 突破深化
         suggestions.push({
-            title: '� 階段三：追求極限',
-            desc: `已有 ${breakthrough2Count} 件裝備達到突破 +2，目前有 ${breakthrough5Count} 件達到突破 +5。建議開始將核心裝備推向突破 +5，進入頂尖水準。`,
+            title: '🚀 裝備突破深化',
+            desc: `裝備評分 <b style="color: #ffd700;">${equipScore.toFixed(1)}</b>/30 (<b style="color: #ffd700;">${equipPercentage.toFixed(0)}%</b>)。建議：<br>1. 擴大突破裝備數量 (目前 <b style="color: #ffd700;">${breakthroughCount}</b>/<b style="color: #ffd700;">${totalEquipCount}</b> 件)<br>2. 將核心裝備推向突破 +5 (目前 <b style="color: #ffd700;">${breakthrough5Count}</b> 件)<br>3. 尋找閃耀裝備以獲得額外加成`,
             priority: '中'
         });
-    }
-
-    // 2. 板塊分析 (先核心四板)
-    const boardDetails = breakdown.board.details || [];
-    const core4Names = ['奈薩肯', '吉凱爾', '白傑爾', '崔妮爾'];
-    const advancedNames = ['艾瑞爾', '阿斯佩爾'];
-
-    let core4Completion = 0;
-    let core4Count = 0;
-    let advancedCompletion = 0;
-    let advancedCount = 0;
-
-    boardDetails.forEach(b => {
-        const name = b.name || '';
-        const isCore = core4Names.some(cn => name.includes(cn));
-        const isAdvanced = advancedNames.some(an => name.includes(an));
-        const progress = b.max > 0 ? (b.count / b.max) : 0;
-
-        if (isCore) {
-            core4Completion += progress;
-            core4Count++;
-        } else if (isAdvanced) {
-            advancedCompletion += progress;
-            advancedCount++;
-        }
-    });
-
-    const avgCore4 = core4Count > 0 ? core4Completion / core4Count : 0;
-    const avgAdvanced = advancedCount > 0 ? advancedCompletion / advancedCount : 0;
-
-    if (avgCore4 < 0.8) {
+    } else if (equipPercentage < 95) {
+        // 85-95%: 極限優化
         suggestions.push({
-            title: '📋 板塊核心',
-            desc: '前四個板塊（奈薩肯至崔妮爾）是奠定基礎的重點，建議優先將這四個解鎖至 80% 以上。',
-            priority: '高'
-        });
-    } else if (avgAdvanced < 0.6) {
-        suggestions.push({
-            title: '📋 板塊進階',
-            desc: '核心板塊已達標！建議開始衝刺「艾瑞爾」與「阿斯佩爾」，以獲取頂級的屬性加成。',
-            priority: '中'
-        });
-    }
-
-    // 3. 寵物分析
-    if (breakdown.petInsight.score < 14) {
-        suggestions.push({
-            title: '🐾 寵物探險',
-            desc: '寵物理解度的 L3/L4 達成率尚有提升空間。請確保探險隊產出，優先達成單一類別的全 L3。',
-            priority: '中'
-        });
-    }
-
-    // 4. 技能分析（4 招核心技能即可）
-    if (breakdown.stigma.score < 24) {
-        const currentIntensity = breakdown.stigma.totalPoints || 0;
-        suggestions.push({
-            title: '⚔️ 技能烙印',
-            desc: `目前技能強度為 ${currentIntensity}/1200。建議將 4 招常用核心技能烙印至 Lv.20（總強度 400），即可達到 80% 分數，無需全滿。`,
+            title: '💎 裝備極限優化',
+            desc: `裝備評分 <b style="color: #ffd700;">${equipScore.toFixed(1)}</b>/30 (<b style="color: #ffd700;">${equipPercentage.toFixed(0)}%</b>)，已達高水準！建議：<br>1. 將所有可突破裝備推向 +5 (目標 <b style="color: #ffd700;">${breakableTarget}</b> 件，目前 <b style="color: #ffd700;">${breakthrough5Count}</b> 件)<br>2. 追求全身神話+閃耀組合<br>3. 優化飾品品階與突破等級`,
             priority: '低'
         });
-    }
-
-
-    // 5. 稱號分析
-    if (breakdown.title.score < 4) {
-        const currentCount = breakdown.title.ownedCount;
-        const targetCount = Math.floor(breakdown.title.totalCount * 0.5);
-        suggestions.push({
-            title: '🏅 稱號蒐集',
-            desc: `目前稱號數量 (${currentCount}) 尚未達標一半 (${targetCount})。達成 50% 總量即可拿滿 80% 分數。`,
-            priority: '低'
-        });
-    } else if (breakdown.title.score >= 4.8) {
-        // 接近滿分（96%+）
-        suggestions.push({
-            title: '🏆 稱號大師',
-            desc: `稱號收集已達頂尖水準！目前擁有 ${breakdown.title.ownedCount} 個稱號，已超越絕大多數玩家。`,
-            priority: '無'
-        });
-    }
-
-    // === 各項目完美狀態判定 ===
-
-    // 裝備完美：10 件以上突破 +2，且 6 件以上突破 +5
-    if (breakthrough2Count >= 10 && breakthrough5Count >= 6) {
+    } else {
+        // 95%+: 完美
         suggestions.push({
             title: '⚔️ 裝備巔峰',
-            desc: `裝備已達頂尖！，${breakthrough5Count} 件突破 +5，屬於全服前段班水準。`,
+            desc: `裝備評分 <b style="color: #ffd700;">${equipScore.toFixed(1)}</b>/30 (<b style="color: #ffd700;">${equipPercentage.toFixed(0)}%</b>)，已達頂尖水準！${breakthrough5Count >= breakableTarget ? '全身核心裝備突破 +5，' : ''}屬於全服前段班。`,
             priority: '無'
         });
     }
 
-    // 板塊完美：核心四板 >= 95% 且進階兩板 >= 80%
-    if (avgCore4 >= 0.95 && avgAdvanced >= 0.8) {
+    // === 2. 板塊分析 (15分,權重計算) ===
+    const board = breakdown.board || { score: 0, details: [] };
+    const boardScore = board.score || 0;
+    const boardPercentage = (boardScore / 15) * 100;
+
+    if (boardPercentage < 60) {
         suggestions.push({
-            title: '📋 板塊完成',
-            desc: '板塊進度已達極致！核心與進階板塊皆已高度完成。',
+            title: '📋 板塊核心建設',
+            desc: `板塊評分 <b style="color: #ffd700;">${boardScore.toFixed(1)}</b>/15 (<b style="color: #ffd700;">${boardPercentage.toFixed(0)}%</b>)。優先解鎖前四板塊（奈薩肯、吉凱爾、白傑爾、崔妮爾）至 80% 以上，這是性價比最高的選擇。`,
+            priority: '高'
+        });
+    } else if (boardPercentage < 80) {
+        suggestions.push({
+            title: '📋 板塊進階衝刺',
+            desc: `板塊評分 <b style="color: #ffd700;">${boardScore.toFixed(1)}</b>/15 (<b style="color: #ffd700;">${boardPercentage.toFixed(0)}%</b>)。核心四板已有基礎，建議開始挑戰「艾瑞爾」與「阿斯佩爾」以獲取高權重加成。`,
+            priority: '中'
+        });
+    } else if (boardPercentage < 95) {
+        suggestions.push({
+            title: '📋 板塊完善',
+            desc: `板塊評分 <b style="color: #ffd700;">${boardScore.toFixed(1)}</b>/15 (<b style="color: #ffd700;">${boardPercentage.toFixed(0)}%</b>)。建議將所有板塊推向 100% 完成度以榨取最後的屬性加成。`,
+            priority: '低'
+        });
+    } else {
+        suggestions.push({
+            title: '📋 板塊大師',
+            desc: `板塊評分 <b style="color: #ffd700;">${boardScore.toFixed(1)}</b>/15 (<b style="color: #ffd700;">${boardPercentage.toFixed(0)}%</b>)，六大板塊已臻完美！`,
             priority: '無'
         });
     }
 
-    // 寵物完美：分數 >= 18（90%）
-    if (breakdown.petInsight.score >= 18) {
+    // === 3. 寵物理解度分析 (20分,8種理解度) ===
+    const pet = breakdown.petInsight || { score: 0, totalClean: 0 };
+    const petScore = pet.score || 0;
+    const petPercentage = (petScore / 20) * 100;
+    const petClean = pet.totalClean || 0;
+
+    if (petPercentage < 50) {
+        suggestions.push({
+            title: '🐾 寵物探險啟動',
+            desc: `寵物評分 <b style="color: #ffd700;">${petScore.toFixed(1)}</b>/20 (<b style="color: #ffd700;">${petPercentage.toFixed(0)}%</b>)。建議持續派遣探險隊，優先將單一類別（智慧/野性/自然/變身）的所有寵物提升至 L3。`,
+            priority: '中'
+        });
+    } else if (petPercentage < 80) {
+        suggestions.push({
+            title: '🐾 寵物深化培養',
+            desc: `寵物評分 <b style="color: #ffd700;">${petScore.toFixed(1)}</b>/20 (<b style="color: #ffd700;">${petPercentage.toFixed(0)}%</b>)。建議將更多寵物推向 L4，並平衡發展四大類別以最大化評分。`,
+            priority: '中'
+        });
+    } else if (petPercentage < 95) {
         suggestions.push({
             title: '🐾 寵物精通',
-            desc: '寵物等級已達90%總數LV4以上！請持續精進自己的寵物理解度。',
+            desc: `寵物評分 <b style="color: #ffd700;">${petScore.toFixed(1)}</b>/20 (<b style="color: #ffd700;">${petPercentage.toFixed(0)}%</b>)。已達成 <b style="color: #ffd700;">${petClean.toFixed(1)}</b>/8 階，繼續完善剩餘類別即可滿分。`,
+            priority: '低'
+        });
+    } else {
+        suggestions.push({
+            title: '🐾 寵物大師',
+            desc: `寵物評分 <b style="color: #ffd700;">${petScore.toFixed(1)}</b>/20 (<b style="color: #ffd700;">${petPercentage.toFixed(0)}%</b>)，寵物理解度已達巔峰！`,
             priority: '無'
         });
     }
 
-    // 技能完美：分數 >= 27（90%）
-    if (breakdown.stigma.score >= 27) {
+    // === 4. 技能烙印分析 (30分,階梯式積分) ===
+    const stigma = breakdown.stigma || { score: 0, totalPoints: 0 };
+    const stigmaScore = stigma.score || 0;
+    const stigmaIntensity = stigma.totalPoints || 0;
+    const stigmaPercentage = (stigmaScore / 30) * 100;
+
+    if (stigmaPercentage < 80) {
+        // 低於24分(80%)
+        const target = 400; // 核心目標強度
+        const remaining = Math.max(0, target - stigmaIntensity);
+        suggestions.push({
+            title: '⚔️ 技能烙印核心',
+            desc: `技能評分 <b style="color: #ffd700;">${stigmaScore.toFixed(1)}</b>/30 (<b style="color: #ffd700;">${stigmaPercentage.toFixed(0)}%</b>)，當前強度 <b style="color: #ffd700;">${stigmaIntensity}</b>/1200。建議將 4 招常用核心技能烙印至 Lv.20（總強度 400），即可達到 24 分（80%），${remaining > 0 ? `還需 <b style="color: #ffd700;">${remaining}</b> 強度` : '已達核心目標'}。`,
+            priority: stigmaPercentage < 50 ? '高' : '中'
+        });
+    } else if (stigmaPercentage < 95) {
+        // 24-28.5分
+        suggestions.push({
+            title: '⚔️ 技能烙印進階',
+            desc: `技能評分 <b style="color: #ffd700;">${stigmaScore.toFixed(1)}</b>/30 (<b style="color: #ffd700;">${stigmaPercentage.toFixed(0)}%</b>)，當前強度 <b style="color: #ffd700;">${stigmaIntensity}</b>/1200。核心技能已達標，可繼續提升更多技能至 Lv.20 以追求滿分（需 1200 強度）。`,
+            priority: '低'
+        });
+    } else {
         suggestions.push({
             title: '⚔️ 烙印大師',
-            desc: '您擁有4個LV20技能烙印，強度分數超越 90%，可持續加強拿滿12個LV20烙印技能。',
+            desc: `技能評分 <b style="color: #ffd700;">${stigmaScore.toFixed(1)}</b>/30 (<b style="color: #ffd700;">${stigmaPercentage.toFixed(0)}%</b>)，技能烙印已達頂尖水準！`,
             priority: '無'
         });
     }
 
-    // 最終判定：所有項目都完美才顯示
-    const isPerfectEquip = breakthrough2Count >= 10 && breakthrough5Count >= 6;
-    const isPerfectBoard = avgCore4 >= 0.95 && avgAdvanced >= 0.8;
-    const isPerfectPet = breakdown.petInsight.score >= 18;
-    const isPerfectSkill = breakdown.stigma.score >= 27;
-    const isPerfectTitle = breakdown.title.score >= 4.8;
+    // === 5. 稱號分析 (5分,分段權重) ===
+    const title = breakdown.title || { score: 0, ownedCount: 0, totalCount: 400 };
+    const titleScore = title.score || 0;
+    const titleCount = title.ownedCount || 0;
+    const titleTotal = title.totalCount || 400;
+    const titlePercentage = (titleScore / 5) * 100;
 
-    if (isPerfectEquip && isPerfectBoard && isPerfectPet && isPerfectSkill && isPerfectTitle) {
+    if (titlePercentage < 80) {
+        // 低於4分
+        const target = Math.floor(titleTotal * 0.5);
         suggestions.push({
-            title: '👑 完美機體',
-            desc: '恭喜！您的機體已全面達到頂尖水準，裝備、板塊、寵物、技能、稱號皆已臻至完美，屬於全服最強梯隊！',
+            title: '🏅 稱號蒐集',
+            desc: `稱號評分 <b style="color: #ffd700;">${titleScore.toFixed(1)}</b>/5 (<b style="color: #ffd700;">${titlePercentage.toFixed(0)}%</b>)，當前 <b style="color: #ffd700;">${titleCount}</b>/${titleTotal} 個。達成 50% (<b style="color: #ffd700;">${target}</b> 個) 即可獲得 4 分（80%），這是性價比最高的目標。`,
+            priority: '低'
+        });
+    } else if (titlePercentage < 95) {
+        suggestions.push({
+            title: '🏅 稱號收藏家',
+            desc: `稱號評分 <b style="color: #ffd700;">${titleScore.toFixed(1)}</b>/5 (<b style="color: #ffd700;">${titlePercentage.toFixed(0)}%</b>)，當前 <b style="color: #ffd700;">${titleCount}</b>/${titleTotal} 個。繼續收集稀有稱號以達到滿分。`,
+            priority: '低'
+        });
+    } else {
+        suggestions.push({
+            title: '🏆 稱號大師',
+            desc: `稱號評分 <b style="color: #ffd700;">${titleScore.toFixed(1)}</b>/5 (<b style="color: #ffd700;">${titlePercentage.toFixed(0)}%</b>)，稱號收集已超越絕大多數玩家！`,
             priority: '無'
+        });
+    }
+
+    // === 6. 綜合評價 ===
+    const totalScore = (equipScore + boardScore + petScore + stigmaScore + titleScore);
+
+    if (totalScore >= 95) {
+        suggestions.unshift({
+            title: '👑 完美機體',
+            desc: `總評分 <b style="color: #ffd700;">${totalScore.toFixed(1)}</b>/100，您的機體已全面達到頂尖水準，裝備、板塊、寵物、技能、稱號皆已臻至完美，屬於全服最強梯隊！`,
+            priority: '無'
+        });
+    } else if (totalScore >= 85) {
+        suggestions.unshift({
+            title: '🌟 精英水準',
+            desc: `總評分 <b style="color: #ffd700;">${totalScore.toFixed(1)}</b>/100，您的機體已達精英水準，繼續優化弱項即可邁向完美！`,
+            priority: '無'
+        });
+    } else if (totalScore >= 70) {
+        suggestions.unshift({
+            title: '💪 穩健發展',
+            desc: `總評分 <b style="color: #ffd700;">${totalScore.toFixed(1)}</b>/100，機體發展穩健，建議優先提升評分較低的項目以快速提升總分。`,
+            priority: '無'
+        });
+    } else if (totalScore >= 50) {
+        suggestions.unshift({
+            title: '🔧 成長階段',
+            desc: `總評分 <b style="color: #ffd700;">${totalScore.toFixed(1)}</b>/100，您的機體還有很大的成長空間。建議從裝備強化和板塊解鎖開始，這兩項是提升戰力最快的途徑！`,
+            priority: '高'
+        });
+    } else {
+        suggestions.unshift({
+            title: '🌱 新手起步',
+            desc: `總評分 <b style="color: #ffd700;">${totalScore.toFixed(1)}</b>/100，歡迎來到永恆之塔！建議優先將主要裝備提升至+15，並開始解鎖板塊。`,
+            priority: '高'
         });
     }
 

@@ -957,7 +957,7 @@
 
         .rank-grid-new {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            grid-template-columns: repeat(4, 1fr);
             gap: 10px;
             margin-bottom: 20px;
         }
@@ -2030,7 +2030,7 @@
                     <div class="stats-source-wrapper"
                         style="display:flex; gap:15px; align-items:stretch; flex-direction:column;">
                         <div class="card" style="flex:1;">
-                            <h3>📊 綜合評分</h3>
+                            <h3>📊 角色裝備成型度</h3>
                             <div id="equip-source-grid"></div>
                             「職業不同、實戰價值」會影響評分公正性是合理的。
                         </div>
@@ -2530,7 +2530,147 @@
             return getProxyUrl(cleanPath);
         }
 
-        // 獲取品階顏色 (根據使用者最新指定對照表)
+        // 獨立渲染健檢分析 UI 函數
+        function renderHealthCheckUI(analysis) {
+            const container = document.getElementById('health-check-container');
+            if (!container) return; // 容錯
+
+            if (!analysis || !Array.isArray(analysis) || analysis.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #8b949e;">
+                        <div style="font-size: 40px; margin-bottom: 10px;">🤔</div>
+                        <div>暫無分析資料</div>
+                    </div>
+                `;
+                return;
+            }
+
+            const mainReview = analysis[0];
+            const suggestions = analysis.slice(1);
+            let html = '';
+
+            // 1. 總評卡片 (Premium UI)
+            if (mainReview) {
+                html += `
+                    <div style="
+                        background: radial-gradient(circle at top right, rgba(255, 215, 0, 0.1), transparent 40%), 
+                                    linear-gradient(180deg, rgba(30, 30, 40, 0.8) 0%, rgba(20, 20, 30, 0.95) 100%);
+                        border: 1px solid rgba(255, 215, 0, 0.3);
+                        box-shadow: 0 4px 20px rgba(0,0,0,0.5), inset 0 0 30px rgba(255, 215, 0, 0.05);
+                        border-radius: 12px;
+                        padding: 25px;
+                        margin-bottom: 25px;
+                        position: relative;
+                        overflow: hidden;
+                    ">
+                        <div style="position: relative; z-index: 2;">
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+                                <span style="font-size: 24px;">📝</span>
+                                <span style="font-size: 20px; font-weight: bold; color: var(--gold-bright); letter-spacing: 1px;">${mainReview.title || '綜合評價'}</span>
+                            </div>
+                            <div style="
+                                font-size: 14px; 
+                                color: #e0e0e0; 
+                                line-height: 1.7; 
+                                padding: 15px; 
+                                background: rgba(255, 255, 255, 0.05); 
+                                border-radius: 8px; 
+                                border-left: 3px solid var(--gold);
+                            ">
+                                ${mainReview.desc || '暫無描述'}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // 2. 建議列表
+            if (suggestions.length > 0) {
+                html += `
+                    <div style="margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between;">
+                        <span style="font-size: 16px; font-weight: bold; color: #fff;">📋 優化建議項目</span>
+                        <span style="font-size: 12px; color: #8b949e;">共 ${suggestions.length} 項</span>
+                    </div>
+                    <div style="display: grid; gap: 12px;">
+                `;
+
+                suggestions.forEach(item => {
+                    if (!item) return;
+
+                    // 根據優先級設定顏色與圖標
+                    let borderColor = '#3498db'; // 藍 (低)
+                    let bgGradient = 'linear-gradient(90deg, rgba(52, 152, 219, 0.1), transparent)';
+                    let icon = '💡';
+                    let badgeText = '建議';
+                    let badgeColor = '#3498db';
+
+                    if (item.priority === '高') {
+                        borderColor = '#e74c3c'; // 紅
+                        bgGradient = 'linear-gradient(90deg, rgba(231, 76, 60, 0.15), transparent)';
+                        icon = '🔥';
+                        badgeText = '優先改善';
+                        badgeColor = '#ff6b6b';
+                    } else if (item.priority === '中') {
+                        borderColor = '#f1c40f'; // 黃
+                        bgGradient = 'linear-gradient(90deg, rgba(241, 196, 15, 0.1), transparent)';
+                        icon = '⚡';
+                        badgeText = '推薦調整';
+                        badgeColor = '#f1c40f';
+                    } else if (item.priority === '無' || item.priority === '完成') {
+                        borderColor = '#2ecc71'; // 綠
+                        bgGradient = 'linear-gradient(90deg, rgba(46, 204, 113, 0.1), transparent)';
+                        icon = '✅';
+                        badgeText = '已達成';
+                        badgeColor = '#2ecc71';
+                    }
+
+                    html += `
+                        <div style="
+                            background: ${bgGradient};
+                            border-left: 4px solid ${borderColor};
+                            border-radius: 6px;
+                            padding: 15px;
+                            border-top: 1px solid rgba(255,255,255,0.05);
+                            border-right: 1px solid rgba(255,255,255,0.05);
+                            border-bottom: 1px solid rgba(255,255,255,0.05);
+                            transition: transform 0.2s;
+                        " onmouseover="this.style.transform='translateX(3px)'" onmouseout="this.style.transform='translateX(0)'">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <span style="font-size: 18px;">${icon}</span>
+                                    <span style="font-weight: bold; color: #fff; font-size: 15px;">${item.title}</span>
+                                </div>
+                                <span style="
+                                    font-size: 10px; 
+                                    padding: 2px 8px; 
+                                    border-radius: 10px; 
+                                    background: rgba(0,0,0,0.3); 
+                                    color: ${badgeColor}; 
+                                    border: 1px solid ${borderColor};
+                                    white-space: nowrap;
+                                ">${badgeText}</span>
+                            </div>
+                            <div style="font-size: 13px; color: #b0b8c3; line-height: 1.5; padding-left: 4px;">
+                                ${item.desc}
+                            </div>
+                        </div>
+                    `;
+                });
+
+                html += '</div>';
+            } else {
+                html += `
+                    <div style="text-align: center; padding: 30px; background: rgba(255,255,255,0.02); border-radius: 8px;">
+                        <span style="font-size: 30px;">🎉</span>
+                        <div style="margin-top: 10px; color: #2ecc71;">完美無瑕！目前沒有其他優化建議。</div>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = html;
+        }
+
+
         function getGradeColor(grade) {
             if (!grade) return '#ffffff';
             const g = String(grade).toLowerCase();
@@ -3710,13 +3850,22 @@
                 <div style="display: flex; border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2);">
                     <button id="btn-tab-score-1" class="score-tab-btn" onclick="switchScoreTab('tab-score-1')" style="flex: 1; padding: 12px 5px; border: none; background: transparent; color: var(--gold); border-bottom: 2px solid var(--gold); cursor: pointer; font-weight: bold; font-size: 13px;">📊 綜合評分</button>
                     <button id="btn-tab-score-2" class="score-tab-btn" onclick="switchScoreTab('tab-score-2')" style="flex: 1; padding: 12px 5px; border: none; background: transparent; color: #8b949e; border-bottom: 2px solid transparent; cursor: pointer; font-weight: bold; font-size: 13px;">📝 計算明細</button>
-                    <button id="btn-tab-score-3" class="score-tab-btn" onclick="switchScoreTab('tab-score-3')" style="flex: 1; padding: 12px 5px; border: none; background: transparent; color: #8b949e; border-bottom: 2px solid transparent; cursor: pointer; font-weight: bold; font-size: 13px;">💡 健檢分析</button>
+                    <button id="btn-tab-score-3" class="score-tab-btn" onclick="switchScoreTab('tab-score-3-new')" style="flex: 1; padding: 12px 5px; border: none; background: transparent; color: #8b949e; border-bottom: 2px solid transparent; cursor: pointer; font-weight: bold; font-size: 13px;">💡 健檢分析</button>
                 </div>
 
-                <!-- 分頁 1: 個人裝備成型度 (原本的主視覺) -->
+                <!-- 分頁 1: 個人裝備成型度 (保持原樣，僅替換列表) -->
                 <div id="tab-score-1" class="score-tab-content" style="padding: 10px;">
                     <div style="text-align: center; margin-bottom: 15px;">
-                        <div style="font-size: 18px; color: #8b949e; margin-bottom: 10px; font-weight: bold;">🏆 ${data.profile.characterName} 角色裝備成型度</div>
+                        <!-- 增強型角色 ID 顯示 -->
+                        <div style="margin-bottom: 12px; display: flex; flex-direction: column; align-items: center; gap: 5px;">
+                            <div style="font-size: 24px; font-weight: 800; letter-spacing: 1px; line-height: 1.2;">
+                                <span style="background: linear-gradient(180deg, #ffffff 0%, #ffd93d 40%, #ffbb00 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 0 10px rgba(255, 217, 61, 0.4));">
+                                    ${data.profile.characterName}
+                                </span>
+                            </div>
+                           
+                        </div>
+                        <!-- 保持原有大分數顯示 -->
                         <div style="display: flex; align-items: center; justify-content: center; gap: 15px;">
                             <div style="font-size: 52px; font-weight: bold; color: ${gradeColor}; text-shadow: 0 0 20px ${gradeColor}; line-height: 1;">
                                 ${scoreResult.totalScore}
@@ -3725,83 +3874,70 @@
                                 ${scoreResult.grade} 級
                             </span>
                         </div>
-                       
                     </div>
                     
-                    <!-- 進度條 -->
-                    <!-- 進度條 (優化: 文字置中不被切斷) -->
+                    <!-- 保持原有進度條 -->
                     <div style="background: rgba(0,0,0,0.3); border-radius: 10px; height: 24px; overflow: hidden; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.05); position: relative;">
-                        <!-- 背景條/填充條 -->
                         <div style="background: linear-gradient(90deg, ${gradeColor}, ${gradeColor}aa); height: 100%; width: ${scoreResult.percentage}%; transition: width 0.5s ease; position: absolute; top: 0; left: 0;"></div>
-                        <!-- 文字層 (永遠置中) -->
                         <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; color: #fff; text-shadow: 0 0 2px rgba(0,0,0,0.8); z-index: 2;">
                             達標率 ${scoreResult.percentage}%
                         </div>
                     </div>
                     
-                    <!-- 雷達圖 (移至此處) -->
+                    <!-- 保持原有雷達圖 -->
                     <div style="background: rgba(0,0,0,0.2); border-radius: 12px; padding: 15px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.05);">
                         <div style="text-align: center; margin-bottom: 10px; color: var(--gold); font-size: 14px; font-weight: bold;">📊 能力分佈雷達圖</div>
                         <div style="max-height: 350px; display:flex; justify-content:center;">
                             <canvas id="radarChart"></canvas>
                         </div>
                     </div>
-                      <!-- 項目細節列表 (移至首頁) -->
-                    <div style="font-size: 14px; color: #bdc3c7; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 6px; margin-bottom: 10px;">
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px; border-bottom: 1px dashed rgba(255,255,255,0.1); padding-bottom: 5px;">
-                            <span>🔎 項目細節</span>
-                            <span>得分 / 上限</span>
+
+                    <!-- 替換原本的項目列表為新設計的「指標彙整表」 -->
+                    <div style="background: rgba(255,217,61,0.08); border: 1px solid rgba(255,217,61,0.2); border-radius: 12px; padding: 14px; margin-bottom: 10px;">
+                        <div style="color: #ffd93d; font-weight: bold; font-size: 14px; margin-bottom: 10px; display: flex; align-items: center; gap: 8px;">
+                            <span>📊 各項指標彙整 (小計/總計/權重)</span>
                         </div>
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                            <span>🔥 裝備強度</span>
-                            <div style="text-align: right;">
-                                <span style="color: #ff6b35; font-weight: bold; font-size: 15px;">
-                                    ${scoreResult.breakdown.rarity.score}
-                                    <span style="font-size: 11px; color: #7f8c8d; opacity: 0.8;">/ ${scoreResult.breakdown.rarity.maxScore}</span>
-                                </span>
-                                <div style="font-size: 10px; color: #7f8c8d; margin-top: -2px;">(${scoreResult.breakdown.rarity.rawScore.toFixed(1)} / 540 分)</div>
-                            </div>
+                        <div style="display: grid; grid-template-columns: 1.5fr 1fr 1fr 1.2fr; gap: 8px; font-size: 11px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 6px; margin-bottom: 8px; color: #8b949e;">
+                            <div style="text-align: left;">判定指標</div>
+                            <div>數值小計</div>
+                            <div>參考總計</div>
+                            <div>最終權重</div>
                         </div>
                         
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                            <span>📋 板塊數量</span>
-                            <div style="text-align: right;">
-                                <span style="color: #3498db; font-weight: bold; font-size: 15px;">
-                                    ${scoreResult.breakdown.board.score}
-                                    <span style="font-size: 10px; color: #7f8c8d; opacity: 0.8;">/ ${scoreResult.breakdown.board.maxScore}</span>
-                                </span>
-                                <div style="font-size: 9px; color: #7f8c8d; margin-top: -2px;">(${scoreResult.breakdown.board.totalBoards} / 684)</div>
-                            </div>
+                        <!-- 項目行 -->
+                        <div style="display: grid; grid-template-columns: 1.5fr 1fr 1fr 1.2fr; gap: 8px; font-size: 12px; text-align: center; align-items: center; margin-bottom: 7px;">
+                            <div style="text-align: left; color: #ff6b35; font-weight: bold;">🔥 裝備強度</div>
+                            <div style="color: #fff;">${scoreResult.breakdown.rarity.rawScore.toFixed(1)}</div>
+                            <div style="color: #8b949e;">540</div>
+                            <div style="color: #ff6b35; font-weight: bold; background: rgba(255,107,53,0.1); border-radius: 4px; padding: 1px 0;">${scoreResult.breakdown.rarity.score} / 30</div>
                         </div>
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                            <span>🐾 寵物數量</span>
-                            <div style="text-align: right;">
-                                <span style="color: #2ecc71; font-weight: bold; font-size: 15px;">
-                                    ${scoreResult.breakdown.petInsight.score}
-                                    <span style="font-size: 10px; color: #7f8c8d; opacity: 0.8;">/ ${scoreResult.breakdown.petInsight.maxScore}</span>
-                                </span>
-                                <div style="font-size: 9px; color: #7f8c8d; margin-top: -2px;">(${scoreResult.breakdown.petInsight.totalClean ? scoreResult.breakdown.petInsight.totalClean.toFixed(1) : 0} / 8 階)</div>
-                            </div>
+
+                        <div style="display: grid; grid-template-columns: 1.5fr 1fr 1fr 1.2fr; gap: 8px; font-size: 12px; text-align: center; align-items: center; margin-bottom: 7px;">
+                            <div style="text-align: left; color: #3498db; font-weight: bold;">📋 板塊完成</div>
+                            <div style="color: #fff;">${scoreResult.breakdown.board.rawScore}</div>
+                            <div style="color: #8b949e;">${scoreResult.breakdown.board.maxRawScore}</div>
+                            <div style="color: #3498db; font-weight: bold; background: rgba(52,152,219,0.1); border-radius: 4px; padding: 1px 0;">${scoreResult.breakdown.board.score} / 15</div>
                         </div>
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                            <span>⚔️ 烙印技能數量</span>
-                            <div style="text-align: right;">
-                                <span style="color: #f39c12; font-weight: bold; font-size: 15px;">
-                                    ${scoreResult.breakdown.stigma.score}
-                                    <span style="font-size: 10px; color: #7f8c8d; opacity: 0.8;">/ ${scoreResult.breakdown.stigma.maxScore}</span>
-                                </span>
-                                <div style="font-size: 9px; color: #7f8c8d; margin-top: -2px;">(${scoreResult.breakdown.stigma.rawScore} / ${scoreResult.breakdown.stigma.maxRawScore} 點)</div>
-                            </div>
+
+                        <div style="display: grid; grid-template-columns: 1.5fr 1fr 1fr 1.2fr; gap: 8px; font-size: 12px; text-align: center; align-items: center; margin-bottom: 7px;">
+                            <div style="text-align: left; color: #2ecc71; font-weight: bold;">🐾 寵物探險</div>
+                            <div style="color: #fff;">${scoreResult.breakdown.petInsight.totalClean.toFixed(1)}</div>
+                            <div style="color: #8b949e;">8</div>
+                            <div style="color: #2ecc71; font-weight: bold; background: rgba(46,204,113,0.1); border-radius: 4px; padding: 1px 0;">${scoreResult.breakdown.petInsight.score} / 20</div>
                         </div>
-                        <div style="display: flex; justify-content: space-between;">
-                            <span>🏅 稱號數量</span>
-                            <div style="text-align: right;">
-                                <span style="color: #9b59b6; font-weight: bold; font-size: 15px;">
-                                    ${scoreResult.breakdown.title.score}
-                                    <span style="font-size: 10px; color: #7f8c8d; opacity: 0.8;">/ ${scoreResult.breakdown.title.maxScore}</span>
-                                </span>
-                                <div style="font-size: 9px; color: #7f8c8d; margin-top: -2px;">(${scoreResult.breakdown.title.ownedCount} / ${scoreResult.breakdown.title.totalCount})</div>
-                            </div>
+
+                        <div style="display: grid; grid-template-columns: 1.5fr 1fr 1fr 1.2fr; gap: 8px; font-size: 12px; text-align: center; align-items: center; margin-bottom: 7px;">
+                            <div style="text-align: left; color: #f39c12; font-weight: bold;">⚔️ 技能烙印</div>
+                            <div style="color: #fff;">${scoreResult.breakdown.stigma.rawScore}</div>
+                            <div style="color: #8b949e;">1200</div>
+                            <div style="color: #f39c12; font-weight: bold; background: rgba(243,156,18,0.1); border-radius: 4px; padding: 1px 0;">${scoreResult.breakdown.stigma.score} / 30</div>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1.5fr 1fr 1fr 1.2fr; gap: 8px; font-size: 12px; text-align: center; align-items: center;">
+                            <div style="text-align: left; color: #9b59b6; font-weight: bold;">🏅 稱號收集</div>
+                            <div style="color: #fff;">${scoreResult.breakdown.title.ownedCount}</div>
+                            <div style="color: #8b949e;">${scoreResult.breakdown.title.maxRawScore}</div>
+                            <div style="color: #9b59b6; font-weight: bold; background: rgba(155,89,182,0.1); border-radius: 4px; padding: 1px 0;">${scoreResult.breakdown.title.score} / 5</div>
                         </div>
                     </div>
                 </div>
@@ -3938,15 +4074,15 @@
                         <div style="display: none; overflow: hidden;">
                             <div style="font-size: 11px; color: #bdc3c7; line-height: 1.6; padding: 8px; background: rgba(0,0,0,0.2); border-radius: 4px; max-height: 400px; overflow-y: auto;">
                                 
-                                <!-- 裝備 -->
-                                <div style="color: #ffd93d; font-weight:bold; margin-bottom: 8px;">🔥 裝備品階</div>
+                                <!-- 裝備詳情 -->
+                                <div style="color: #ffd93d; font-weight:bold; margin-bottom: 8px;">🔥 裝備品階詳情</div>
                                 ${(scoreResult.breakdown.rarity.details || []).map(d => `
                                     <div style="background: rgba(255,255,255,0.05); border-radius: 4px; padding: 6px 8px; margin-bottom: 6px; border-left: 4px solid ${d.color || '#fff'}; display: flex; justify-content: space-between; align-items: center;">
                                         <div>
                                             <div style="color: ${d.color || '#fff'}; font-weight:bold; font-size:12px;">${d.name} <span style="font-size: 10px; opacity:0.7; font-weight:normal;">${d.dragonType}</span></div>
                                             <div style="font-size: 10px; color: #8b949e;">
                                                 基礎:${d.baseScore} | 
-                                                <span style="color: #3498db;">強化(+${d.enchantLevel - d.exceedLevel}):+${d.enchantBonus}</span>
+                                                <span style="color: #3498db;">強化(+${d.pureEnchantLevel}):+${d.enchantBonus}</span>
                                                 ${d.exceedLevel > 0 ? ` | <span style="color: #e74c3c;">突破(+${d.exceedLevel}):+${d.exceedBonus}</span>` : ''}
                                                 ${d.shineBonus > 0 ? ` | <span style="color: #f1c40f;">閃耀:+${d.shineBonus}</span>` : ''}
                                             </div>
@@ -3992,7 +4128,16 @@
                                         </div>
                                     `).join('') || '<div style="color: #7f8c8d;">無板塊數據</div>'}
                                 </div>
-                                <div style="text-align: right; color: #7f8c8d; font-size: 10px; margin-top: 4px;">總計: ${scoreResult.breakdown.board.totalBoards} 個</div>
+                                <div style="margin-top: 8px; border-top: 1px dashed rgba(255,255,255,0.2); padding-top: 6px; display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 4px;">
+                                    <div style="display: flex; align-items: center; gap: 6px;">
+                                        <span style="font-size: 14px;">📋</span>
+                                        <span style="color: #bdc3c7; font-size: 11px;">板塊合計</span>
+                                    </div>
+                                    <div style="text-align: right;">
+                                        <span style="color: #ffd93d; font-weight: bold; font-size: 13px;">${scoreResult.breakdown.board.rawScore} 個板塊</span>
+                                        <span style="color: #3498db; font-size: 12px; margin-left: 6px; font-weight: bold;">➡ ${scoreResult.breakdown.board.score} / 15 分</span>
+                                    </div>
+                                </div>
 
                                 <!-- 寵物 -->
                                 <div style="color: #ffd93d; font-weight:bold; margin: 15px 0 8px 0;">🐾 寵物探險隊 (3/4階佔比)</div>
@@ -4009,6 +4154,16 @@
                                         <div style="font-size:10px; color:#8b949e; text-align:right; margin-top:2px;">(貢獻 ${d.rawScore || 0} 點)</div>
                                     </div>
                                 `}).join('') || '<div style="color: #7f8c8d;">無寵物數據</div>'}
+                                </div>
+                                <div style="margin-top: 8px; border-top: 1px dashed rgba(255,255,255,0.2); padding-top: 6px; display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 4px;">
+                                    <div style="display: flex; align-items: center; gap: 6px;">
+                                        <span style="font-size: 14px;">🐾</span>
+                                        <span style="color: #bdc3c7; font-size: 11px;">寵物合計</span>
+                                    </div>
+                                    <div style="text-align: right;">
+                                        <span style="color: #ffd93d; font-weight: bold; font-size: 13px;">${scoreResult.breakdown.petInsight.totalClean.toFixed(1)} 階</span>
+                                        <span style="color: #2ecc71; font-size: 12px; margin-left: 6px; font-weight: bold;">➡ ${scoreResult.breakdown.petInsight.score} / 20 分</span>
+                                    </div>
                                 </div>
 
                                 <!-- 技能 -->
@@ -4028,21 +4183,36 @@
                                     </div>
                                 `}).join('') || '<div style="color: #7f8c8d;">無技能數據</div>'}
                                 </div>
-                                <div style="text-align: right; margin-top: 4px;">
-                                    <span style="color: #ffd93d; font-weight: bold; font-size: 13px;">總強度: ${scoreResult.breakdown.stigma.rawScore} / 1200</span>
-                                    <span style="color: #ff6b35; font-size: 12px; margin-left: 6px; font-weight: bold;">➡ ${scoreResult.breakdown.stigma.score} / 30 分</span>
+                                <div style="margin-top: 8px; border-top: 1px dashed rgba(255,255,255,0.2); padding-top: 6px; display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 4px;">
+                                    <div style="display: flex; align-items: center; gap: 6px;">
+                                        <span style="font-size: 14px;">⚔️</span>
+                                        <span style="color: #bdc3c7; font-size: 11px;">技能合計</span>
+                                    </div>
+                                    <div style="text-align: right;">
+                                        <span style="color: #ffd93d; font-weight: bold; font-size: 13px;">${scoreResult.breakdown.stigma.rawScore} 強度</span>
+                                        <span style="color: #f39c12; font-size: 12px; margin-left: 6px; font-weight: bold;">➡ ${scoreResult.breakdown.stigma.score} / 30 分</span>
+                                    </div>
                                 </div>
 
                                 <!-- 稱號 -->
-                                <div style="color: #ffd93d; font-weight:bold; margin: 15px 0 8px 0;">🏅 稱號 (量表)</div>
-                                <div style="background: rgba(255,255,255,0.05); border-radius: 4px; padding: 10px; border-left: 4px solid #9b59b6; display: flex; justify-content: space-between; align-items: center;">
+                                <div style="color: #ffd93d; font-weight:bold; margin: 15px 0 8px 0;">🏅 稱號收集</div>
+                                <div style="background: rgba(255,255,255,0.05); border-radius: 4px; padding: 10px; border-left: 4px solid #9b59b6; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                                     <div>
                                         <div style="font-size: 12px; color: #ccc;">擁有數量</div>
                                         <div style="font-size: 16px; font-weight: bold; color: #fff;">${scoreResult.breakdown.title.ownedCount} <span style="font-size:12px; font-weight:normal; color:#888;">/ ${scoreResult.breakdown.title.totalCount}</span></div>
                                     </div>
+                                    <div style="text-align: right; font-size: 10px; color: #8b949e; line-height: 1.4;">
+                                        50% 得 4 分<br>100% 得 5 分
+                                    </div>
+                                </div>
+                                <div style="margin-top: 8px; border-top: 1px dashed rgba(255,255,255,0.2); padding-top: 6px; display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 4px;">
+                                    <div style="display: flex; align-items: center; gap: 6px;">
+                                        <span style="font-size: 14px;">🏅</span>
+                                        <span style="color: #bdc3c7; font-size: 11px;">稱號合計</span>
+                                    </div>
                                     <div style="text-align: right;">
-                                        <div style="font-size: 10px; color: #8b949e;">規則: 達成 50% 總數得 4 分，達成 100% 得 5 分</div>
-                                        <div style="color: #f1c40f; font-weight: bold; font-size: 14px;">+${scoreResult.breakdown.title.score} 分</div>
+                                        <span style="color: #ffd93d; font-weight: bold; font-size: 13px;">${scoreResult.breakdown.title.ownedCount} 個稱號</span>
+                                        <span style="color: #9b59b6; font-size: 12px; margin-left: 6px; font-weight: bold;">➡ ${scoreResult.breakdown.title.score} / 5 分</span>
                                     </div>
                                 </div>
 
@@ -4052,22 +4222,6 @@
 
                 </div>
 
-                <!-- 分頁 3: 健檢分析 -->
-                <div id="tab-score-3" class="score-tab-content" style="display: none; padding: 20px;">
-                    <div style="color: var(--gold); font-size: 16px; font-weight: bold; margin-bottom: 15px; border-bottom: 1px solid rgba(255,217,61,0.2); padding-bottom: 8px;">💡 機體發展建議</div>
-                    <div id="score-analysis-list">
-                        ${getScoreAnalysis(scoreResult.breakdown).map(s => `
-                            <div style="background: rgba(255,255,255,0.05); border-radius: 8px; padding: 12px; margin-bottom: 10px; border-left: 4px solid ${s.priority === '高' ? '#ff4d4d' : (s.priority === '中' ? '#f1c40f' : (s.priority === '低' ? '#3498db' : '#2ecc71'))};">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
-                                    <span style="font-weight: bold; color: #fff;">${s.title}</span>
-                                    <span style="font-size: 10px; padding: 2px 6px; border-radius: 4px; background: ${s.priority === '高' ? 'rgba(255,77,77,0.2)' : (s.priority === '中' ? 'rgba(241,196,15,0.2)' : (s.priority === '低' ? 'rgba(52,152,219,0.2)' : 'rgba(46,204,113,0.2)'))}; color: ${s.priority === '高' ? '#ff4d4d' : (s.priority === '中' ? '#f1c40f' : (s.priority === '低' ? '#3498db' : '#2ecc71'))};">${s.priority}優先級</span>
-                                </div>
-                                <div style="font-size: 13px; color: #bdc3c7; line-height: 1.5;">${s.desc}</div>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-
             </div>`;
 
             let sourceAnalysisHtml = scoreCardHtml;
@@ -4075,10 +4229,37 @@
             // 插入 HTML 到頁面 (專屬容器)
             const equipSourceGridInject = document.getElementById('equip-source-grid');
             if (equipSourceGridInject) {
+                // 1. 注入 Tab 1 & Tab 2 (可能含有結構錯誤)
                 equipSourceGridInject.innerHTML = sourceAnalysisHtml;
-                // 立即渲染雷達圖
+
+                // 2. [FIX] 動態創建並附加 Tab 3 (確保它獨立於前面的 HTML 結構)
+                const tab3Div = document.createElement('div');
+                tab3Div.id = 'tab-score-3-new';
+                tab3Div.className = 'score-tab-content';
+                tab3Div.style.display = 'none';
+                tab3Div.style.padding = '20px';
+                tab3Div.innerHTML = `
+                    <div id="health-check-container" style="min-height: 200px;">
+                        <div style="text-align: center; padding: 40px; color: #8b949e;">
+                            <div style="font-size: 24px; margin-bottom: 10px;">⏳</div>
+                            <div>正在分析機體數據...</div>
+                        </div>
+                    </div>
+                `;
+                equipSourceGridInject.appendChild(tab3Div);
+
+                // 3. 獨立渲染健檢分析 UI
+                setTimeout(() => {
+                    if (typeof renderHealthCheckUI === 'function') {
+                        renderHealthCheckUI(scoreResult.analysis);
+                    }
+                }, 50);
+
+                // 4. 立即渲染雷達圖
                 setTimeout(() => { if (typeof renderRadarChart === 'function') renderRadarChart(); }, 100);
             }
+
+
 
             // 渲染新圖表 (已改為 CSS 渲染，移除 Chart.js 相關代碼)
             // if (sourceStats.armor.total > 0) window.srcArmorChart = drawSourcePie('chart-source-armor', sourceStats.armor);
@@ -4197,10 +4378,10 @@
                         maintainAspectRatio: false,
                         layout: {
                             padding: {
-                                top: 30,
+                                top: 50,
                                 right: 30,
                                 bottom: 0,
-                                left: 0
+                                left: 20
                             }
                         },
                         plugins: {
@@ -4308,7 +4489,7 @@
                     return;
                 }
 
-                const history = rankingData.history;
+                const history = rankingData.history.slice(-5);
                 const labels = [];
                 const ranks = [];
                 const pointColors = [];
@@ -4369,10 +4550,10 @@
                         maintainAspectRatio: false,
                         layout: {
                             padding: {
-                                top: 30,
+                                top: 50,
                                 right: 30,
                                 bottom: 0,
-                                left: 0
+                                left: 20
                             }
                         },
                         plugins: {
@@ -4502,6 +4683,7 @@
         // 簡化: 直接載入同職業
         async function loadClassLeaderboard() {
             const contentEl = document.getElementById('leaderboard-content');
+            if (!contentEl) return; // Prevent error if element missing
 
             // 獲取當前角色的職業與種族
             const currentData = window.__LAST_DATA_JSON__;
@@ -4595,6 +4777,48 @@
                 contentEl.innerHTML = `<div style="text-align:center; color:#f85149; padding: 20px;">載入失敗<br>${error.message}</div>`;
             }
         }
+
+        // --- 全域分頁切換函數 (確保分頁功能正常) ---
+        window.switchScoreTab = function (tabId) {
+            // 1. 隱藏所有分頁內容
+            document.querySelectorAll('.score-tab-content').forEach(el => {
+                el.style.display = 'none';
+            });
+
+            // 2. 移除所有按鈕 active 狀態
+            document.querySelectorAll('.score-tab-btn').forEach(btn => {
+                btn.style.color = '#8b949e';
+                btn.style.borderBottom = '2px solid transparent';
+            });
+
+            // 3. 顯示目標分頁
+            const target = document.getElementById(tabId);
+            if (target) {
+                target.style.display = 'block';
+                // console.log(`Switched to tab: ${tabId}`);
+            } else {
+                console.warn(`Target tab not found: ${tabId}`);
+            }
+
+            // 4. 設定對應按鈕 active 狀態
+            // 假設按鈕 ID命名規則: btn-{tabId}, 但在HTML中我們有點亂, btn-tab-score-3 指向 tab-score-3-new
+            // 所以我們需要反向查找，或者遍歷按鈕看誰的 onclick 包含 tabId
+
+            // 簡單解法：嘗試直接找對應 ID
+            // Case 1: btn-tab-score-1 -> tab-score-1
+            // Case 2: btn-tab-score-3 -> tab-score-3-new (Mismatch!)
+
+            let btn = document.getElementById('btn-' + tabId);
+            if (!btn) {
+                // 如果找不到直接對應的 ID，嘗試 mapping
+                if (tabId === 'tab-score-3-new') btn = document.getElementById('btn-tab-score-3');
+            }
+
+            if (btn) {
+                btn.style.color = 'var(--gold)';
+                btn.style.borderBottom = '2px solid var(--gold)';
+            }
+        };
 
         // 不再需要原本的 switchLeaderboard 
         // 渲染排行榜 (主要顯示同職業)
@@ -5897,9 +6121,9 @@
             });
         };
     </script>
+    <script src="equipment-score.js?v=UI_FIX_FINAL"></script>
+    <script src="skill-database.js"></script>
+    <script src="health_check.js"></script>
 </body>
 
 </html>
-<script src="equipment-score.js?v=20260216_1600"></script>
-<script src="skill-database.js"></script>
-<script src="health_check.js"></script>
