@@ -2002,6 +2002,12 @@
                     style="margin-top: 0; background: transparent; border: none; padding: 0;">
                     <div style="display: flex; align-items: center; gap: 10px;">
                         <h3 style="margin: 0; border: none; padding: 0;">🛡️ 武器防具與飾品清單</h3>
+                        <span id="equipment-break-badge"
+                            style="background:rgba(0,212,255,0.2); color:#00d4ff; padding:4px 10px; border-radius:4px; font-size:13px; font-weight:bold; display:none;">💎
+                            0件突破</span>
+                        <span id="equipment-break5-badge"
+                            style="background:rgba(255,215,0,0.2); color:#ffd700; padding:4px 10px; border-radius:4px; font-size:13px; font-weight:bold; display:none;">⭐
+                            0件+5</span>
                     </div>
                     <div style="display: flex; align-items: center; gap: 10px;">
                         <span style="font-size: 12px; color: #8b949e;">(點擊展開/收合)</span>
@@ -2025,6 +2031,7 @@
                         <div class="card" style="flex:1;">
                             <h3>📊 綜合評分</h3>
                             <div id="equip-source-grid"></div>
+                            「職業不同、實戰價值」會影響評分公正性是合理的。
                         </div>
 
                         <div class="card" style="flex:1;">
@@ -3303,7 +3310,10 @@
             const equipMap = {};
             let armorBreakCount = 0; // 初始化武器防具突破件數統計
             let accessoryBreakCount = 0; // 初始化飾品突破件數統計
-            let sourceStats = { armor: { crafted: 0, dungeon: 0, other: 0, total: 0 }, accessory: { crafted: 0, dungeon: 0, other: 0, total: 0 } };
+            let sourceStats = {
+                armor: { crafted: 0, dungeon: 0, other: 0, total: 0, breakCount: 0, break5Count: 0 },
+                accessory: { crafted: 0, dungeon: 0, other: 0, total: 0, breakCount: 0, break5Count: 0 }
+            };
             const setCountMap = new Map(); // 用於計算套裝件數
 
             (data.equipment ? data.equipment.equipmentList : []).forEach(item => { equipMap[item.slotPos] = item; });
@@ -3317,9 +3327,18 @@
                 const finalIcon = getCorrectIcon(originalItem.icon);
 
                 // 統計突破件數
-                if ((originalItem.exceedLevel || 0) > 0) {
-                    if (isArmor) armorBreakCount++;
-                    if (isAccessory) accessoryBreakCount++;
+                const exceedLv = originalItem.exceedLevel || 0;
+                if (exceedLv > 0) {
+                    if (isArmor) {
+                        armorBreakCount++;
+                        sourceStats.armor.breakCount++;
+                        if (exceedLv >= 5) sourceStats.armor.break5Count++;
+                    }
+                    if (isAccessory) {
+                        accessoryBreakCount++;
+                        sourceStats.accessory.breakCount++;
+                        if (exceedLv >= 5) sourceStats.accessory.break5Count++;
+                    }
                 }
 
                 // 來源統計
@@ -3497,24 +3516,55 @@
                 }).join('')}</div>`;
             });
 
+            // 更新主標題的突破徽章
+            const totalBreakCount = armorBreakCount + accessoryBreakCount;
+            const totalBreak5Count = sourceStats.armor.break5Count + sourceStats.accessory.break5Count;
+
+            const breakBadge = document.getElementById('equipment-break-badge');
+            const break5Badge = document.getElementById('equipment-break5-badge');
+
+            if (breakBadge) {
+                if (totalBreakCount > 0) {
+                    breakBadge.textContent = `💎 ${totalBreakCount}件突破`;
+                    breakBadge.style.display = 'inline-block';
+                } else {
+                    breakBadge.style.display = 'none';
+                }
+            }
+
+            if (break5Badge) {
+                if (totalBreak5Count > 0) {
+                    break5Badge.textContent = `⭐ ${totalBreak5Count}件+5`;
+                    break5Badge.style.display = 'inline-block';
+                } else {
+                    break5Badge.style.display = 'none';
+                }
+            }
+
             // 更新突破件數到標題 (武器防具)
             const armorHeader = document.getElementById('armor-header');
             if (armorHeader) {
+                let headerHtml = `🛡️ 武器與防具`;
                 if (armorBreakCount > 0) {
-                    armorHeader.innerHTML = `🛡️ 武器與防具 <span style="font-size:15px; color:#ff3e3e; margin-left:15px; background:rgba(255, 62, 62, 0.1); padding:2px 10px; border-radius:12px; border:1px solid rgba(255, 62, 62, 0.3); text-shadow:0 0 10px rgba(255, 62, 62, 0.5);">🔥 突破件數: ${armorBreakCount} 件</span>`;
-                } else {
-                    armorHeader.innerHTML = `🛡️ 武器與防具`;
+                    headerHtml += ` <span style="background:rgba(0,212,255,0.2); color:#00d4ff; padding:4px 10px; border-radius:4px; font-size:13px; font-weight:bold; margin-left:8px;">💎 ${armorBreakCount}件突破</span>`;
                 }
+                if (sourceStats.armor.break5Count > 0) {
+                    headerHtml += ` <span style="background:rgba(255,215,0,0.2); color:#ffd700; padding:4px 10px; border-radius:4px; font-size:13px; font-weight:bold; margin-left:4px;">⭐ ${sourceStats.armor.break5Count}件+5</span>`;
+                }
+                armorHeader.innerHTML = headerHtml;
             }
 
             // 更新突破件數到標題 (飾品配件)
             const accessoryHeader = document.getElementById('accessory-header');
             if (accessoryHeader) {
+                let headerHtml = `💍 飾品與配件`;
                 if (accessoryBreakCount > 0) {
-                    accessoryHeader.innerHTML = `💍 飾品與配件 <span style="font-size:15px; color:#ff3e3e; margin-left:15px; background:rgba(255, 62, 62, 0.1); padding:2px 10px; border-radius:12px; border:1px solid rgba(255, 62, 62, 0.3); text-shadow:0 0 10px rgba(255, 62, 62, 0.5);">🔥 突破件數: ${accessoryBreakCount} 件</span>`;
-                } else {
-                    accessoryHeader.innerHTML = `💍 飾品與配件`;
+                    headerHtml += ` <span style="background:rgba(0,212,255,0.2); color:#00d4ff; padding:4px 10px; border-radius:4px; font-size:13px; font-weight:bold; margin-left:8px;">💎 ${accessoryBreakCount}件突破</span>`;
                 }
+                if (sourceStats.accessory.break5Count > 0) {
+                    headerHtml += ` <span style="background:rgba(255,215,0,0.2); color:#ffd700; padding:4px 10px; border-radius:4px; font-size:13px; font-weight:bold; margin-left:4px;">⭐ ${sourceStats.accessory.break5Count}件+5</span>`;
+                }
+                accessoryHeader.innerHTML = headerHtml;
             }
 
             document.getElementById('equip-armor-list').innerHTML = armorHtml || "<div>無資料</div>";
@@ -3531,8 +3581,12 @@
 
                 return `
                 <div style="background:rgba(255,255,255,0.03); border-radius:6px; padding:10px; border:1px solid rgba(255,255,255,0.05); margin-bottom:10px;">
-                    <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
-                        <span style="color:${color}; font-weight:bold; font-size:14px;">${title}</span>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                        <div style="display:flex; align-items:center; gap:6px;">
+                            <span style="color:${color}; font-weight:bold; font-size:14px;">${title}</span>
+                            ${stats.breakCount > 0 ? `<span style="background:rgba(0,212,255,0.2); color:#00d4ff; padding:2px 8px; border-radius:4px; font-size:11px; font-weight:bold;">💎 ${stats.breakCount}件突破</span>` : ''}
+                            ${stats.break5Count > 0 ? `<span style="background:rgba(255,215,0,0.2); color:#ffd700; padding:2px 8px; border-radius:4px; font-size:11px; font-weight:bold;">⭐ ${stats.break5Count}件+5</span>` : ''}
+                        </div>
                         <span style="font-size:12px; color:#8b949e;">共 ${count} 件</span>
                     </div>
                     
@@ -4033,19 +4087,12 @@
                     <div style="max-width: 600px; margin: 0 auto;">
                         <div style="text-align: center; margin-bottom: 20px;">
                             <div style="color: var(--gold); font-size: 18px; font-weight: bold; margin-bottom: 8px;">📊 角色能力雷達圖</div>
-                            <div style="color: #8b949e; font-size: 13px;">五大維度全方位分析</div>
+                            
                         </div>
                         <div style="background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 30px;">
                             <canvas id="radarChart" style="max-height: 400px;"></canvas>
                         </div>
-                        <div style="margin-top: 20px; padding: 15px; background: var(--panel-elevated); border-radius: 8px; border: 1px solid var(--border);">
-                            <div style="color: var(--blue); font-size: 14px; font-weight: bold; margin-bottom: 10px;">💡 圖表說明</div>
-                            <div style="color: #8b949e; font-size: 12px; line-height: 1.6;">
-                                • 雷達圖顯示您在五個維度的得分百分比<br>
-                                • 圖形越接近外圈代表該項目越完善<br>
-                                • 凹陷的部分是您可以優先提升的方向
-                            </div>
-                        </div>
+                        
                     </div>
                 </div>
 
