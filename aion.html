@@ -3652,14 +3652,14 @@
                 <div style="display: flex; border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2);">
                     <button id="btn-tab-score-1" class="score-tab-btn" onclick="switchScoreTab('tab-score-1')" style="flex: 1; padding: 12px 5px; border: none; background: transparent; color: var(--gold); border-bottom: 2px solid var(--gold); cursor: pointer; font-weight: bold; font-size: 13px;">📊 綜合評分</button>
                     <button id="btn-tab-score-2" class="score-tab-btn" onclick="switchScoreTab('tab-score-2')" style="flex: 1; padding: 12px 5px; border: none; background: transparent; color: #8b949e; border-bottom: 2px solid transparent; cursor: pointer; font-weight: bold; font-size: 13px;">📝 計算明細</button>
-                    <button id="btn-tab-score-3" class="score-tab-btn" onclick="switchScoreTab('tab-score-3')" style="flex: 1; padding: 12px 5px; border: none; background: transparent; color: #8b949e; border-bottom: 2px solid transparent; cursor: pointer; font-weight: bold; font-size: 13px;">🏆 榜首比較</button>
+                    <button id="btn-tab-score-3" class="score-tab-btn" onclick="switchScoreTab('tab-score-3')" style="flex: 1; padding: 12px 5px; border: none; background: transparent; color: #8b949e; border-bottom: 2px solid transparent; cursor: pointer; font-weight: bold; font-size: 13px;">💡 健檢分析</button>
                     <button id="btn-tab-score-4" class="score-tab-btn" onclick="switchScoreTab('tab-score-4')" style="flex: 1; padding: 12px 5px; border: none; background: transparent; color: #8b949e; border-bottom: 2px solid transparent; cursor: pointer; font-weight: bold; font-size: 13px;">⚖️ 職業比較</button>
                 </div>
 
-                <!-- 分頁 1: 綜合評分 (原本的主視覺) -->
+                <!-- 分頁 1: 個人裝備成型度 (原本的主視覺) -->
                 <div id="tab-score-1" class="score-tab-content" style="padding: 20px;">
                     <div style="text-align: center; margin-bottom: 15px;">
-                        <div style="font-size: 18px; color: #8b949e; margin-bottom: 10px; font-weight: bold;">🏆 角色實力綜合評分</div>
+                        <div style="font-size: 18px; color: #8b949e; margin-bottom: 10px; font-weight: bold;">🏆 角色裝備成型度</div>
                         <div style="display: flex; align-items: center; justify-content: center; gap: 15px;">
                             <div style="font-size: 52px; font-weight: bold; color: ${gradeColor}; text-shadow: 0 0 20px ${gradeColor}; line-height: 1;">
                                 ${scoreResult.totalScore}
@@ -4009,11 +4009,20 @@
 
                 </div>
 
-                <!-- 分頁 3: 榜首比較 (預留) -->
-                <div id="tab-score-3" class="score-tab-content" style="display: none; padding: 40px 20px; text-align: center;">
-                    <div style="font-size: 40px; margin-bottom: 10px; opacity: 0.5;">🏆</div>
-                    <div style="color: var(--gold); font-size: 16px; font-weight: bold; margin-bottom: 5px;">與全服第一名比較</div>
-                    <div style="color: #8b949e; font-size: 12px;">此功能開發中，將顯示您與榜首的差距分析。</div>
+                <!-- 分頁 3: 健檢分析 -->
+                <div id="tab-score-3" class="score-tab-content" style="display: none; padding: 20px;">
+                    <div style="color: var(--gold); font-size: 16px; font-weight: bold; margin-bottom: 15px; border-bottom: 1px solid rgba(255,217,61,0.2); padding-bottom: 8px;">💡 機體發展建議</div>
+                    <div id="score-analysis-list">
+                        ${getScoreAnalysis(scoreResult.breakdown).map(s => `
+                            <div style="background: rgba(255,255,255,0.05); border-radius: 8px; padding: 12px; margin-bottom: 10px; border-left: 4px solid ${s.priority === '高' ? '#ff4d4d' : (s.priority === '中' ? '#f1c40f' : (s.priority === '低' ? '#3498db' : '#2ecc71'))};">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                                    <span style="font-weight: bold; color: #fff;">${s.title}</span>
+                                    <span style="font-size: 10px; padding: 2px 6px; border-radius: 4px; background: ${s.priority === '高' ? 'rgba(255,77,77,0.2)' : (s.priority === '中' ? 'rgba(241,196,15,0.2)' : (s.priority === '低' ? 'rgba(52,152,219,0.2)' : 'rgba(46,204,113,0.2)'))}; color: ${s.priority === '高' ? '#ff4d4d' : (s.priority === '中' ? '#f1c40f' : (s.priority === '低' ? '#3498db' : '#2ecc71'))};">${s.priority}優先級</span>
+                                </div>
+                                <div style="font-size: 13px; color: #bdc3c7; line-height: 1.5;">${s.desc}</div>
+                            </div>
+                        `).join('')}
+                    </div>
                 </div>
 
                 <!-- 分頁 4: 職業比較 (預留) -->
@@ -5705,9 +5714,7 @@
             }
 
             // Trigger data loading for comparison tabs
-            if (tabId === 'tab-score-3') {
-                renderComparison('server');
-            } else if (tabId === 'tab-score-4') {
+            if (tabId === 'tab-score-4') {
                 renderComparison('class');
             }
         };
