@@ -22,10 +22,10 @@
             if (res.ok) {
                 SKILL_NAMES_DB = await res.json();
                 dbLoaded = true;
-                console.log(`[HealthCheck] 技能資料庫載入成功！共 ${Object.keys(SKILL_NAMES_DB).length} 個技能`);
+                //  console.log(`[HealthCheck] 技能資料庫載入成功！共 ${Object.keys(SKILL_NAMES_DB).length} 個技能`);
             }
         } catch (e) {
-            console.warn('[HealthCheck] 技能資料庫載入失敗:', e);
+            //  console.warn('[HealthCheck] 技能資料庫載入失敗:', e);
         }
     }
 
@@ -64,7 +64,7 @@
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             return await res.json();
         } catch (e) {
-            console.error('[HealthCheck] API Error:', e);
+            //  console.error('[HealthCheck] API Error:', e);
             return null;
         }
     }
@@ -79,7 +79,7 @@
         // 確保技能資料庫已載入
         await loadSkillNamesDB();
 
-        console.log('[HealthCheck] 完整 data:', data);
+        // console.log('[HealthCheck] 完整 data:', data);
 
         // 🆕 自動判斷分段：根據道具等級
         let showLowLevelWarning = true; // 改為常駐顯示，永遠顯示提示框
@@ -104,7 +104,7 @@
                 }
             }
 
-            console.log('[HealthCheck] 偵測到道具等級:', itemLevel);
+            // console.log('[HealthCheck] 偵測到道具等級:', itemLevel);
 
             // 根據道具等級自動判斷分段
             if (itemLevel >= 4000) {
@@ -118,7 +118,7 @@
                 minScore = 2500;
             }
 
-            console.log('[HealthCheck] 自動選擇分段:', minScore);
+            // console.log('[HealthCheck] 自動選擇分段:', minScore);
         }
 
         // 嘗試從多個可能的位置取得職業名稱
@@ -127,19 +127,19 @@
             || (data.data && data.data.profile && data.data.profile.className)
             || '';
 
-        console.log('[HealthCheck] 原始 rawClass:', rawClass);
+        // console.log('[HealthCheck] 原始 rawClass:', rawClass);
 
         if (typeof rawClass === 'string') rawClass = rawClass.trim().replace(/\s+/g, '_').toUpperCase();
         if (rawClass === 'SPIRITMASTER' || rawClass === 'ELEMENTALLIST') rawClass = 'SPIRIT_MASTER';
 
-        console.log('[HealthCheck] 處理後 rawClass:', rawClass);
+        // console.log('[HealthCheck] 處理後 rawClass:', rawClass);
 
         const className = CLASS_MAP[rawClass] || rawClass;
 
-        console.log('[HealthCheck] 最終 className:', className);
+        // console.log('[HealthCheck] 最終 className:', className);
 
         if (!className || className === '') {
-            console.error('[HealthCheck] ❌ 無法取得職業名稱');
+            // console.error('[HealthCheck] ❌ 無法取得職業名稱');
             container.innerHTML = `<div style="padding:20px;text-align:center;color:#f00;">❌ 無法取得角色職業資訊</div>`;
             return;
         }
@@ -216,20 +216,20 @@
 
             let serverList = [];
 
-            console.log(`[HealthCheck] 渲染 ${categoryKey} 分類`);
-            console.log(`[HealthCheck] skillsData:`, skillsData);
-            console.log(`[HealthCheck] SKILL_NAMES_DB 已載入:`, dbLoaded, '技能數量:', Object.keys(SKILL_NAMES_DB).length);
+            // console.log(`[HealthCheck] 渲染 ${categoryKey} 分類`);
+            // console.log(`[HealthCheck] skillsData:`, skillsData);
+            // console.log(`[HealthCheck] SKILL_NAMES_DB 已載入:`, dbLoaded, '技能數量:', Object.keys(SKILL_NAMES_DB).length);
 
             if (skillsData && skillsData.skills) {
                 const filtered = skillsData.skills.filter(s => serverTypes.includes(s.type));
-                console.log(`[HealthCheck] ${categoryKey} 篩選後技能數:`, filtered.length);
+                // console.log(`[HealthCheck] ${categoryKey} 篩選後技能數:`, filtered.length);
 
                 serverList = filtered
                     .sort((a, b) => (b.avgLevel || 0) - (a.avgLevel || 0))
                     .slice(0, 5)
                     .map(s => {
                         const skillName = getSkillName(s.skillId);
-                        console.log(`[HealthCheck] Skill ${s.skillId} -> ${skillName} (Lv.${s.avgLevel})`);
+                        // console.log(`[HealthCheck] Skill ${s.skillId} -> ${skillName} (Lv.${s.avgLevel})`);
                         return {
                             id: s.skillId,
                             name: skillName,
@@ -238,11 +238,11 @@
                     });
             }
 
-            console.log(`[HealthCheck] ${categoryKey} serverList:`, serverList);
+            // console.log(`[HealthCheck] ${categoryKey} serverList:`, serverList);
 
             let rawUserSkills = data.skillList || (data.skill ? data.skill.skillList : []) || [];
 
-            console.log(`[HealthCheck] 使用者總技能數:`, rawUserSkills.length);
+            // console.log(`[HealthCheck] 使用者總技能數:`, rawUserSkills.length);
 
             let userList = rawUserSkills
                 .map(s => {
@@ -269,18 +269,18 @@
 
                     if (categoryKey === 'stigma') {
                         const match = uType === 'stigma' || uType === 'dp' || uType === 'devotion' || uType === 'special';
-                        if (match) console.log(`[HealthCheck] ✓ ${categoryKey} 匹配:`, s.name, `(${uType})`);
-                        return match;
+                        if (match) // console.log(`[HealthCheck] ✓ ${categoryKey} 匹配:`, s.name, `(${uType})`);
+                            return match;
                     }
 
                     if (uType === categoryKey) {
-                        console.log(`[HealthCheck] ✓ ${categoryKey} 匹配:`, s.name, `(${uType})`);
+                        // console.log(`[HealthCheck] ✓ ${categoryKey} 匹配:`, s.name, `(${uType})`);
                         return true;
                     }
 
                     // 如果是 active 且沒有類型，預設為 active
                     if (categoryKey === 'active' && !uType) {
-                        console.log(`[HealthCheck] ✓ ${categoryKey} 預設匹配:`, s.name);
+                        // console.log(`[HealthCheck] ✓ ${categoryKey} 預設匹配:`, s.name);
                         return true;
                     }
 
@@ -294,7 +294,7 @@
                     lv: s.skillLevel
                 }));
 
-            console.log(`[HealthCheck] ${categoryKey} 使用者篩選後:`, userList.length, '個技能');
+            // console.log(`[HealthCheck] ${categoryKey} 使用者篩選後:`, userList.length, '個技能');
 
             while (serverList.length < 5) serverList.push({ name: '-', avgLv: 0 });
             while (userList.length < 5) userList.push({ name: '-', lv: 0 });
@@ -431,5 +431,5 @@
     loadSkillNamesDB();
 
     hookFunc();
-    console.log("Health Check v32.0 (Dual Column Layout) loaded.");
+    // console.log("Health Check v32.0 (Dual Column Layout) loaded.");
 })();

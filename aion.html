@@ -7,6 +7,7 @@
     <meta name="referrer" content="no-referrer">
     <title>Aion2 高階解析 - 角色名稱快速查詢版</title>
     <script src="skill-database.js"></script>
+    <script src="skill-api.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script
         src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
@@ -5118,31 +5119,34 @@
                 let bLv = boardSkillMap[s.name] || 0;
                 let cLv = (cardSkillMap[s.name] || []).reduce((a, b) => a + b.lv, 0);
 
-                // 🆕 查詢技能效果
+
+                // 🆕 查詢技能效果（使用新 API）
                 let effectsHtml = "";
-                let parsedCount = 0;
+                const skillId = s.skillId || s.id;
 
-                if (typeof findSkillByName !== 'undefined') {
-                    const skillInfo = findSkillByName(s.name);
-                    if (skillInfo && skillInfo.levels && skillInfo.levels[s.skillLevel]) {
-                        const effects = skillInfo.levels[s.skillLevel];
-                        effectsHtml = `<br><br><b style="color:var(--gold);">📋 技能效果 (Lv.${s.skillLevel}):</b><br>`;
+                // 建立一個 placeholder，稍後異步更新
+                const effectPlaceholderId = `skill-effect-${skillId}-${s.skillLevel}`;
+                effectsHtml = `<br><br><b style="color:var(--gold);">📋 技能效果 (Lv.${s.skillLevel}):</b><br><span id="${effectPlaceholderId}" style="color:#8b949e; font-size:11px;">⏳ 載入中...</span>`;
 
-                        effects.forEach(effect => {
-                            // 嘗試解析並加入統計
-                            const parsed = parseSkillEffect(effect, s.name, stats ? stats.getEntry : null);
-                            if (parsed) parsedCount++;
-
-                            effectsHtml += `<span style="color:var(--green);">▹ ${effect}</span><br>`;
-                        });
-
-                        // 如果有成功解析的效果,顯示提示
-                        if (parsedCount > 0) {
-                            effectsHtml += `<span style="color:var(--blue); font-size:10px;">✓ 已加入屬性統計 (${parsedCount}項)</span>`;
+                // 異步抓取技能資料
+                if (skillId && window.SkillAPI) {
+                    window.SkillAPI.fetchSkill(skillId, s.skillLevel).then(skillInfo => {
+                        const placeholder = document.getElementById(effectPlaceholderId);
+                        if (placeholder && skillInfo) {
+                            placeholder.innerHTML = window.SkillAPI.formatEffects(skillInfo);
+                            placeholder.style.color = 'var(--green)';
+                        } else if (placeholder) {
+                            placeholder.innerHTML = '💡 此技能效果數據尚未收錄';
+                            placeholder.style.color = '#8b949e';
                         }
-                    } else {
-                        effectsHtml = `<br><span style="color:#8b949e; font-size:11px;">💡 此技能效果數據尚未收錄</span>`;
-                    }
+                    }).catch(error => {
+                        console.error(`Failed to load skill ${skillId}:`, error);
+                        const placeholder = document.getElementById(effectPlaceholderId);
+                        if (placeholder) {
+                            placeholder.innerHTML = '❌ 載入失敗';
+                            placeholder.style.color = '#ff6c6c';
+                        }
+                    });
                 }
 
                 let tip = `<div class="tooltip"><button class="tooltip-close-btn" onclick="this.parentElement.classList.remove('tooltip-pinned'); event.stopPropagation();">✕</button><b>${s.name}</b><br>基礎: Lv.${Math.max(0, s.skillLevel - bLv - cLv)}<br>板塊: +${bLv}<br>卡片: +${cLv}${effectsHtml}</div>`;
