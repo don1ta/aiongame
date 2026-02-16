@@ -3688,29 +3688,20 @@
                             <span>得分 / 上限</span>
                         </div>
                         <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                            <span>🔥 裝備品階分數</span>
+                            <span>🔥 裝備強度</span>
                             <div style="text-align: right;">
-                                <span style="color: #ff6b35; font-weight: bold;">
+                                <span style="color: #ff6b35; font-weight: bold; font-size: 15px;">
                                     ${scoreResult.breakdown.rarity.score}
                                     <span style="font-size: 11px; color: #7f8c8d; opacity: 0.8;">/ ${scoreResult.breakdown.rarity.maxScore}</span>
                                 </span>
-                                <div style="font-size: 10px; color: #7f8c8d; margin-top: -2px;">(${scoreResult.breakdown.rarity.rawScore} / 500+ 點)</div>
+                                <div style="font-size: 10px; color: #7f8c8d; margin-top: -2px;">(${scoreResult.breakdown.rarity.rawScore.toFixed(1)} / 500 分)</div>
                             </div>
                         </div>
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                            <span>💎 古文石強化等級</span>
-                            <div style="text-align: right;">
-                                <span style="color: #9b59b6; font-weight: bold;">
-                                    ${scoreResult.breakdown.magicStone.score}
-                                    <span style="font-size: 10px; color: #7f8c8d; opacity: 0.8;">/ ${scoreResult.breakdown.magicStone.maxScore}</span>
-                                </span>
-                                <div style="font-size: 9px; color: #7f8c8d; margin-top: -2px;">(${scoreResult.breakdown.magicStone.rawScore} / 60 點)</div>
-                            </div>
-                        </div>
+                        
                         <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
                             <span>📋 板塊數量</span>
                             <div style="text-align: right;">
-                                <span style="color: #3498db; font-weight: bold;">
+                                <span style="color: #3498db; font-weight: bold; font-size: 15px;">
                                     ${scoreResult.breakdown.board.score}
                                     <span style="font-size: 10px; color: #7f8c8d; opacity: 0.8;">/ ${scoreResult.breakdown.board.maxScore}</span>
                                 </span>
@@ -3718,26 +3709,29 @@
                             </div>
                         </div>
                         <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                            <span>🐾 寵物理解度</span>
-                            <span style="color: #2ecc71; font-weight: bold;">
-                                ${scoreResult.breakdown.petInsight.score}
-                                <span style="font-size: 10px; color: #7f8c8d; opacity: 0.8;">/ ${scoreResult.breakdown.petInsight.maxScore}</span>
-                            </span>
+                            <span>🐾 寵物數量</span>
+                            <div style="text-align: right;">
+                                <span style="color: #2ecc71; font-weight: bold; font-size: 15px;">
+                                    ${scoreResult.breakdown.petInsight.score}
+                                    <span style="font-size: 10px; color: #7f8c8d; opacity: 0.8;">/ ${scoreResult.breakdown.petInsight.maxScore}</span>
+                                </span>
+                                <div style="font-size: 9px; color: #7f8c8d; margin-top: -2px;">(${scoreResult.breakdown.petInsight.totalClean ? scoreResult.breakdown.petInsight.totalClean.toFixed(1) : 0} / 8 階)</div>
+                            </div>
                         </div>
                         <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                            <span>⚔️ 技能烙印分數</span>
+                            <span>⚔️ 烙印技能數量</span>
                             <div style="text-align: right;">
-                                <span style="color: #f39c12; font-weight: bold;">
+                                <span style="color: #f39c12; font-weight: bold; font-size: 15px;">
                                     ${scoreResult.breakdown.stigma.score}
                                     <span style="font-size: 10px; color: #7f8c8d; opacity: 0.8;">/ ${scoreResult.breakdown.stigma.maxScore}</span>
                                 </span>
-                                <div style="font-size: 9px; color: #7f8c8d; margin-top: -2px;">(${scoreResult.breakdown.stigma.rawScore} / ${scoreResult.breakdown.stigma.maxRawScore}+ 點)</div>
+                                <div style="font-size: 9px; color: #7f8c8d; margin-top: -2px;">(${scoreResult.breakdown.stigma.rawScore} / ${scoreResult.breakdown.stigma.maxRawScore} 點)</div>
                             </div>
                         </div>
                         <div style="display: flex; justify-content: space-between;">
-                            <span>🏅 稱號擁有數量</span>
+                            <span>🏅 稱號數量</span>
                             <div style="text-align: right;">
-                                <span style="color: #9b59b6; font-weight: bold;">
+                                <span style="color: #9b59b6; font-weight: bold; font-size: 15px;">
                                     ${scoreResult.breakdown.title.score}
                                     <span style="font-size: 10px; color: #7f8c8d; opacity: 0.8;">/ ${scoreResult.breakdown.title.maxScore}</span>
                                 </span>
@@ -3776,118 +3770,114 @@
                             <div style="font-size: 11px; color: #bdc3c7; line-height: 1.6; padding: 8px; background: rgba(0,0,0,0.2); border-radius: 4px;">
                                 
                                 <!-- 總分說明 -->
+                                <!-- 總分制度 -->
                                 <div style="margin-bottom: 12px; padding: 8px; background: rgba(255,215,61,0.1); border-left: 3px solid #ffd93d; border-radius: 3px;">
-                                    <div style="color: #ffd93d; font-weight: bold; margin-bottom: 4px;">📊 總分制度：90分制</div>
-                                    <div style="font-size: 10px; color: #bdc3c7;">各項目分數加總後，目前滿分為90分。根據總分百分比評定等級。</div>
+                                    <div style="color: #ffd93d; font-weight: bold; margin-bottom: 4px;">📊 總分制度：100分制</div>
+                                    <div style="font-size: 10px; color: #bdc3c7;">各項目分數加總後，目前滿分為100分。根據總分百分比評定等級。</div>
                                 </div>
 
                                 <!-- 分數佔比說明 -->
                                 <div style="margin-bottom: 12px; padding: 6px 8px; background: rgba(0,0,0,0.2); border-radius: 4px; font-size: 10px; line-height: 1.5;">
                                     <div style="color: #ffd93d; font-weight: bold; margin-bottom: 3px;">📊 各項目分數配置：</div>
                                     <div style="color: #bdc3c7;">
-                                        裝備品階 30分 | 古文石 10分 | 板塊 15分<br>
-                                        寵物理解度 10分 | 技能烙印 20分 | 稱號 5分<br>
-                                        <span style="color: #ffd93d; font-weight: bold;">總計 90分</span>
+                                        裝備品階 30分 | 板塊 15分 | 寵物理解度 20分<br>
+                                        技能烙印 30分 | 稱號 5分<br>
+                                        <span style="color: #ffd93d; font-weight: bold;">總計 100分</span>
                                     </div>
                                 </div>
 
                                 <!-- 裝備品階 -->
                                 <div style="margin-bottom: 10px;">
-                                    <div style="color: #ff6b35; font-weight: bold; margin-bottom: 4px;">🔥 裝備品階 (30分)</div>
+                                    <div style="color: #ff6b35; font-weight: bold; margin-bottom: 4px;">🔥 裝備品階 (30分) - 強度評估</div>
                                     <div style="padding-left: 10px; font-size: 10px;">
-                                        <div style="margin-bottom: 5px;"><b>品階基礎分：</b></div>
-                                        <div>
-                                            • <span style="color: #ff6600; font-weight: bold;">神話:15</span> | 
-                                            <span style="color: #ff9500; font-weight: bold;">傳說:10</span> | 
-                                            <span style="color: #a335ee; font-weight: bold;">史詩:6</span> | 
-                                            <span style="color: #0070dd; font-weight: bold;">特殊:4</span> | 
-                                            <span style="color: #1eff00; font-weight: bold;">稀有:3</span> | 
-                                            <span style="color: #9d9d9d;">普通:1</span>
+                                        <div style="margin-bottom: 4px; color: #bdc3c7;">
+                                            此項目計算 12 件裝備的<b>綜合強度</b>。<br>
+                                            不只看顏色，<b>強化等級</b>影響最大。
                                         </div>
-                                        <div style="margin-top: 5px; background: rgba(0,0,0,0.3); padding: 4px; border-radius: 2px; font-family: monospace; color: #00d4ff;">
-                                            裝備分 = 基礎分 × (1 + 強化/25 + 閃耀10%)
+                                        
+                                        <div style="margin-bottom: 5px; border-left: 2px solid #555; padding-left: 6px;">
+                                            <div style="color: #ffd93d;"><b>1. 看品階 (基礎分)</b></div>
+                                            <div>
+                                                <span style="color: #e67e22; font-weight: bold;">神話(10)</span> > 
+                                                <span style="color: #f1c40f; font-weight: bold;">傳說(7)</span> > 
+                                                <span style="color: #3498db; font-weight: bold;">史詩(4.5)</span>...
+                                            </div>
                                         </div>
-                                        <div style="margin-top: 5px;"><b>分級制度 (5級分 → 30分)：</b></div>
-                                        <div>• 100-199分 → 1級(6分) | 200-299分 → 2級(12分)</div>
-                                        <div>• 300-399分 → 3級(18分) | 400-499分 → 4級(24分)</div>
-                                        <div>• 500+分 → 5級(30分滿分)</div>
-                                        <div style="margin-top: 3px; color: #8b949e;">範例：神話+25閃耀 = 15×2.1 = 32分 (4捨2入)</div>
-                                    </div>
-                                </div>
 
-                                <!-- 古文石 -->
-                                <div style="margin-bottom: 10px;">
-                                    <div style="color: #9b59b6; font-weight: bold; margin-bottom: 4px;">💎 古文石/護身符 (5分)</div>
-                                    <div style="padding-left: 10px; font-size: 10px;">
-                                        <div><b>4個槽位：</b>激戰古文石、專心古文石、啟示護身符、激戰護身符</div>
-                                        <div style="margin-top: 3px;"><b>古文石（無品階）：</b>直接用強化等級</div>
-                                        <div>• 激戰/專心古文石 +10 = 10分</div>
-                                        <div style="margin-top: 3px;"><b>護身符（有品階）：</b>品階 × (1 + 強化/10)</div>
-                                        <div>
-                                            • <span style="color: #ff9500; font-weight: bold;">傳說:10</span> | 
-                                            <span style="color: #a335ee; font-weight: bold;">史詩:6</span> | 
-                                            <span style="color: #1eff00; font-weight: bold;">稀有:3</span>
+                                        <div style="margin-bottom: 5px; border-left: 2px solid #555; padding-left: 6px;">
+                                            <div style="color: #ffd93d;"><b>2. 看投入 (加成分)</b></div>
+                                            <div>• <b>強化/突破：</b> 等級越高，分數<b>翻倍成長</b>。</div>
+                                            <div>• <b>閃耀：</b> 額外加分 (約20%)。</div>
                                         </div>
-                                        <div>• <span style="color: #ff9500;">傳說+10</span> = 10×2 = 20分</div>
-                                        <div style="margin-top: 3px; color: #8b949e;">滿分：2古文石×10 + 2護身符×20 = 60分 → 轉換為5分</div>
+
+                                        <div style="margin-top: 6px; background: rgba(255,107,53,0.1); padding: 4px; border-radius: 4px;">
+                                            <div style="color: #ff6b35; font-weight:bold;">🎯 如何拿滿 30 分？</div>
+                                            <div style="color: #ccc;">目標：全身總強度達 <b>500</b> (約神話+25水準)。</div>
+                                            <div style="color: #8b949e; margin-top: 2px; font-size: 9px;">
+                                                • <b>最終分數</b> = 總強度 ÷ 16.7 (上限30分)<br>
+                                                • 下方數字為單件強度，越高越好。
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 
                                 <!-- 板塊 -->
                                 <div style="margin-bottom: 10px;">
-                                    <div style="color: #3498db; font-weight: bold; margin-bottom: 4px;">📋 板塊數量 (20分)</div>
+                                    <div style="color: #3498db; font-weight: bold; margin-bottom: 4px;">📋 板塊數量 (15分) - 難度加權</div>
                                     <div style="padding-left: 10px; font-size: 10px;">
-                                        <div>• 100個以上: 1級(4分) | 200個以上: 2級(8分)</div>
-                                        <div>• 300個以上: 3級(12分) | 400個以上: 4級(16分)</div>
-                                        <div>• 500個以上: 5級(20分滿分)</div>
-                                        <div style="margin-top: 3px; color: #8b949e;">(總上限: 684個)</div>
+                                        <div>• 依據不同板塊取得難度加權計算</div>
+                                        <div style="margin-top: 5px;">
+                                            <span style="color: #2ecc71;">奈薩肯/吉凱爾/白傑爾/崔妮爾：各 1.5分</span><br>
+                                            <span style="color: #f1c40f;">艾瑞爾：4.0分</span> (難度高)<br>
+                                            <span style="color: #e74c3c;">阿斯佩爾：5.0分</span> (極難)
+                                        </div>
                                     </div>
                                 </div>
 
                                 <!-- 寵物理解度 -->
                                 <div style="margin-bottom: 10px;">
-                                    <div style="color: #2ecc71; font-weight: bold; margin-bottom: 4px;">🐾 寵物理解度 (10分)</div>
+                                    <div style="color: #2ecc71; font-weight: bold; margin-bottom: 4px;">🐾 寵物理解度 (20分) - 線性</div>
                                     <div style="padding-left: 10px; font-size: 10px;">
-                                        <div>• 該項滿寵(全Lv3+): +1分</div>
-                                        <div>• 該項滿寵(全Lv4+): 再+1分</div>
-                                        <div style="margin-top: 3px; color: #8b949e;">(共4類別，原始8分 → 轉換為10分)</div>
+                                        <div>• 依據理解度 L3/L4 達成比例計算</div>
+                                        <div>• 公式：(達成進度 / 8) × 20</div>
+                                        <div style="margin-top: 3px; color: #8b949e;">(滿分: 8種理解度)</div>
                                     </div>
                                 </div>
 
                                 <!-- 技能烙印 -->
                                 <div style="margin-bottom: 10px;">
-                                    <div style="color: #f39c12; font-weight: bold; margin-bottom: 4px;">⚔️ 技能烙印 (20分)</div>
+                                    <div style="color: #f39c12; font-weight: bold; margin-bottom: 4px;">⚔️ 技能烙印 (30分) - 分段式目標積分</div>
                                     <div style="padding-left: 10px; font-size: 10px;">
-                                        <div>• 將所有技能烙印的等級加總</div>
-                                        <div>• 滿分：12個技能全Lv20（總和240）</div>
-                                        <div style="margin-top: 5px; padding: 4px; background: rgba(241,196,15,0.1); border-left: 2px solid #f1c40f; border-radius: 2px; color: #f1c40f;">
-                                            <b>範例：</b>全部Lv10 = 120分 → 得10分 | 全部Lv20 = 240分 → 得20分(滿分)
-                                        </div>
+                                        <div>• 採用「核心階段」與「極限追求」分段計算</div>
+                                        <div>• <strong>核心階段 (0-400強度)</strong>: 達成4個核心Lv20，即獲得 <strong>80% 分數 (24分)</strong></div>
+                                        <div>• <strong>極限階段 (400-1200強度)</strong>: 超出部分緩步增加，直到滿分 (30分)</div>
+                                        <div style="margin-top: 3px; color: #8b949e;">(推薦目標: 優先達成 400 強度)</div>
                                     </div>
                                 </div>
 
                                 <!-- 稱號 -->
                                 <div style="margin-bottom: 10px;">
-                                    <div style="color: #e74c3c; font-weight: bold; margin-bottom: 4px;">🏅 稱號數量 (5分)</div>
+                                    <div style="color: #e74c3c; font-weight: bold; margin-bottom: 4px;">🏅 稱號數量 (5分) - 線性</div>
                                     <div style="padding-left: 10px; font-size: 10px;">
-                                        <div>• 每100個稱號 +1分</div>
-                                        <div style="margin-top: 3px; color: #8b949e;">(原始分 × 5 = 最高5分)</div>
+                                        <div>• 採用「核心階段」與「極限追求」動態分段積分</div>
+                                        <div>• <strong>核心階段 (前 50% 稱號)</strong>: 達成一半總數即獲得 <strong>80% 分數 (4分)</strong></div>
+                                        <div>• <strong>極限階段 (後 50% 稱號)</strong>: 剩餘 1 分隨數量增加直到拿滿總數</div>
                                     </div>
                                 </div>
 
                                 <!-- 評級標準 -->
+                                <!-- 評級標準 -->
                                 <div style="margin-top: 12px; padding-top: 8px; border-top: 1px dashed rgba(255,255,255,0.2);">
-                                    <div style="color: #ffd93d; font-weight: bold; margin-bottom: 4px;">🏆 評級標準 (總分100分)</div>
-                                    <div style="padding-left: 10px; font-size: 10px;">
-                                        <div style="color: #ff0000;">• SSS: 90分以上 (90%+)</div>
-                                        <div style="color: #ff6b35;">• SS: 80-89分 (80-89%)</div>
-                                        <div style="color: #ffa500;">• S: 70-79分 (70-79%)</div>
-                                        <div style="color: #ffd700;">• A: 60-69分 (60-69%)</div>
-                                        <div style="color: #00d4ff;">• B: 50-59分 (50-59%)</div>
-                                        <div style="color: #00ff88;">• C: 40-49分 (40-49%)</div>
-                                        <div style="color: #95a5a6;">• D: 30-39分 (30-39%)</div>
-                                        <div style="color: #7f8c8d;">• E: 15-29分 (15-29%)</div>
-                                        <div style="color: #5a6268;">• F: 15分以下 (0-14%)</div>
+                                    <div style="color: #ffd93d; font-weight: bold; margin-bottom: 4px;">🏆 評級標準 (百分比)</div>
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; font-size: 10px;">
+                                        <div style="color: #e74c3c; font-weight:bold;">• SSS: 90%以上</div>
+                                        <div style="color: #e67e22; font-weight:bold;">• SS: 80-89%</div>
+                                        <div style="color: #f1c40f; font-weight:bold;">• S: 70-79%</div>
+                                        <div style="color: #f39c12;">• A: 60-69%</div>
+                                        <div style="color: #3498db;">• B: 50-59%</div>
+                                        <div style="color: #2ecc71;">• C: 40-49%</div>
+                                        <div style="color: #95a5a6;">• D: 30-39%</div>
+                                        <div style="color: #7f8c8d;">• E/F: 30%以下</div>
                                     </div>
                                 </div>
 
@@ -3911,48 +3901,50 @@
                                     <div style="background: rgba(255,255,255,0.05); border-radius: 4px; padding: 6px 8px; margin-bottom: 6px; border-left: 4px solid ${d.color || '#fff'}; display: flex; justify-content: space-between; align-items: center;">
                                         <div>
                                             <div style="color: ${d.color || '#fff'}; font-weight:bold; font-size:12px;">${d.name} <span style="font-size: 10px; opacity:0.7; font-weight:normal;">${d.dragonType}</span></div>
-                                            <div style="font-size: 10px; color: #8b949e;">基礎:${d.baseScore} | 強化:+${d.enchantLevel} | 倍率:x${d.multiplier}</div>
+                                            <div style="font-size: 10px; color: #8b949e;">
+                                                基礎:${d.baseScore} | 
+                                                <span style="color: #3498db;">強化(+${d.enchantLevel - d.exceedLevel}):+${d.enchantBonus}</span> | 
+                                                <span style="color: #e74c3c;">突破(+${d.exceedLevel}):+${d.exceedBonus}</span>
+                                                ${d.shineBonus > 0 ? ` | <span style="color: #f1c40f;">閃耀:+${d.shineBonus}</span>` : ''}
+                                            </div>
                                         </div>
-                                        <div style="text-align:right;">
-                                            <span style="color: var(--gold); font-weight: bold;">+${d.score}</span>
+                                            <div style="text-align:right;">
+                                                <div style="color: var(--gold); font-weight: bold;">+${d.score}</div>
+                                                <div style="font-size: 9px; color: #8b949e; margin-top:2px;">
+                                                    (約 ${(d.score * 30 / 500).toFixed(1)}分)
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                    ${(!scoreResult.breakdown.rarity.details || scoreResult.breakdown.rarity.details.length === 0) ? '<div style="color: #7f8c8d; font-style: italic;">無相關裝備</div>' : ''}
+                                    
+                                    <div style="margin-top: 8px; border-top: 1px dashed rgba(255,255,255,0.2); padding-top: 6px; display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 4px;">
+                                        <div style="display: flex; align-items: center; gap: 6px;">
+                                            <span style="font-size: 14px;">🔥</span>
+                                            <span style="color: #bdc3c7; font-size: 11px;">裝備合計</span>
+                                        </div>
+                                        <div style="text-align: right;">
+                                            <span style="color: #ffd93d; font-weight: bold; font-size: 13px;">${scoreResult.breakdown.rarity.rawScore.toFixed(1)} 強度</span>
+                                            <span style="color: #ff6b35; font-size: 12px; margin-left: 6px; font-weight: bold;">➡ ${scoreResult.breakdown.rarity.score} / 30 分</span>
                                         </div>
                                     </div>
-                                `).join('')}
-                                ${(!scoreResult.breakdown.rarity.details || scoreResult.breakdown.rarity.details.length === 0) ? '<div style="color: #7f8c8d; font-style: italic;">無相關裝備</div>' : ''}
 
-                                <!-- 魔力聖物系統 -->
-                                <div style="color: #ffd93d; font-weight:bold; margin: 15px 0 8px 0;">💎 魔力聖物系統 (4槽總計)</div>
-                                ${(scoreResult.breakdown.magicStone.details || []).map(d => {
-                let color = '#3498db'; // Default Blue
-                if (d.quality) {
-                    if (d.quality.includes('神話')) color = '#e67e22'; // Orange/Red
-                    else if (d.quality.includes('傳說')) color = '#f1c40f'; // Gold/Yellow
-                    else if (d.quality.includes('史詩')) color = '#3498db'; // Blue/Cyan  (User screenshot shows blue-ish for Epic)
-                    else if (d.quality.includes('稀有')) color = '#2ecc71'; // Green
-                    else if (d.quality.includes('普通')) color = '#95a5a6'; // Grey
-                } else {
-                    // Ancient Stone (Runes) -> Cyan/Teal
-                    color = '#00cec9';
-                }
-                return `
-                                    <div style="background: rgba(255,255,255,0.05); border-radius: 4px; padding: 8px 10px; margin-bottom: 6px; border-left: 4px solid ${color}; display: flex; justify-content: space-between; align-items: center;">
-                                        <div style="font-weight: bold; color: #fff;">${d.name} <span style="font-size:10px; opacity:0.7; font-weight:normal;">${d.quality || ''}</span></div>
-                                        <div style="text-align:right;">
-                                            <div style="color: ${color}; font-weight:bold;">+${d.enchantLevel}</div>
-                                            <div style="font-size:10px; color:#8b949e;">+${d.score}分</div>
-                                        </div>
-                                    </div>`;
-            }).join('') || '<div style="color: #7f8c8d; padding:5px;">無裝備古文石</div>'}
 
                                 <!-- 板塊 -->
                                 <div style="color: #ffd93d; font-weight:bold; margin: 15px 0 8px 0;">📋 德巴板塊完成數</div>
                                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                                     ${(scoreResult.breakdown.board.details || []).map(d => `
-                                        <div style="background: rgba(255,255,255,0.05); border-radius: 4px; padding: 8px; border-left: 4px solid #3498db;">
-                                            <div style="color: #fff; font-size: 12px; margin-bottom: 2px;">${d.name}</div>
+                                        <div style="background: rgba(255,255,255,0.05); border-radius: 4px; padding: 8px; border-left: 4px solid ${d.weight > 3 ? '#e74c3c' : '#3498db'};">
+                                            <div style="color: #fff; font-size: 12px; margin-bottom: 2px; display:flex; justify-content:space-between;">
+                                                <span>${d.name}</span>
+                                                <span style="color:${d.weight > 3 ? '#e74c3c' : '#bdc3c7'}; font-size:10px;">(權重:${d.weight})</span>
+                                            </div>
                                             <div style="display: flex; justify-content: space-between; align-items: flex-end;">
-                                                <span style="font-size: 14px; font-weight: bold; color: #3498db;">${d.count}</span>
-                                                <span style="font-size: 10px; color: #8b949e;">/ ${d.max}</span>
+                                                <div>
+                                                    <span style="font-size: 14px; font-weight: bold; color: #3498db;">${d.count}</span>
+                                                    <span style="font-size: 10px; color: #8b949e;">/ ${d.max}</span>
+                                                </div>
+                                                <div style="color: var(--gold); font-weight:bold; font-size:12px;">+${d.score}分</div>
                                             </div>
                                         </div>
                                     `).join('') || '<div style="color: #7f8c8d;">無板塊數據</div>'}
@@ -3971,13 +3963,13 @@
                                             <span style="color:${d.lv4 > 0 ? '#e74c3c' : '#888'}">L4:${d.lv4}</span> | 
                                             <span style="color:${d.lv3 > 0 ? '#f1c40f' : '#888'}">L3:${d.lv3}</span>
                                         </div>
-                                        <div style="font-size:10px; color:#8b949e; text-align:right; margin-top:2px;">+${d.score}分</div>
+                                        <div style="font-size:10px; color:#8b949e; text-align:right; margin-top:2px;">(貢獻 ${d.rawScore || 0} 點)</div>
                                     </div>
                                 `}).join('') || '<div style="color: #7f8c8d;">無寵物數據</div>'}
                                 </div>
 
                                 <!-- 技能 -->
-                                <div style="color: #ffd93d; font-weight:bold; margin: 15px 0 8px 0;">⚔️ 技能烙印 (前12強)</div>
+                                <div style="color: #ffd93d; font-weight:bold; margin: 15px 0 8px 0;">⚔️ 技能烙印 (特化權重)</div>
                                 <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;">
                                 ${(scoreResult.breakdown.stigma.details || []).slice(0, 12).map(d => {
                     // 顏色邏輯: 高分紅, 中分橘, 低分藍
@@ -3989,12 +3981,14 @@
                     return `
                                     <div style="background: rgba(255,255,255,0.05); border-radius: 4px; padding: 6px; border-left: 3px solid ${sColor}; text-align:center;">
                                         <div style="color: #fff; font-size: 11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${d.name}">${d.name}</div>
-                                        <div style="color: ${sColor}; font-weight: bold; font-size: 13px;">Lv.${d.level}</div>
-                                        <div style="font-size: 9px; color: #8b949e;">${d.points}點</div>
+                                        <div style="color: ${sColor}; font-weight: bold; font-size: 13px;">Lv.${d.level} <span style="font-size:10px; color:#aaa;">(${d.points}分)</span></div>
                                     </div>
                                 `}).join('') || '<div style="color: #7f8c8d;">無技能數據</div>'}
                                 </div>
-                                <div style="text-align: right; color: #7f8c8d; font-size: 10px; margin-top: 4px;">總點數: ${scoreResult.breakdown.stigma.totalPoints} 點</div>
+                                <div style="text-align: right; margin-top: 4px;">
+                                    <span style="color: #ffd93d; font-weight: bold; font-size: 13px;">總強度: ${scoreResult.breakdown.stigma.rawScore} / 1200</span>
+                                    <span style="color: #ff6b35; font-size: 12px; margin-left: 6px; font-weight: bold;">➡ ${scoreResult.breakdown.stigma.score} / 30 分</span>
+                                </div>
 
                                 <!-- 稱號 -->
                                 <div style="color: #ffd93d; font-weight:bold; margin: 15px 0 8px 0;">🏅 稱號 (量表)</div>
@@ -4004,7 +3998,7 @@
                                         <div style="font-size: 16px; font-weight: bold; color: #fff;">${scoreResult.breakdown.title.ownedCount} <span style="font-size:12px; font-weight:normal; color:#888;">/ ${scoreResult.breakdown.title.totalCount}</span></div>
                                     </div>
                                     <div style="text-align: right;">
-                                        <div style="font-size: 10px; color: #8b949e;">規則: 每100個 +1分</div>
+                                        <div style="font-size: 10px; color: #8b949e;">規則: 達成 50% 總數得 4 分，達成 100% 得 5 分</div>
                                         <div style="color: #f1c40f; font-weight: bold; font-size: 14px;">+${scoreResult.breakdown.title.score} 分</div>
                                     </div>
                                 </div>
@@ -5721,6 +5715,6 @@
 </body>
 
 </html>
-<script src="equipment-score.js"></script>
+<script src="equipment-score.js?v=20260216_1600"></script>
 <script src="skill-database.js"></script>
 <script src="health_check.js"></script>
