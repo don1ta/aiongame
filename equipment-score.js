@@ -210,13 +210,10 @@ function calculateEquipmentRarityScore(itemDetails) {
         const d = item.detail;
         if (!d || !d.name) return;
 
-        const slot = item.slotPos;
-        // 判定範圍: 1-8(防具), 21(盾?), 9-20(飾品/翅膀?), 22-40(其他飾品)
-        const isArmor = (slot >= 1 && slot <= 8) || slot === 21;
-        const isAccessory = (slot >= 9 && slot <= 20) || (slot >= 22 && slot <= 40);
-
-        // 只計算武防和飾品 (含翅膀 slot 15)
-        if (!isArmor && !isAccessory) return;
+        const slot = Number(item.slotPos);
+        // Aion slot 定義: 0(主手), 1(副手), 2(頭), 3(身), 4(手), 5(腳), 6(肩), 7(項鍊), 8(耳環1), 9(耳環2), 10(戒1), 11(戒2), 12(腰), 15(翅膀), etc.
+        // 擴大允許範圍 0 ~ 40 以涵蓋所有裝備 (包含飾品與主手武器)
+        if (isNaN(slot) || slot < 0 || slot > 40) return;
 
         // 使用共用邏輯取得品階資訊
         const info = getEquipmentRarityInfo(item);
@@ -664,11 +661,15 @@ function calculateEquipmentScore(itemDetails, boardData, petInsight, skillData, 
 
     // === 指數加權評分系統 (總計100分) ===
 
-    // 1. 裝備品階 (30分) - 使用指數加權系統
-    // 注意：裝備品階已包含古文石，不需要額外計算
     // rarity.score 是所有裝備的得分總和
-    // 滿分：修正為 500 分，以涵蓋全身 +25 以上的頂級裝備
-    const rarityConverted = Math.min(Math.round((rarity.score / 500) * 30 * 10) / 10, 30);
+    // 滿分修正：540 分
+    // 1. 武防 8 件 + 可突破飾品 8 件 (項鍊x2/耳環x2/戒指x2/手鐲x2) = 16 件可突破
+    //    - 滿強度 (神話+20/突破+5/閃耀) = 32.0 × 16 = 512 分
+    // 2. 不可突破飾品 4 件 (腰帶/護身符/古文石x2)
+    //    - 腰帶/護身符 (傳說+10) = 10.0 × 2 = 20 分
+    //    - 古文石 (特殊+10) = 3.6 × 2 = 7.2 分
+    // 總計約 539.2 分 -> 取 540 為滿分基準
+    const rarityConverted = Math.min(Math.round((rarity.score / 540) * 30 * 10) / 10, 30);
 
     // 2. 板塊數量 (15分) - 權重計算
     const boardConverted = Math.min(board.score, 15);
