@@ -876,7 +876,7 @@ function getScoreAnalysis(breakdown) {
     }
 
     // 4. 技能分析（4 招核心技能即可）
-    if (breakdown.stigma.score < 20) {
+    if (breakdown.stigma.score < 24) {
         const currentIntensity = breakdown.stigma.totalPoints || 0;
         suggestions.push({
             title: '⚔️ 技能烙印',
