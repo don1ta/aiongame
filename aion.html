@@ -2958,7 +2958,7 @@
 
         const loadPassiveCache = () => {
             try {
-                const data = localStorage.getItem('PASSIVE_REAL_CACHE_V7');
+                const data = localStorage.getItem('PASSIVE_REAL_CACHE_V8');
                 if (data) window.PASSIVE_REAL_CACHE = JSON.parse(data);
             } catch (e) {
                 window.PASSIVE_REAL_CACHE = {};
@@ -2967,7 +2967,7 @@
 
         const savePassiveCache = () => {
             try {
-                localStorage.setItem('PASSIVE_REAL_CACHE_V7', JSON.stringify(window.PASSIVE_REAL_CACHE));
+                localStorage.setItem('PASSIVE_REAL_CACHE_V8', JSON.stringify(window.PASSIVE_REAL_CACHE));
             } catch (e) { }
         };
 
@@ -3005,10 +3005,11 @@
                         const m = cleanDesc.match(pRegex);
                         if (m) return parseFloat(m[1]) / 100;
 
-                        // 2. 如果沒找到 % 但找到關鍵字後面有數字 (例如 21)，且預設就是百分比，
-                        // 我們可以謹慎地認為這是遺漏 % 的 API 值，但這很容易出錯。
-                        // 這裡我們只允許在「明確含有 %」的情況下才承認它是百分比。
-                        return null;
+                        // 🔑 保險補強：如果上面沒抓到，但描述中有明顯的 '% '，且包含 key 的一部分
+                        if (cleanDesc.includes('生命力')) {
+                            const vMatch = cleanDesc.match(/生命力[^0-9]*增加[^0-9]*(\d+)\s*%/);
+                            if (vMatch) return parseFloat(vMatch[1]) / 100;
+                        }
                     } else {
                         // 3. 處理固定值 (如 迴避 200)
                         // 必須確保後面「不帶 %」，避免把百分比抓成固定值
@@ -3164,11 +3165,16 @@
             const container = document.getElementById('ge-checkbox-container');
             if (!container) return;
 
-            // Initialize active state from default if not set
+            // 💾 加強：從 localStorage 讀取該增益的勾選狀態
+            const savedStates = JSON.parse(localStorage.getItem('gainEffectStates_v1') || '{}');
+
             Object.keys(GAIN_EFFECT_DATABASE).forEach(key => {
-                if (GAIN_EFFECT_DATABASE[key].active === undefined) {
+                if (savedStates[key] !== undefined) {
+                    GAIN_EFFECT_DATABASE[key].active = savedStates[key];
+                } else if (GAIN_EFFECT_DATABASE[key].active === undefined) {
                     GAIN_EFFECT_DATABASE[key].active = GAIN_EFFECT_DATABASE[key].default;
                 }
+
                 // Initialize selectedWings array for Wing Collection
                 if (key === '翅膀收藏') {
                     // Load from localStorage if available
@@ -3182,8 +3188,8 @@
                     }
                     GAIN_EFFECT_DATABASE[key].selectedWings = saved;
 
-                    // 如果有已選擇的翅膀，自動啟用翅膀收藏加成
-                    if (saved.length > 0) {
+                    // 💡 優化：只有在「完全沒有儲存過狀態」且「有翅膀」時才自動啟用
+                    if (savedStates[key] === undefined && saved.length > 0) {
                         GAIN_EFFECT_DATABASE[key].active = true;
                     }
 
@@ -3414,6 +3420,13 @@
             if (GAIN_EFFECT_DATABASE[key]) {
                 GAIN_EFFECT_DATABASE[key].active = isChecked;
 
+                // 💾 儲存所有增益狀態到 localStorage
+                const states = {};
+                Object.keys(GAIN_EFFECT_DATABASE).forEach(k => {
+                    states[k] = GAIN_EFFECT_DATABASE[k].active;
+                });
+                localStorage.setItem('gainEffectStates_v1', JSON.stringify(states));
+
                 // Special handling for Wing Collection: Re-render controls to show/hide dropdown
                 if (key === '翅膀收藏') {
                     initGainControls();
@@ -3425,11 +3438,8 @@
                 }
 
                 // Update UI directly without re-rendering the whole list
-                // Find the input with this key
                 const inputs = document.querySelectorAll('#ge-checkbox-container input[type="checkbox"]');
                 inputs.forEach(input => {
-                    // Check if this input corresponds to the key
-                    // The structure is label > input + span
                     const span = input.nextElementSibling;
                     if (span && span.textContent.trim() === key) {
                         span.style.color = isChecked ? '#fff' : '#8b949e';
@@ -3438,7 +3448,6 @@
 
                 // Re-process data (Stats Only)
                 if (window.__LAST_DATA_JSON__) {
-                    // skipScroll=true, skipWingRender=true, statsOnly=true
                     processData(window.__LAST_DATA_JSON__, true, true, true);
                 }
             }
@@ -3849,15 +3858,18 @@
 
         // 🟢 標準化屬性名稱 (確保 被動技能 與 主表 欄位對齊)
         function normalizeKey(name, forcePerc = null) {
-            // 🚫 修正：將「暴擊抵抗」從中移除，因為它有固定值與百分比之分
+            // 🚫 嚴格區分：
+            // 「暴擊抵抗」 = 固定值 (Fixed Value, 如 100)
+            // 「暴擊抵抗增加」= 百分比 (Percentage, 如 6.5%)
             const alwaysPercent = ['戰鬥速度', '移動速度', '攻擊速度', '飛行速度', '暴擊傷害增幅', '物理致命一擊', '魔法致命一擊', '暴擊抵抗增加'];
             let cleanName = name.replace('%', '').trim();
+
+            if (cleanName === '暴擊抵抗') return '暴擊抵抗'; // 強制鎖定為固定值
 
             // 如果外部有指定 (forcePerc)，以外部為主；否則檢查是否為強制百分比屬性
             let isPerc = (forcePerc !== null) ? forcePerc : alwaysPercent.some(k => name.includes(k));
 
             if (alwaysPercent.includes(cleanName) || isPerc) {
-                // 修正：特定對應到您剛改好的「暴擊抵抗增加%」
                 if (cleanName === '暴擊抵抗增加') return '暴擊抵抗增加%';
                 return cleanName + '%';
             }
@@ -3891,8 +3903,12 @@
 
             document.getElementById('main-content').style.display = 'flex';
 
-            // 更新被動技能增益效果
-            updatePassiveSkills(data);
+            // 🛡️ 核心修復：更新被動技能增益效果
+            // 只有在非「僅更新統計」的情況（如重新搜尋）才解析技能，防止勾選開關時導致數據跳回預設值。
+            if (!statsOnly) {
+                updatePassiveSkills(data);
+            }
+
             // 重新渲染增益效果控制項以更新 Tooltip (包含新的 breakdown 資訊)
             // 但如果翅膀下拉選單目前是開啟的，跳過重繪以避免關閉選單
             const _wingDropdown = document.getElementById('wing-dropdown-list');
