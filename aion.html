@@ -2962,22 +2962,36 @@
             let hasPassive = false;
 
             // 輔助函式：從描述文字中提取數值
-            const extractStatValue = (desc, key) => {
+            // defaultVal 用於判斷預期類型（< 1 表示百分比，優先尋找帶 % 的匹配）
+            const extractStatValue = (desc, key, defaultVal) => {
                 if (!desc) return null;
                 try {
                     // 先過濾掉所有 HTML 標籤，避免抓到顏色代碼中的數字 (例如 #FCC78B 中的 78)
                     const cleanDesc = desc.replace(/<[^>]+>/g, '');
 
                     const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                    // 修正正則：同時抓取數值後面的可能單位 (%)
+                    const isExpectPercent = (defaultVal !== undefined && Math.abs(defaultVal) > 0 && Math.abs(defaultVal) < 1);
+
+                    // 如果預期是百分比類型，優先尋找帶 % 的匹配（避免抓到同名的整數值）
+                    if (isExpectPercent) {
+                        // 全域搜尋所有匹配，找出帶 % 的那個
+                        const regexAll = new RegExp(`${escapedKey}[^0-9\\-]*([\\+\\-]?\\d+(?:\\.\\d+)?)\\s*(%)`, "gi");
+                        let m;
+                        while ((m = regexAll.exec(cleanDesc)) !== null) {
+                            if (m[2] === '%') {
+                                return parseFloat(m[1]) / 100; // 7% → 0.07
+                            }
+                        }
+                        // 找不到帶 % 的匹配，回傳 null（保留預設值）
+                        return null;
+                    }
+
+                    // 一般類型：直接抓第一個匹配
                     const regex = new RegExp(`${escapedKey}[^0-9\\-]*([\\+\\-]?\\d+(?:\\.\\d+)?)\\s*(%?)`, "i");
                     const match = cleanDesc.match(regex);
                     if (match) {
                         let val = parseFloat(match[1]);
-                        // 如果後面有 %，則除以 100 (因為我們系統統一用 1 = 100% 的小數儲存百分比，顯示時再乘回來)
-                        if (match[2] === '%') {
-                            val = val / 100;
-                        }
+                        if (match[2] === '%') val = val / 100;
                         return val;
                     }
                 } catch (e) {
@@ -3059,14 +3073,11 @@
                                         let hasChange = false;
 
                                         for (let sName in dbStats) {
-                                            let extractedVal = extractStatValue(info.description, sName);
                                             let defaultVal = dbStats[sName];
+                                            // 傳入 defaultVal，讓函數判斷是否優先尋找帶 % 的匹配
+                                            let extractedVal = extractStatValue(info.description, sName, defaultVal);
 
                                             if (extractedVal !== null) {
-                                                // 單位修正
-                                                if (Math.abs(defaultVal) > 0 && Math.abs(defaultVal) < 1 && Math.abs(extractedVal) >= 1) {
-                                                    extractedVal = extractedVal / 100;
-                                                }
                                                 parsedStats[sName] = extractedVal;
                                                 hasChange = true;
                                             } else {
