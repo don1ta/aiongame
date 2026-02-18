@@ -4,8 +4,56 @@
  */
 
 const SKILL_API_BASE = 'https://questlog.gg/aion-2/api/trpc/database.getSkill';
-const CACHE_PREFIX = 'aion_skill_';
+const CACHE_PREFIX = 'aion_skill_v7_'; // 強制刷新快取代 v7 (全面數值偵測版)
 const CACHE_EXPIRE = 86400000 * 7;
+
+// 處理 descriptionData 模板變數解析 (移至頂部確保可用)
+function processDescriptionData(dd, targetLevel) {
+    if (!dd || !dd.text) return '';
+    let text = dd.text;
+
+    // 取得變數集合
+    let variables = dd.placeholders || dd.variables || dd;
+
+    // 1. 清理所有舊標籤，回歸最純淨的敘述文字
+    text = text.replace(/<span[^>]*>/gi, '').replace(/<\/span>/gi, '');
+
+    // 2. 解析並替換變數 (此時先不加顏色，等最後統一處理)
+    for (let key in variables) {
+        if (key === 'text' || key === 'placeholders' || key === 'variables') continue;
+        let varData = variables[key];
+        let val = null;
+
+        if (varData.levels && varData.levels[targetLevel]) {
+            val = varData.levels[targetLevel].values;
+        } else if (varData.levels) {
+            let levels = Object.keys(varData.levels).map(Number).sort((a, b) => b - a);
+            let matchLv = levels.find(l => l <= targetLevel) || levels[levels.length - 1];
+            if (matchLv) val = varData.levels[matchLv].values;
+        }
+
+        if (!val && varData.base) val = varData.base.values;
+
+        if (val && Array.isArray(val)) {
+            let numVal = val[1];
+            if (varData.modifier === 'divide100') numVal = (parseFloat(numVal) / 100).toString();
+            else if (varData.modifier === 'time') numVal = (parseFloat(numVal) / 1000).toString() + 's';
+
+            if (key.includes('se_') || key.includes('SkillUI')) {
+                if (varData.property && varData.property.includes('Min')) numVal = val[0];
+                if (varData.property && varData.property.includes('Max')) numVal = val[1] || val[0];
+            }
+            if (numVal !== null) text = text.split(key).join(numVal);
+        }
+    }
+
+    // 3. 終極數值偵測：找出句子中所有的數字、範圍 ~、百分比 %，並統一染成金色
+    // 正則解釋：數字(含小數) 可能接著 ~數字，最後可能帶 %
+    const numRegex = /(\d+(?:\.\d+)?(?:~\d+(?:\.\d+)?)?%?)/g;
+    text = text.replace(numRegex, '<span class="api-num-highlight" style="color:#FCC78B !important; font-weight:bold; font-family:\'Segoe UI\', sans-serif;">$1</span>');
+
+    return text;
+}
 
 // 檢查可用性
 function isQuotaExceeded(e) {
@@ -90,17 +138,25 @@ async function fetchSkillFromAPI(skillId, level) {
         let skillData = data.result?.data?.json || data.result?.data || data.data;
         if (!skillData) return null;
 
+        console.log(`[SkillAPI] 用戶端取得資料 ID:${skillId}`, skillData);
+
         let levelData = skillData.levels?.find(l => l.level === level);
         if (!levelData && skillData.levels?.length > 0) {
             const sorted = [...skillData.levels].sort((a, b) => b.level - a.level);
             levelData = sorted.find(l => l.level <= level) || sorted[sorted.length - 1];
         }
 
-        let description = levelData?.description || skillData.description || '';
-
-        // 如果原始描述太短，才找 descriptionData
-        if ((!description || description.length < 5) && levelData?.descriptionData?.text) {
-            description = levelData.descriptionData.text;
+        // 處理 descriptionData (優先於純文字描述)
+        // 這是解決高等級技能數值顯示錯誤（如 Lv16 顯示 Lv1 數值）的關鍵
+        if (skillData.descriptionData && skillData.descriptionData.text) {
+            description = processDescriptionData(skillData.descriptionData, level);
+        } else {
+            // 舊邏輯 fallback
+            description = levelData?.description || skillData.description || '';
+            // 如果原始描述太短，才找 levels 中的 descriptionData (有些舊 API 結構)
+            if ((!description || description.length < 5) && levelData?.descriptionData?.text) {
+                description = levelData.descriptionData.text;
+            }
         }
 
         if (description) {
@@ -108,8 +164,8 @@ async function fetchSkillFromAPI(skillId, level) {
             const noise = ['FALSE', 'DeBuff', 'Vacant', 'SkillUI', 'Sum', 'Min', 'Max', 'Dmg'];
             noise.forEach(word => description = description.replace(new RegExp(word, 'gi'), ''));
 
-            // 2. 數值填充
-            if (levelData) {
+            // 2. 數值填充 (僅當 descriptionData 未處理時使用舊邏輯)
+            if (!skillData.descriptionData && levelData) {
                 const clean = (v) => (v && v.length < 8 && v !== '0') ? v : null;
                 const val1 = clean(levelData.minValue), val2 = clean(levelData.maxValue),
                     val3 = clean(levelData.minValue2), val4 = clean(levelData.maxValue2);
@@ -124,7 +180,7 @@ async function fetchSkillFromAPI(skillId, level) {
 
             // 3. 最終清理 (修正點：保留 span 和 br 標籤，只移除 se_ 等垃圾標籤)
             description = description
-                .replace(/\{[^}]+\}/g, '') // 清理 {變數}
+                .replace(/\{[^}]+\}/g, '') // 清理未解析的 {變數}
                 .replace(/<(se_|SkillUI)[^>]+>/g, '') // 只清理特定垃圾標籤 <se_...>
                 .replace(/<(?!\/?(span|br|b|strong))[^>]+>/gi, '') // 移除除了 span, br, b 以外的標籤 (更安全)
                 .replace(/\d+!\d+!\d+/g, '')

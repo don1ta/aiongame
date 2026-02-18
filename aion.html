@@ -6,8 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="referrer" content="no-referrer">
     <title>Aion2 高階解析 - 角色名稱快速查詢版</title>
-    <script src="skill-database.js"></script>
-    <script src="skill-api.js"></script>
+    <script src="skill-api.js?v=99"></script>
+    <script src="health_check.js?v=99"></script>
+    <script src="equipment-score.js?v=UI_FIX_FINAL"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script
         src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
@@ -540,6 +541,27 @@
         .stat-tab-content.active {
             display: flex;
             flex-direction: column;
+        }
+
+        /* 精確設定：技能名稱純白，敘述文字灰白，數值金色 */
+        .stat-row-label {
+            color: #FFFFFF !important;
+            /* 技能名稱：純白 */
+            font-weight: 800;
+        }
+
+        .skill-description-box,
+        .stat-row-desc {
+            color: #94a3b8;
+            /* 敘述背景文字：灰白色 (Slate 400 質感更佳) */
+        }
+
+        /* 只有數值標籤顯示金色 */
+        .api-num-highlight,
+        .stat-row-val {
+            color: #FCC78B !important;
+            font-weight: bold;
+            text-shadow: 0 0 5px rgba(252, 199, 139, 0.4);
         }
 
         .stat-list-container {
@@ -2734,12 +2756,6 @@
                 active: undefined,
                 default: true // 🟢 設為預設開啟
             },
-            '誓約石版': {
-                // 假設值，待填入真實數據
-                stats: { '攻擊力': 0, '命中': 0 },
-                active: undefined,
-                default: true // 🟢 設為預設開啟
-            },
             '被動技能': {
                 stats: {},
                 default: true
@@ -2800,13 +2816,6 @@
             if (!charName) {
                 alert("請輸入角色名稱");
                 return;
-            }
-
-            // 自動格式化角色名稱 (首字大寫其餘小寫，支援大小寫不敏感搜尋)
-            if (charName.length > 0) {
-                charName = charName.charAt(0).toUpperCase() + charName.slice(1).toLowerCase();
-                // 同步更新輸入框顯示
-                document.getElementById('charNameInput').value = charName;
             }
 
             // 儲存設定
@@ -2950,6 +2959,29 @@
         // 🟢 新增：解析被動技能並更新到增益效果資料庫
         window.PASSIVE_REAL_CACHE = {}; // 用於快取已解析的 API 數值
 
+        const loadPassiveCache = () => {
+            try {
+                const data = localStorage.getItem('PASSIVE_REAL_CACHE_V3');
+                if (data) {
+                    window.PASSIVE_REAL_CACHE = JSON.parse(data);
+                    console.log("被動技能快取 V3 已載入");
+                }
+            } catch (e) {
+                window.PASSIVE_REAL_CACHE = {};
+            }
+        };
+
+        const savePassiveCache = () => {
+            try {
+                localStorage.setItem('PASSIVE_REAL_CACHE_V3', JSON.stringify(window.PASSIVE_REAL_CACHE));
+            } catch (e) {
+                console.error("儲存快取失敗:", e);
+            }
+        };
+
+        // 嘗試載入快取
+        loadPassiveCache();
+
         function updatePassiveSkills(data) {
 
             // 重置被動技能統計
@@ -2966,33 +2998,42 @@
             const extractStatValue = (desc, key, defaultVal) => {
                 if (!desc) return null;
                 try {
-                    // 先過濾掉所有 HTML 標籤，避免抓到顏色代碼中的數字 (例如 #FCC78B 中的 78)
-                    const cleanDesc = desc.replace(/<[^>]+>/g, '');
+                    // 先過濾掉所有 HTML 標籤
+                    const cleanDesc = desc.replace(/<[^>]+>/g, '').replace(/\s+/g, '');
 
-                    const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                    const isExpectPercent = (defaultVal !== undefined && Math.abs(defaultVal) > 0 && Math.abs(defaultVal) < 1);
-
-                    // 如果預期是百分比類型，優先尋找帶 % 的匹配（避免抓到同名的整數值）
-                    if (isExpectPercent) {
-                        // 全域搜尋所有匹配，找出帶 % 的那個
-                        const regexAll = new RegExp(`${escapedKey}[^0-9\\-]*([\\+\\-]?\\d+(?:\\.\\d+)?)\\s*(%)`, "gi");
-                        let m;
-                        while ((m = regexAll.exec(cleanDesc)) !== null) {
-                            if (m[2] === '%') {
-                                return parseFloat(m[1]) / 100; // 7% → 0.07
-                            }
-                        }
-                        // 找不到帶 % 的匹配，回傳 null（保留預設值）
-                        return null;
+                    // 模糊匹配處理：將關鍵字轉為正則，中間允許任意字元 (例如「生命力增加」匹配「最大生命力增加」)
+                    // 我們將關鍵字拆分，例如「生命力」、「增加」
+                    let fuzzyPattern = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    if (key.includes('增加')) {
+                        fuzzyPattern = fuzzyPattern.replace('增加', '.*增加');
+                    } else if (key.includes('減少')) {
+                        fuzzyPattern = fuzzyPattern.replace('減少', '.*減少');
                     }
 
-                    // 一般類型：直接抓第一個匹配
-                    const regex = new RegExp(`${escapedKey}[^0-9\\-]*([\\+\\-]?\\d+(?:\\.\\d+)?)\\s*(%?)`, "i");
-                    const match = cleanDesc.match(regex);
+                    const isExpectPercent = (defaultVal !== undefined && Math.abs(defaultVal) > 0 && Math.abs(defaultVal) < 1);
+
+                    // 1. 優先嘗試帶有關鍵字的完整匹配
+                    let regex;
+                    if (isExpectPercent) {
+                        regex = new RegExp(`${fuzzyPattern}[^0-9\\-]*([\\+\\-]?\\d+(?:\\.\\d+)?)\\s*%`, "i");
+                    } else {
+                        regex = new RegExp(`${fuzzyPattern}[^0-9\\-]*([\\+\\-]?\\d+(?:\\.\\d+)?)`, "i");
+                    }
+
+                    let match = cleanDesc.match(regex);
                     if (match) {
                         let val = parseFloat(match[1]);
-                        if (match[2] === '%') val = val / 100;
+                        // 如果帶有 % 符號，或者是預期百分比但抓到的是整數 (如 21)，則除以 100
+                        if (cleanDesc.includes(match[1] + '%') || (isExpectPercent && val > 1)) {
+                            return val / 100;
+                        }
                         return val;
+                    }
+
+                    // 2. 備案：如果關鍵字匹配失敗，但在描述中只發現一個數字，且符合預期類型
+                    const allNums = cleanDesc.match(/[\+\-]?\d+(\.\d+)?/g);
+                    if (allNums && allNums.length === 1 && isExpectPercent) {
+                        return parseFloat(allNums[0]) / 100;
                     }
                 } catch (e) {
                     console.error("解析失敗:", e);
@@ -3030,7 +3071,7 @@
 
                     // 產生描述
                     let displayNum = Number(parseFloat(displayVal).toFixed(2));
-                    let sourceMark = isReal ? '' : '<span style="color:gray;font-size:10px">(預設)</span>';
+                    let sourceMark = isReal ? '' : '<span style="color:gray;font-size:10px"></span>';
                     let desc = `[${skillName}]: +${displayNum}${unit} ${sourceMark}`;
 
                     GAIN_EFFECT_DATABASE['被動技能'].breakdowns[key].push(desc);
@@ -3051,60 +3092,62 @@
                     // 只處理被動技能
                     if (skill.category !== 'Passive') return;
 
-                    // 檢查資料庫是否有此技能 (使用 window.PASSIVE_SKILL_DATABASE)
+                    // 檢查資料庫是否有此技能，確認其是否有我們感興趣的屬性 (如生命力增加)
                     const dbStats = window.PASSIVE_SKILL_DATABASE && window.PASSIVE_SKILL_DATABASE[skill.name];
 
                     if (dbStats) {
-                        // 檢查快取
+                        // a. 初始顯示：有快取用快取，沒快取用預設
                         const realCache = window.PASSIVE_REAL_CACHE && window.PASSIVE_REAL_CACHE[skill.id];
-
                         if (realCache) {
-                            // 使用快取數值
                             processStats(skill.name, realCache, true);
                         } else {
-                            // 使用預設數值 (暫時)
                             processStats(skill.name, dbStats, false);
+                        }
 
-                            // 發動非同步抓取
-                            if (window.SkillAPI && window.SkillAPI.fetchSkill) {
-                                window.SkillAPI.fetchSkill(skill.id, skill.level || 1).then(info => {
+                        // b. 非同步同步：從 API 抓取最新描述並更新數值
+                        if (window.SkillAPI && window.SkillAPI.fetchSkill) {
+                            window.SkillAPI.fetchSkill(skill.id, skill.level || 1)
+                                .then(info => {
                                     if (info && info.description) {
                                         let parsedStats = {};
-                                        let hasChange = false;
+                                        let hasChanges = false;
 
-                                        for (let sName in dbStats) {
-                                            let defaultVal = dbStats[sName];
-                                            // 傳入 defaultVal，讓函數判斷是否優先尋找帶 % 的匹配
-                                            let extractedVal = extractStatValue(info.description, sName, defaultVal);
-
-                                            if (extractedVal !== null) {
-                                                parsedStats[sName] = extractedVal;
-                                                hasChange = true;
+                                        for (let key in dbStats) {
+                                            const apiVal = extractStatValue(info.description, key, dbStats[key]);
+                                            if (apiVal !== null) {
+                                                parsedStats[key] = apiVal;
+                                                hasChanges = true;
                                             } else {
-                                                parsedStats[sName] = defaultVal;
+                                                parsedStats[key] = dbStats[key];
                                             }
                                         }
 
-                                        if (hasChange) {
+                                        if (hasChanges) {
                                             if (!window.PASSIVE_REAL_CACHE) window.PASSIVE_REAL_CACHE = {};
-                                            // 只有當快取不存在時才視為有效變更並重繪，防止無窮迴圈
-                                            if (!window.PASSIVE_REAL_CACHE[skill.id]) {
+                                            const oldData = JSON.stringify(window.PASSIVE_REAL_CACHE[skill.id]);
+                                            const newData = JSON.stringify(parsedStats);
+
+                                            if (oldData !== newData) {
                                                 window.PASSIVE_REAL_CACHE[skill.id] = parsedStats;
-                                                console.log(`✅ [${skill.name}] API數據更新`, parsedStats);
+                                                savePassiveCache();
+                                                // 強制重新計算所有被動技能並渲染
                                                 updatePassiveSkills(data);
-                                                initGainControls();
+                                                if (typeof initGainControls === 'function') initGainControls();
                                             }
                                         }
                                     }
-                                });
-                            }
+                                }).catch(e => { });
                         }
                     }
                 });
             }
 
-            // 2. 備案：解析 Stat List中的其他屬性 (維持原有邏輯但增加檢查)
-            if (!data || !data.stat || !data.stat.statList) return;
+            // 2. 備案：解析 Stat List 中的其他屬性
+            if (!data || !data.stat || !data.stat.statList) {
+                // 如果沒有詳細技能列表，至少確保 HTML 有基本回饋
+                if (!hasPassive) window.__PASSIVE_SKILLS_HTML__ = '<div style="padding:20px; text-align:center; color:#8b949e;">未偵測到被動技能加成</div>';
+                return;
+            }
 
             // 定義需要忽略的標準屬性列表 (避免重複計算或誤判)
             const standardStats = [
@@ -3125,81 +3168,47 @@
                 "PVE攻擊力", "PVE防禦力", "PVE命中", "PVE迴避", "PVE傷害增幅", "PVE傷害耐性",
                 "PVP攻擊力", "PVP防禦力", "PVP命中", "PVP迴避", "PVP傷害增幅", "PVP傷害耐性", "PVP暴擊", "PVP暴擊抵抗",
                 "首領攻擊力", "首領防禦力", "首領傷害增幅", "首領傷害耐性",
-                "攻擊力", "防禦力", "命中", "迴避", "暴擊", "生命力", "精神力"
+                "攻擊力", "防禦力", "命中", "迴備", "暴擊", "生命力", "精神力"
             ];
 
-            let passiveHtmlFallback = ''; // 備用 HTML，避免重複
-
             data.stat.statList.forEach(stat => {
-                // 如果已經在資料庫中處理過，則跳過 (避免重複計算)
-                if (PASSIVE_SKILL_DATABASE[stat.name]) return;
-
-                // 如果屬性名稱不在標準列表中，且顯然不是某種基礎屬性，我們假設它是被動技能來源
-                if (!standardStats.includes(stat.name) && !standardStats.some(s => stat.name === s)) {
-
+                if (window.PASSIVE_SKILL_DATABASE && window.PASSIVE_SKILL_DATABASE[stat.name]) return;
+                if (!standardStats.includes(stat.name)) {
                     const valStr = String(stat.value);
                     let foundStatName = null;
                     let foundValue = 0;
-
-                    // 嘗試從數值字串中匹配屬性名稱 (例如: "暴擊傷害增幅增加6%")
-                    // Sort targetStats by length (descending) to match longest specific string first
-                    // e.g. "PVE攻擊力" should match before "攻擊力"
                     targetStats.sort((a, b) => b.length - a.length);
 
                     for (const target of targetStats) {
                         if (valStr.includes(target)) {
                             foundStatName = target;
-                            // 解析數值 (支援小數)
                             const numMatch = valStr.match(/[\+\-]?\d+(\.\d+)?/);
-                            if (numMatch) {
-                                foundValue = parseFloat(numMatch[0]);
-                            }
+                            if (numMatch) foundValue = parseFloat(numMatch[0]);
                             break;
                         }
                     }
 
-                    // 如果成功解析出屬性與數值
                     if (foundStatName && foundValue !== 0) {
-                        // 判斷是否為百分比
-                        // 1. 值字串包含 %
-                        // 2. 特殊屬性名稱處理 
                         const isPercent = valStr.includes('%');
-
                         let key = foundStatName;
-                        if (isPercent && !key.includes('%')) {
-                            key += '%';
-                        } else if (!isPercent && key.includes('%')) {
-                            // 如果名稱本來就帶%，但數值沒%，通常視為%屬性
-                            // Do nothing
-                        }
+                        if (isPercent && !key.includes('%')) key += '%';
 
-
-                        // 累積數值
                         if (!GAIN_EFFECT_DATABASE['被動技能'].stats[key]) {
                             GAIN_EFFECT_DATABASE['被動技能'].stats[key] = 0;
-                            // 初始化 breakdown 結構 (如果尚未存在)
                             if (!GAIN_EFFECT_DATABASE['被動技能'].breakdowns) GAIN_EFFECT_DATABASE['被動技能'].breakdowns = {};
                             if (!GAIN_EFFECT_DATABASE['被動技能'].breakdowns[key]) GAIN_EFFECT_DATABASE['被動技能'].breakdowns[key] = [];
                         }
                         GAIN_EFFECT_DATABASE['被動技能'].stats[key] += foundValue;
-
-                        // 儲存詳細來源資訊 format: [來源名稱]: +數值%
                         let unit = isPercent ? '%' : '';
-                        // 避免重複加入
-                        let desc = `[${stat.name}]: +${foundValue}${unit}`;
-                        // 簡單檢查一下避免重複 (雖然每次 processData 都會重置)
-                        GAIN_EFFECT_DATABASE['被動技能'].breakdowns[key].push(desc);
+                        GAIN_EFFECT_DATABASE['被動技能'].breakdowns[key].push(`[${stat.name}]: +${foundValue}${unit}`);
 
-                        // 生成顯示 HTML
                         hasPassive = true;
                         passiveHtml += `
-                        <div class="stat-list-row">
-                            <div class="stat-row-label" style="color:#ffd93d; font-size:13px;">${stat.name}</div>
-                            <div class="stat-row-val">+${foundValue}${isPercent ? '%' : ''}</div>
-                            <div class="stat-row-desc" style="font-size:11px;">${key.replace('%', '')}</div>
-                        </div>`;
-
-                        // console.log(`[被動技能解析] 來源: ${stat.name}, 解析屬性: ${key}, 數值: ${foundValue}`);
+                            <div class="stat-list-row">
+                                <div class="stat-row-label" style="color:#ffd93d; font-size:13px;">${stat.name}</div>
+                                <div class="stat-row-val">+${foundValue}${unit}</div>
+                                <div class="stat-row-desc" style="font-size:11px;">${key.replace('%', '')}</div>
+                            </div>`;
                     }
                 }
             });
@@ -4526,15 +4535,18 @@
                     for (let statName in effect.stats) {
                         let val = effect.stats[statName];
 
-                        // Handle % values if needed (heuristic or explicit)
-                        // Currently assumes DB values match the semantic (flat vs perc)
-                        // If normalizeKey detects % in key, fine.
-
                         let key = normalizeKey(statName, statName.includes('%'));
                         let entry = getEntry(key);
 
-                        entry.other += val;
-                        entry.subtotals.gainEffect += val;
+                        // 單位統一：entry.other 的百分比值以整數儲存 (6 = 6%)
+                        // GAIN_EFFECT_DATABASE.stats 的百分比值可能是小數 (0.06 = 6%)，需轉換
+                        let applyVal = val;
+                        if (key.includes('%') && Math.abs(val) > 0 && Math.abs(val) < 1) {
+                            applyVal = val * 100;
+                        }
+
+                        entry.other += applyVal;
+                        entry.subtotals.gainEffect += applyVal;
 
                         let unit = key.includes('%') ? '%' : '';
 
@@ -4544,7 +4556,7 @@
                                 entry.detailGroups.gainEffect.push(desc);
                             });
                         } else {
-                            entry.detailGroups.gainEffect.push(`[${effectName}]: +${val}${unit}`);
+                            entry.detailGroups.gainEffect.push(`[${effectName}]: +${applyVal}${unit}`);
                         }
                     }
                 }
