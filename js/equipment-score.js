@@ -271,7 +271,8 @@ function calculateEquipmentRarityScore(itemDetails) {
                 exceedBonus: Math.round(exceedBonus * 10) / 10,
                 shineBonus: Math.round(shineBonus * 10) / 10,
                 score: itemRawScore,  // 單件得分
-                color: info.color
+                color: info.color,
+                id: d.id || item.itemId // Added ID for reference
             });
         }
     });

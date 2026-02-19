@@ -65,12 +65,11 @@
     };
 
     // 排名類型對照表
-    // 排名類型對照表 (修正版)
     const RANKING_NAMES = {
-        '0': '🏰 深淵', // 修正: ID 0 是深淵
-        '1': '👻 夢魘', // 相容舊 ID
+        '0': '🏰 深淵',
+        '1': '👻 夢魘',
         '2': '✨ 超越',
-        '3': '🗡️ 單人競技場', // 修正: ID 5 是單人
+        '3': '🗡️ 單人競技場',
         '4': '⚔️ 協力競技場',
         '5': '🎯 征服',
         '6': '⚡ 覺醒'
@@ -87,8 +86,8 @@
     };
 
     // 抓取數據
-    async function fetchData() {
-        const region = g_currentRegion;
+    async function fetchData(targetRegion) {
+        const region = targetRegion || g_currentRegion;
         const baseUrl = "https://questlog.gg/aion-2/api/trpc";
         const input = encodeURIComponent(JSON.stringify({ region: region }));
 
@@ -139,17 +138,33 @@
 
         // 如果 HTML 已經有該容器，就直接使用
         if (!container) {
-            const chartContainer = document.getElementById('class-dist-chart-container');
-            if (chartContainer) {
+
+            // 嘗試建立在伺服器分頁的最上層容器中 (tab-content-server)
+            const tabContentServer = document.getElementById('tab-content-server');
+            const serverChartContainer = document.getElementById('server-dist-chart-container');
+
+            if (tabContentServer && serverChartContainer) {
                 container = document.createElement('div');
                 container.id = containerId;
                 container.style.marginBottom = '20px';
-                container.style.padding = '0 15px'; // match html
-                chartContainer.parentElement.insertBefore(container, chartContainer);
+                container.style.padding = '0 15px';
+                // 插入在伺服器列表之前
+                tabContentServer.insertBefore(container, serverChartContainer);
             } else {
-                return;
+                // 如果找不到伺服器分頁結構，才回退到舊位置 (Class Tab)
+                const chartContainer = document.getElementById('class-dist-chart-container');
+                if (chartContainer) {
+                    container = document.createElement('div');
+                    container.id = containerId;
+                    container.style.marginBottom = '20px';
+                    container.style.padding = '0 15px';
+                    chartContainer.parentElement.insertBefore(container, chartContainer);
+                } else {
+                    return;
+                }
             }
         }
+
 
         let elyosCount = 0;
         let asmodianCount = 0;
@@ -180,14 +195,14 @@
         const diff = Math.abs(parseFloat(elyosPerc) - parseFloat(asmodianPerc));
         let statusHtml = '';
         if (diff <= 5) { // 差距 5% 內視為平衡
-            statusHtml = `<span style="color:#2ecc71; font-size:12px; display:flex; align-items:center; gap:4px;"><span style="font-size:14px;">✅</span> 平衡</span>`;
+            statusHtml = `<span style="color:#2ecc71; font-size:12px; display:flex; align-items:center; gap:4px;"><span style="font-size:14px;"></span> 平衡</span>`;
         } else {
-            statusHtml = `<span style="color:#e74c3c; font-size:12px; display:flex; align-items:center; gap:4px;"><span style="font-size:14px;">⚠️</span> 差距 ${(diff).toFixed(1)}%</span>`;
+            statusHtml = `<span style="color:#e74c3c; font-size:12px; display:flex; align-items:center; gap:4px;"><span style="font-size:14px;"></span> 差距 ${(diff).toFixed(1)}%</span>`;
         }
 
-        // 格式化數字 (K)
+        // 格式化數字 (直接顯示完整數字)
         const formatK = (num) => {
-            return num >= 1000 ? (num / 1000).toFixed(1) + 'K' : num;
+            return num.toLocaleString();
         };
 
         container.innerHTML = `
@@ -196,8 +211,8 @@
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                     <!-- 左側：天族 -->
                     <div style="display:flex; align-items:center; gap:6px;">
-                        <span style="color:#3b82f6; font-size:14px;">👑</span>
-                        <span style="color:#3b82f6; font-weight:bold; font-size:15px;">天族 ${elyosPerc}%</span>
+                       
+                        <span style="color:#3498db; font-weight:bold; font-size:15px;">天族 ${elyosPerc}%</span>
                     </div>
 
                     <!-- 中間：狀態 -->
@@ -205,21 +220,21 @@
 
                     <!-- 右側：魔族 -->
                     <div style="display:flex; align-items:center; gap:6px;">
-                        <span style="color:#ef4444; font-weight:bold; font-size:15px;">${asmodianPerc}% 魔族</span>
-                        <span style="color:#ef4444; font-size:14px;">👿</span>
+                        <span style="color:#e74c3c; font-weight:bold; font-size:15px;">${asmodianPerc}% 魔族</span>
+                        
                     </div>
                 </div>
 
                 <!-- 進度條 -->
-                <div style="display:flex; height:24px; border-radius:12px; overflow:hidden; background:#1a1f29; position:relative;">
+                <div style="display:flex; height:24px; border-radius:12px; overflow:hidden; background:#1a1f29; position:relative; cursor:default;">
                     
                     <!-- 天族 (藍) -->
-                    <div style="width:${elyosPerc}%; background:#2563eb; display:flex; align-items:center; justify-content:flex-end; padding-right:8px; position:relative;">
+                    <div title="天族: ${elyosCount.toLocaleString()} 人" style="width:${elyosPerc}%; background:#3498db; display:flex; align-items:center; justify-content:flex-end; padding-right:8px; position:relative;">
                         <span style="color:rgba(255,255,255,0.9); font-size:11px; font-weight:bold;">${formatK(elyosCount)}</span>
                     </div>
 
                     <!-- 魔族 (紅) -->
-                    <div style="width:${asmodianPerc}%; background:#dc2626; display:flex; align-items:center; justify-content:flex-start; padding-left:8px; position:relative;">
+                    <div title="魔族: ${asmodianCount.toLocaleString()} 人" style="width:${asmodianPerc}%; background:#e74c3c; display:flex; align-items:center; justify-content:flex-start; padding-left:8px; position:relative;">
                         <span style="color:rgba(255,255,255,0.9); font-size:11px; font-weight:bold;">${formatK(asmodianCount)}</span>
                     </div>
 
@@ -231,16 +246,22 @@
     // 渲染各排行榜職業佔比 (Class Representation by Ranking)
     function renderPerformanceMatrix(perfData, containerId) {
         let container = document.getElementById(containerId);
+        const chartContainer = document.getElementById('class-dist-chart-container');
 
         // 確保容器存在
         if (!container) {
-            const chartContainer = document.getElementById('class-dist-chart-container');
             if (chartContainer) {
                 container = document.createElement('div');
                 container.id = containerId;
-                container.style.marginTop = '30px';
-                chartContainer.parentElement.appendChild(container);
             } else { return; }
+        }
+
+        // 強制移動到圖表上方 (即使容器已存在)
+        if (container && chartContainer) {
+            container.style.marginTop = '0px';
+            container.style.marginBottom = '30px';
+            // 下面這行會將 container 移動到 chartContainer 之前
+            chartContainer.parentElement.insertBefore(container, chartContainer);
         }
 
         if (!perfData || Object.keys(perfData).length === 0) {
@@ -538,6 +559,24 @@
         window.renderClassDistributionTab();
     };
 
+    // Expose race rendering for external use (e.g. by server_stats.js)
+    // Expose race rendering for external use (e.g. by server_stats.js)
+    window.renderRaceDistributionPart = async function (region) {
+        console.log(`[ClassDist] renderRaceDistributionPart called for region: ${region}`);
+
+        // Pass region to fetchData
+        const data = await fetchData(region);
+
+        if (data && data.raceData) {
+            // Render to the race container, wherever it is
+            const raceContainerId = 'race-dist-container';
+            // Use internal render function which has fallback logic
+            renderRaceBar(data.raceData, raceContainerId);
+        } else {
+            console.warn("[ClassDist] No race data found or fetch failed.");
+        }
+    };
+
     // 主渲染函數
     window.renderClassDistributionTab = async function () {
         const container = document.getElementById('class-dist-chart-container');
@@ -553,23 +592,16 @@
         const data = await fetchData();
 
         if (data) {
+            /*
             // --- Race Data Rendering ---
-            let raceData = data.raceData;
-            let isRaceEmpty = !raceData;
-            if (Array.isArray(raceData) && raceData.length === 0) isRaceEmpty = true;
-            else if (typeof raceData === 'object' && Object.keys(raceData).length === 0) isRaceEmpty = true;
-
-            const raceContainerId = 'race-dist-container';
-            // 嘗試找到 HTML 中預定義的容器
-            let raceContainer = document.getElementById(raceContainerId);
-
-            if (isRaceEmpty) {
-                if (raceContainer) {
-                    raceContainer.innerHTML = `<div style="text-align:center; color:#666; font-size:12px; padding:10px;">(暫無種族數據)</div>`;
-                }
-            } else {
-                renderRaceBar(raceData, raceContainerId);
+            // Call internal render directly
+            if (data.raceData) {
+                const raceContainerId = 'race-dist-container';
+                renderRaceBar(data.raceData, raceContainerId);
             }
+            */
+
+            // --- Class Data Rendering ---
 
             // --- Class Data Rendering ---
             let classData = data.classData;

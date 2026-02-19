@@ -127,14 +127,14 @@
                 .hc-tab-content { display: none; }
                 .hc-tab-content.active { display: block; }
                 .skill-row { margin-bottom: 10px; padding: 0 15px; }
-                .skill-bar { width: 80px; height: 8px; background: #2a2a2a; border-radius: 4px; position: relative; overflow: hidden; }
-                .skill-name { font-size: 14px; max-width: 160px; }
+                .skill-bar { width: 80px; height: 8px; background: #2a2a2a; border-radius: 4px; position: relative; overflow: hidden; flex-shrink: 0; }
+                .skill-name { font-size: 14px; width: 100%; }
                 @media (max-width: 768px) {
                     .hc-title { font-size: 14px; }
                     .hc-score-select { font-size: 12px; padding: 4px 8px; }
                     .hc-tab-btn { font-size: 13px; padding: 8px 0; }
                     .skill-bar { width: 50px !important; }
-                    .skill-name { font-size: 11px !important; max-width: 70px !important; }
+                    .skill-name { font-size: 11px !important; }
                 }
             </style>
         `;
@@ -205,7 +205,7 @@
                 <div class="skill-row" style="display:flex; align-items:center; min-height:36px;">
                     <div style="flex: 1 1 50%; display:flex; justify-content:flex-end; align-items:center; border-right:1px solid #444; padding-right:10px;">
                         <div style="flex: 1; text-align:right; margin-right:8px; min-width:0;">
-                            <div class="skill-name" style="color:${s.name !== '-' ? (sInUser ? '#2ed573' : '#eee') : '#666'}; font-weight:${sInUser ? 'bold' : 'normal'}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${s.name}</div>
+                            <div class="skill-name" style="color:${s.name !== '-' ? (sInUser ? '#2ed573' : '#eee') : '#666'}; font-weight:${sInUser ? 'bold' : 'normal'}; line-height: 1.3;">${s.name}</div>
                             ${s.avgLv > 0 ? `<div style="font-size:11px; color:#4a9eff; margin-top:2px;">Lv.${s.avgLv.toFixed(1)}</div>` : ''}
                         </div>
                         <div class="skill-bar"><div style="position:absolute; right:0; top:0; height:100%; width:${serverWidth}%; background:linear-gradient(90deg, #2563eb, #4a9eff);"></div></div>
@@ -213,7 +213,7 @@
                     <div style="flex: 1 1 50%; display:flex; justify-content:flex-start; align-items:center; padding-left:10px;">
                         <div class="skill-bar"><div style="position:absolute; left:0; top:0; height:100%; width:${userWidth}%; background:linear-gradient(90deg, #ff9f43, #ff6b35);"></div></div>
                         <div style="flex: 1; text-align:left; margin-left:8px; min-width:0;">
-                            <div class="skill-name" style="color:${u.name !== '-' ? (uInServer ? '#2ed573' : '#eee') : '#666'}; font-weight:${uInServer ? 'bold' : 'normal'}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${u.name}</div>
+                            <div class="skill-name" style="color:${u.name !== '-' ? (uInServer ? '#2ed573' : '#eee') : '#666'}; font-weight:${uInServer ? 'bold' : 'normal'}; line-height: 1.3;">${u.name}</div>
                             ${u.lv > 0 ? `<div style="font-size:11px; color:#ff9f43; margin-top:2px;">Lv.${u.lv}</div>` : ''}
                         </div>
                     </div>

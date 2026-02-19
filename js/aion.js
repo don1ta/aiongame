@@ -1436,8 +1436,8 @@ function renderRankings(rankingList, gameRankings) {
         1: '深淵',
         3: '惡夢',
         4: '超越',
-        5: '孤獨競技場',
-        6: '協力競技場',
+        5: '單人競技',
+        6: '協力競技',
         20: '討伐戰',
         21: '覺醒戰'
     };
@@ -1446,8 +1446,8 @@ function renderRankings(rankingList, gameRankings) {
         '深淵': '⚔️',
         '惡夢': '👹',
         '超越': '⭐',
-        '孤獨競技場': '🎯',
-        '協力競技場': '🤝',
+        '單人競技': '🎯',
+        '協力競技': '🤝',
         '討伐戰': '⚡',
         '覺醒戰': '💫'
     };
@@ -1583,6 +1583,29 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
     const data = json.queryResult ? json.queryResult.data : (json.data ? json.data : json);
     if (!data || !data.profile) { alert("無法在結果中找到有效的角色數據!"); return; }
 
+    const rating = json.rating || (json.queryResult ? json.queryResult.rating : null);
+
+    // 🛡️ Robust Ratings Extraction
+    // Check multiple paths: data.ratings, rating.ratings, json.ratings
+    const ratingsData = (data && data.ratings) ? data.ratings :
+        (rating && rating.ratings) ? rating.ratings :
+            (json.ratings ? json.ratings : null);
+
+    console.log("[RatingDebug] Extracted ratings:", ratingsData);
+
+    // Update Stat Header ID and Score
+    if (!statsOnly) {
+        const headerIdEl = document.getElementById('stat-header-char-id');
+        const headerScoreEl = document.getElementById('stat-header-score');
+
+        // Find ItemLevel from stat list
+        const itemLvObj = data.stat.statList.find(s => s.type === "ItemLevel");
+        const pItemLv = itemLvObj ? itemLvObj.value : "--";
+
+        if (headerIdEl) headerIdEl.textContent = data.profile.characterName || "--";
+        if (headerScoreEl) headerScoreEl.textContent = (typeof pItemLv === 'number') ? pItemLv.toLocaleString() : pItemLv;
+    }
+
     document.getElementById('main-content').style.display = 'flex';
 
     // 🛡️ 核心修復：更新被動技能增益效果
@@ -1665,17 +1688,22 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                         </div>
                         
                         <div class="profile-right">
-                            <div class="item-score-card">
-                                <div class="score-header">
-                                    <span class="score-icon">💎</span>
-                                    <span class="score-label">ITEM SCORE</span>
+                            <div class="score-card-group" style="display:flex; gap:10px;">
+                                <div class="item-score-card">
+                                    <div class="score-header"><span class="score-icon">📏</span>遊戲裝分</div>
+                                    <div class="score-value-container"><div class="score-value">${pItemLv}</div></div>
                                 </div>
-                                <div class="score-value-container">
-                                    <div class="score-value">${pItemLv}</div>
+                                <div class="item-score-card" style="background:linear-gradient(135deg, rgba(243,156,18,0.1), rgba(0,0,0,0)); border-color:rgba(243,156,18,0.3); border-left-color:#f39c12;">
+                                    <div class="score-header"><span class="score-icon">🐲</span> PVE 裝分</div>
+                                    <div class="score-value-container"><div class="score-value" style="color:#f39c12;">${(ratingsData && ratingsData.PVE) ? ratingsData.PVE.score.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : "--"}</div></div>
+                                </div>
+                                <div class="item-score-card" style="background:linear-gradient(135deg, rgba(155,89,182,0.1), rgba(0,0,0,0)); border-color:rgba(155,89,182,0.3); border-left-color:#9b59b6;">
+                                    <div class="score-header"><span class="score-icon">⚔️</span> PVP 裝分</div>
+                                    <div class="score-value-container"><div class="score-value" style="color:#9b59b6;">${(ratingsData && ratingsData.PVP) ? Math.floor(ratingsData.PVP.score).toLocaleString() : "--"}</div></div>
                                 </div>
                             </div>
                             <div class="update-time-pill" title="官方數據更新時間">
-                                <span class="update-icon">🔄</span> ${updateTimeStr}
+                                <span class="update-icon">API更新時間</span> ${updateTimeStr}
                             </div>
                         </div>
                     `;
@@ -1702,7 +1730,8 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
         let allRankings = [];
 
         // 預先解析 rating 用於裝備等級卡片
-        const rating = json.rating || (json.queryResult ? json.queryResult.rating : null);
+        // 預先解析 rating 用於裝備等級卡片
+        // const rating = json.rating || (json.queryResult ? json.queryResult.rating : null); // Moved to top
 
         // 0. 加入 [裝備等級] 卡片作為第一個按鈕
         const itemPercentile = (rating && rating.percentile) ? rating.percentile.itemScoreRangePercentile : "--";
@@ -1724,7 +1753,8 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
             1: '深淵',
             3: '惡夢',
             4: '超越',
-            6: '協力競技場',
+            5: '單人競技',
+            6: '協力競技',
             20: '討伐戰',
             21: '覺醒戰'
         };
@@ -1764,7 +1794,8 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
             '深淵': 1, 'Abyss': 1,
             '惡夢': 3, 'Nightmare': 3,
             '超越': 4, 'Transcendence': 4,
-            '協力競技場': 6, 'Arena': 6,
+            '單人競技': 5, 'Solo Arena': 5,
+            '協力競技': 6, 'Coop Arena': 6,
             '討伐戰': 20, 'Raid': 20,
             '覺醒戰': 21, 'Awakening': 21
         };
@@ -2248,10 +2279,10 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
 
     if (petInsight) {
         const insightTypes = [
-            { key: 'intellect', name: '知性', color: '#00d4ff' },
-            { key: 'feral', name: '野性', color: '#00ff88' },
-            { key: 'nature', name: '自然', color: '#ffd93d' },
-            { key: 'trans', name: '變形', color: '#d63aff' }
+            { key: 'intellect', name: '知性', color: '#3498db' },
+            { key: 'feral', name: '野性', color: '#2ecc71' },
+            { key: 'nature', name: '自然', color: '#f1c40f' },
+            { key: 'trans', name: '變形', color: '#9b59b6' }
         ];
 
         petStats = insightTypes.map(t => {
@@ -2627,10 +2658,10 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
     if (accessoryHeader) {
         let headerHtml = `💍 飾品與配件`;
         if (accessoryBreakCount > 0) {
-            headerHtml += ` <span style="background:rgba(0,212,255,0.2); color:#00d4ff; padding:4px 10px; border-radius:4px; font-size:13px; font-weight:bold; margin-left:8px;">💎 ${accessoryBreakCount}件突破</span>`;
+            headerHtml += ` <span style="background:rgba(52, 152, 219, 0.2); color:#3498db; padding:4px 10px; border-radius:4px; font-size:13px; font-weight:bold; margin-left:8px;">💎 ${accessoryBreakCount}件突破</span>`;
         }
         if (sourceStats.accessory.break5Count > 0) {
-            headerHtml += ` <span style="background:rgba(255,215,0,0.2); color:#ffd700; padding:4px 10px; border-radius:4px; font-size:13px; font-weight:bold; margin-left:4px;">⭐ ${sourceStats.accessory.break5Count}件+5</span>`;
+            headerHtml += ` <span style="background:rgba(241, 196, 15, 0.2); color:#f1c40f; padding:4px 10px; border-radius:4px; font-size:13px; font-weight:bold; margin-left:4px;">⭐ ${sourceStats.accessory.break5Count}件+5</span>`;
         }
         accessoryHeader.innerHTML = headerHtml;
     }
@@ -2652,8 +2683,8 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
                         <div style="display:flex; align-items:center; gap:6px;">
                             <span style="color:${color}; font-weight:bold; font-size:14px;">${title}</span>
-                            ${stats.breakCount > 0 ? `<span style="background:rgba(0,212,255,0.2); color:#00d4ff; padding:2px 8px; border-radius:4px; font-size:11px; font-weight:bold;">💎 ${stats.breakCount}件突破</span>` : ''}
-                            ${stats.break5Count > 0 ? `<span style="background:rgba(255,215,0,0.2); color:#ffd700; padding:2px 8px; border-radius:4px; font-size:11px; font-weight:bold;">⭐ ${stats.break5Count}件+5</span>` : ''}
+                            ${stats.breakCount > 0 ? `<span style="background:rgba(52, 152, 219, 0.2); color:#3498db; padding:2px 8px; border-radius:4px; font-size:11px; font-weight:bold;">💎 ${stats.breakCount}件突破</span>` : ''}
+                            ${stats.break5Count > 0 ? `<span style="background:rgba(241, 196, 15, 0.2); color:#f1c40f; padding:2px 8px; border-radius:4px; font-size:11px; font-weight:bold;">⭐ ${stats.break5Count}件+5</span>` : ''}
                         </div>
                         <span style="font-size:12px; color:#8b949e;">共 ${count} 件</span>
                     </div>
@@ -3417,15 +3448,19 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
 
                     <div id="stat-tab-core" class="stat-tab-content">
                         <div class="stat-general-grid">
-                            ${(coreStatsForOverview || []).map(s => `
+                            ${(coreStatsForOverview || []).map(s => {
+            const valNum = parseInt(String(s.value).replace(/,/g, ''), 10);
+            const colorStyle = (!isNaN(valNum) && valNum > 200) ? 'color:#ff6b6b !important;' : '';
+            return `
                                 <div class="stat-list-row" onclick="toggleRowExpand(this)">
                                     <div class="stat-row-label">${s.name}</div>
-                                    <div class="stat-row-val">${s.value}</div>
+                                    <div class="stat-row-val" style="${colorStyle}">${s.value}</div>
                                     <div class="stat-row-desc">
                                         ${s.descs.map(d => `<div>${parseOverviewDesc(d)}</div>`).join('') || "<div>基礎屬性</div>"}
                                     </div>
                                     <div class="tooltip"><b>${s.name} 詳細轉換:</b><br>${s.details}</div>
-                                </div>`).join('')}
+                                </div>`;
+        }).join('')}
                         </div>
                     </div>
                     <div id="stat-tab-passive" class="stat-tab-content">

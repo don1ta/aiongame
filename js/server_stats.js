@@ -161,6 +161,12 @@
             return;
         }
 
+        // Render Race Distribution Data (from module: class_distribution.js)
+        if (window.renderRaceDistributionPart) {
+            // Pass region to ensure correct data
+            window.renderRaceDistributionPart(g_serverRegion);
+        }
+
         renderServerChart(data, 'server-dist-chart-container');
     };
 
