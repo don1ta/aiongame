@@ -2154,3 +2154,310 @@
         .combat-toast.show {
             transform: translateY(0);
         }
+
+        /* ==========================================================================
+   Step 988: Premium Profile Header Redesign (Overrides previous styles)
+   ========================================================================== */
+
+        /* 1. Header Container & Layout */
+        .profile-new-header {
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.9));
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        /* Subtle animated sheen background */
+        .profile-new-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at center, rgba(0, 212, 255, 0.03), transparent 70%);
+            animation: rotate 30s linear infinite;
+            pointer-events: none;
+        }
+
+        .profile-left {
+            display: flex;
+            gap: 25px;
+            align-items: flex-start;
+            position: relative;
+            z-index: 2;
+        }
+
+        .profile-right {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 12px;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* 2. Avatar & Level Badge */
+        .profile-avatar-wrapper {
+            position: relative;
+            width: 120px;
+            height: 120px;
+        }
+
+        .profile-img-lg {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 3px solid var(--gold);
+            box-shadow: 0 0 25px rgba(255, 217, 61, 0.4);
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .profile-img-lg:hover {
+            transform: scale(1.05);
+        }
+
+        .profile-lv-badge {
+            position: absolute;
+            bottom: -5px;
+            right: -5px;
+            background: linear-gradient(135deg, var(--gold), #d4af37);
+            color: #0f172a;
+            font-size: 11px;
+            font-weight: 800;
+            padding: 2px 8px;
+            border-radius: 12px;
+            border: 2px solid #1e293b;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+            z-index: 5;
+        }
+
+        /* 3. Name & Title */
+        .profile-info {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding-top: 5px;
+        }
+
+        .profile-name-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .p-name-lg {
+            font-size: 32px;
+            font-weight: 800;
+            color: #fff;
+            text-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+            letter-spacing: 0.5px;
+            line-height: 1;
+        }
+
+        .p-title-sm {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--blue-bright);
+            background: rgba(88, 166, 255, 0.1);
+            border: 1px solid rgba(88, 166, 255, 0.2);
+            padding: 4px 10px;
+            border-radius: 6px;
+            letter-spacing: 0.5px;
+        }
+
+        /* 4. Meta Badge Grid */
+        .profile-meta-grid {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 5px;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 6px 12px;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .meta-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .meta-icon {
+            font-size: 14px;
+        }
+
+        .meta-text {
+            font-size: 13px;
+            color: #94a3b8;
+            font-weight: 500;
+        }
+
+        .abyss-rank {
+            border-color: rgba(255, 123, 123, 0.2);
+            background: rgba(255, 123, 123, 0.05);
+        }
+
+        .abyss-rank .meta-text {
+            color: #ff7b7b;
+            font-weight: 700;
+        }
+
+        /* 5. Item Score Card (The Hero Component) */
+        .item-score-card {
+            background: linear-gradient(145deg, rgba(255, 217, 61, 0.1), rgba(255, 217, 61, 0.02));
+            border: 1px solid rgba(255, 217, 61, 0.3);
+            border-left: 4px solid var(--gold);
+            border-radius: 12px;
+            padding: 15px 25px;
+            min-width: 180px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            box-shadow: 0 0 30px rgba(255, 217, 61, 0.1), inset 0 0 20px rgba(255, 217, 61, 0.05);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .item-score-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100px;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05));
+            transform: skewX(-20deg) translateX(150%);
+            animation: shine 4s infinite;
+        }
+
+        @keyframes shine {
+            0% {
+                transform: skewX(-20deg) translateX(150%);
+            }
+
+            20% {
+                transform: skewX(-20deg) translateX(-150%);
+            }
+
+            100% {
+                transform: skewX(-20deg) translateX(-150%);
+            }
+        }
+
+        .score-header {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 5px;
+            opacity: 0.9;
+        }
+
+        .score-icon {
+            font-size: 14px;
+        }
+
+        .score-label {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--gold);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .score-value-container {
+            position: relative;
+        }
+
+        .score-value {
+            font-size: 42px;
+            font-weight: 900;
+            color: #fff;
+            text-shadow: 0 0 20px rgba(255, 217, 61, 0.6);
+            line-height: 1;
+            font-family: 'Inter', sans-serif;
+            /* Gradient Text */
+            background: linear-gradient(180deg, #fff 20%, #ffd93d 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* 6. Update Time Pill */
+        .update-time-pill {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            color: #64748b;
+            background: rgba(15, 23, 42, 0.6);
+            padding: 6px 14px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.2s;
+        }
+
+        .update-time-pill:hover {
+            color: #94a3b8;
+            border-color: rgba(255, 255, 255, 0.1);
+            background: rgba(30, 41, 59, 0.8);
+        }
+
+        .update-icon {
+            font-size: 12px;
+            opacity: 0.7;
+        }
+
+        /* 7. Responsive Adjustments */
+        @media (max-width: 768px) {
+            .profile-new-header {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 20px;
+                padding: 20px;
+            }
+
+            .profile-right {
+                align-items: center;
+                width: 100%;
+            }
+
+            .item-score-card {
+                width: 100%;
+                align-items: center;
+                padding: 15px;
+                box-sizing: border-box;
+            }
+
+            .profile-info {
+                align-items: center;
+                text-align: center;
+            }
+
+            .profile-left {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .profile-meta-grid {
+                justify-content: center;
+            }
+        }

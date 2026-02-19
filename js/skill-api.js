@@ -123,6 +123,7 @@ async function fetchSkillFromAPI(skillId, level) {
         const targetUrl = `${SKILL_API_BASE}?input=${input}`;
 
         const proxies = [
+            `https://proxy.kk69347321.workers.dev/?url=${encodeURIComponent(targetUrl)}`,
             `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`,
             `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`
         ];
@@ -143,7 +144,7 @@ async function fetchSkillFromAPI(skillId, level) {
         let skillData = data.result?.data?.json || data.result?.data || data.data;
         if (!skillData) return null;
 
-        console.log(`[SkillAPI] 用戶端取得資料 ID:${skillId}`, skillData);
+        // console.log(`[SkillAPI] 用戶端取得資料 ID:${skillId}`, skillData);
 
         let levelData = skillData.levels?.find(l => l.level === level);
         if (!levelData && skillData.levels?.length > 0) {

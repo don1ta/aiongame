@@ -1633,27 +1633,50 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
 
             pH.innerHTML = `
                         <div class="profile-left">
-                            <img class="profile-img-lg" src="${pImg}">
+                            <div class="profile-avatar-wrapper">
+                                <img class="profile-img-lg" src="${pImg}">
+                                <div class="profile-lv-badge">Lv.${pLv}</div>
+                            </div>
                             <div class="profile-info">
                                 <div class="profile-name-row">
                                     <span class="p-name-lg">${pName}</span>
                                     <span class="p-title-sm">${pTitle}</span>
                                 </div>
-                                <div class="profile-badges">
-                                    <span class="p-badge" title="伺服器">🌏 ${pServer}</span>
-                                    <span class="p-badge" title="等級">🆙 Lv.${pLv}</span>
-                                    <span class="p-badge" title="職業">⚔️ ${pClass}</span>
-                                    ${pLegion ? `<span class="p-badge" title="軍團">🛡️ ${pLegion}</span>` : ''}
-                                    <span id="abyss-badge-new" class="p-badge" style="display:none; color:#ff7b7b; border-color:rgba(255, 123, 123, 0.2);" title="深淵階級"></span>
+                                <div class="profile-meta-grid">
+                                    <div class="meta-item">
+                                        <span class="meta-icon">🌏</span>
+                                        <span class="meta-text">${pServer}</span>
+                                    </div>
+                                    <div class="meta-item">
+                                        <span class="meta-icon">⚔️</span>
+                                        <span class="meta-text">${pClass}</span>
+                                    </div>
+                                    ${pLegion ? `
+                                    <div class="meta-item">
+                                        <span class="meta-icon">🛡️</span>
+                                        <span class="meta-text">${pLegion}</span>
+                                    </div>` : ''}
+                                    <div id="abyss-badge-new" class="meta-item abyss-rank" style="display:none;">
+                                        <span class="meta-icon">🏆</span>
+                                        <span class="meta-text"></span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
+                        
                         <div class="profile-right">
-                            <div class="item-score-box">
-                                <div class="is-label">ITEM SCORE</div>
-                                <div class="is-val">${pItemLv}</div>
+                            <div class="item-score-card">
+                                <div class="score-header">
+                                    <span class="score-icon">💎</span>
+                                    <span class="score-label">ITEM SCORE</span>
+                                </div>
+                                <div class="score-value-container">
+                                    <div class="score-value">${pItemLv}</div>
+                                </div>
                             </div>
-                            <div class="update-time" title="官方數據更新時間">🔄 更新於: ${updateTimeStr}</div>
+                            <div class="update-time-pill" title="官方數據更新時間">
+                                <span class="update-icon">🔄</span> ${updateTimeStr}
+                            </div>
                         </div>
                     `;
 
@@ -1664,8 +1687,9 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
             if (abyssRanking && abyssRanking.gradeName) {
                 const abBadge = document.getElementById('abyss-badge-new');
                 if (abBadge) {
-                    abBadge.style.display = 'inline-flex';
-                    abBadge.innerText = `🏆 ${abyssRanking.gradeName}`;
+                    abBadge.style.display = 'flex';
+                    const textSpan = abBadge.querySelector('.meta-text');
+                    if (textSpan) textSpan.innerText = abyssRanking.gradeName;
                 }
             }
         }
@@ -1791,9 +1815,9 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
 
                 rankHtml += `
                             <div class="rank-card-new ${activeClass}" style="${cursorStyle}" ${clickAttr} title="點擊查看趨勢">
-                                <div class="rc-label">${name}</div>
-                                <div class="rc-val" style="font-size: 24px;">${mainVal}</div>
-                                ${subVal ? `<div style="font-size:12px; color:#94a3b8; margin-top:-2px;">${subVal}</div>` : ''}
+                                <div class="rc-label" style="font-size:13px; color:rgba(255,255,255,0.7);">${name}</div>
+                                <div class="rc-val" style="font-size: 18px; margin-top:2px;">${mainVal}</div>
+                                ${subVal ? `<div style="font-size:11px; color:#64748b; margin-top:0px;">${subVal}</div>` : ''}
                                 ${diffHtml}
                             </div>
                         `;
@@ -5250,4 +5274,44 @@ window.renderRadarChart = function () {
             }
         }
     });
+};
+
+// 全局切換主圖表頁籤 (歷史趨勢 vs 職業分布)
+// 全局切換主圖表頁籤 (歷史趨勢 vs 職業分布 vs 伺服器)
+window.switchMainChartTab = function (tabName) {
+    // Buttons
+    document.querySelectorAll('.stat-tab-btn').forEach(btn => btn.classList.remove('active'));
+
+    // Contents
+    const trendContent = document.getElementById('tab-content-trend');
+    const classContent = document.getElementById('tab-content-class');
+    const serverContent = document.getElementById('tab-content-server');
+
+    if (trendContent) trendContent.style.display = 'none';
+    if (classContent) classContent.style.display = 'none';
+    if (serverContent) serverContent.style.display = 'none';
+
+    if (tabName === 'trend') {
+        const btn = document.getElementById('tab-btn-trend');
+        if (btn) btn.classList.add('active');
+        if (trendContent) trendContent.style.display = 'block';
+    } else if (tabName === 'class') {
+        const btn = document.getElementById('tab-btn-class');
+        if (btn) btn.classList.add('active');
+        if (classContent) classContent.style.display = 'block';
+
+        // 觸發渲染
+        if (typeof window.renderClassDistributionTab === 'function') {
+            window.renderClassDistributionTab();
+        }
+    } else if (tabName === 'server') {
+        const btn = document.getElementById('tab-btn-server');
+        if (btn) btn.classList.add('active');
+        if (serverContent) serverContent.style.display = 'block';
+
+        // 觸發渲染
+        if (typeof window.renderServerDistributionTab === 'function') {
+            window.renderServerDistributionTab();
+        }
+    }
 };

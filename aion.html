@@ -126,15 +126,70 @@
                     </div>
 
 
-                    <!-- 歷史趨勢曲線圖 -->
+                    <!-- Toggle Tabs for History vs Class Distribution -->
                     <div class="card">
-                        <h3>📊 歷史趨勢曲線</h3>
-                        <div id="p-ranking-new" class="rank-grid-new" style="margin-top:15px;"></div>
-                        <div id="trend-chart-container" style="position: relative; height: 350px; margin-top: 15px;">
-                            <canvas id="trend-chart"></canvas>
+                        <div class="card-header-tabs"
+                            style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:10px;">
+                            <div style="display:flex; gap:15px;">
+                                <div id="tab-btn-trend" class="stat-tab-btn active"
+                                    onclick="switchMainChartTab('trend')">📊 歷史趨勢</div>
+                                <div id="tab-btn-class" class="stat-tab-btn" onclick="switchMainChartTab('class')">👥
+                                    職業分布</div>
+                                <div id="tab-btn-server" class="stat-tab-btn" onclick="switchMainChartTab('server')">🏢
+                                    全伺服器</div>
+                            </div>
                         </div>
-                        <div id="trend-info"
-                            style="margin-top: 15px; font-size: 13px; color: #8b949e; text-align: center;"></div>
+
+                        <div id="tab-content-trend" style="display:block;">
+                            <div id="p-ranking-new" class="rank-grid-new" style="margin-top:0;"></div>
+                            <div id="trend-chart-container"
+                                style="position: relative; height: 350px; margin-top: 15px;">
+                                <canvas id="trend-chart"></canvas>
+                            </div>
+                            <div id="trend-info"
+                                style="margin-top: 15px; font-size: 13px; color: #8b949e; text-align: center;"></div>
+                        </div>
+
+
+                        <div id="tab-content-class" style="display:none;">
+                            <div
+                                style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; padding:15px; border-bottom:1px solid rgba(255,255,255,0.05);">
+                                <div style="color:#8b949e; font-size:14px;">全服職業與種族分布</div>
+                                <div id="region-toggle-container"
+                                    style="display:flex; gap:5px; background:rgba(0,0,0,0.3); padding:4px; border-radius:6px;">
+                                    <button id="region-btn-tw" onclick="switchClassRegion('tw')"
+                                        style="background:#3b82f6; color:white; border:none; padding:4px 10px; border-radius:4px; cursor:pointer; font-size:12px; font-weight:bold;">TW
+                                        (台灣)</button>
+                                    <button id="region-btn-ko" onclick="switchClassRegion('ko')"
+                                        style="background:transparent; color:#8b949e; border:none; padding:4px 10px; border-radius:4px; cursor:pointer; font-size:12px; font-weight:bold;">KO
+                                        (韓國)</button>
+                                </div>
+                            </div>
+                            <div id="race-dist-container" style="margin-bottom: 20px; padding: 0 15px;"></div>
+                            <div id="class-dist-chart-container" style="position: relative; height: 450px;">
+                                <canvas id="class-dist-chart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Content 3: Server Distribution -->
+                        <div id="tab-content-server" style="display:none;">
+                            <div
+                                style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; padding:15px; border-bottom:1px solid rgba(255,255,255,0.05);">
+                                <div style="color:#8b949e; font-size:14px;">伺服器排行 (Server Distribution)</div>
+                                <div id="region-toggle-server-container"
+                                    style="display:flex; gap:5px; background:rgba(0,0,0,0.3); padding:4px; border-radius:6px;">
+                                    <button id="server-stats-region-btn-tw" onclick="switchServerRegion('tw')"
+                                        style="background:#3b82f6; color:white; border:none; padding:4px 10px; border-radius:4px; cursor:pointer; font-size:12px; font-weight:bold;">TW
+                                        (台灣)</button>
+                                    <button id="server-stats-region-btn-ko" onclick="switchServerRegion('ko')"
+                                        style="background:transparent; color:#8b949e; border:none; padding:4px 10px; border-radius:4px; cursor:pointer; font-size:12px; font-weight:bold;">KO
+                                        (韓國)</button>
+                                </div>
+                            </div>
+                            <div id="server-dist-chart-container" style="position: relative;  padding:15px;">
+                                <!-- Will be rendered by JS -->
+                            </div>
+                        </div>
                     </div>
 
                 </div>
@@ -206,6 +261,8 @@
     <script src="js/equipment-score.js?v=UI_FIX_FINAL"></script>
     <script src="js/health_check.js"></script>
     <script src="js/aion.js"></script>
+    <script src="js/class_distribution.js"></script>
+    <script src="js/server_stats.js"></script>
 </body>
 
 </html>
