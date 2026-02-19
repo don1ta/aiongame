@@ -1,5 +1,14 @@
 // 在瀏覽器 Console 中運行此腳本
 // 用於從 questlog.gg API 批量獲取技能數據並轉換為資料庫格式
+/**
+ * 技能 API 批量抓取工具 (fetch-skill-from-api.js)
+ * 
+ * 用於從 QuestLog TRPC 介面批量抓取特定職業的所有技能詳細數據，
+ * 並生成用於更新 `passive_skills.json` 或 `window.PASSIVE_SKILL_DATABASE` 的格式。
+ */
+
+const https = require('https');
+const fs = require('fs');
 
 async function fetchSkillData(skillId) {
     const url = `https://questlog.gg/aion-2/api/trpc/database.getSkill?input=${encodeURIComponent(JSON.stringify({ id: skillId, language: "zh" }))}`;

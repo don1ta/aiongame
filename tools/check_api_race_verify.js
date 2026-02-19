@@ -1,3 +1,9 @@
+/**
+ * API race 參數最終驗證 (check_api_race_verify.js)
+ * 
+ * 通過多組請求對比，最終確認種族篩選的正確參數名稱與值。
+ */
+
 const https = require('https');
 
 function fetchApi(url) {

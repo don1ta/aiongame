@@ -1,3 +1,9 @@
+/**
+ * API raceId 參數驗證工具 (check_api_raceId.js)
+ * 
+ * 用於驗證使用數字型 raceId (1/2) 在排行 API 中的過濾效果。
+ */
+
 const https = require('https');
 
 function fetchApi(url) {

@@ -1,3 +1,10 @@
+/**
+ * API 種族參數測試腳本 (check_api_race.js)
+ * 
+ * 此工具用於測試與驗證 aion-api.bnshive.com 的排行介面中，關於「種族」(Race) 的篩選參數。
+ * 協助確定應使用 raceId (1/2) 還是字串 (ELYOS/ASMODIANS) 來正確過濾天族或魔族數據。
+ */
+
 const https = require('https');
 
 function fetchApi(url) {

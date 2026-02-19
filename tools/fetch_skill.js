@@ -1,3 +1,11 @@
+/**
+ * 遠端技能數據抓取工具 (fetch_skill.js)
+ * 
+ * 此腳本用於在 Node.js 環境下直接從 QuestLog API 獲取特定技能的詳細數據。
+ * 它主要用於開發階段，測試技能描述模板標籤與數值變數的對應關係，
+ * 是 `skill-api.js` 核心解析邏輯的測試基準。
+ */
+
 const https = require('https');
 
 function fetchUrl(url) {

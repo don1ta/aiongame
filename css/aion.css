@@ -1,0 +1,2156 @@
+﻿        /* 保留你原本的所有 CSS 樣式 */
+        :root {
+            /* 🎨 現代深色主題配色 */
+            --bg: #0a0e17;
+            --bg-secondary: #0f1419;
+            --panel: #151b26;
+            --panel-elevated: #1a2332;
+            --border: #2d3748;
+            --border-bright: #4a5568;
+
+            /* 🌟 主要品牌色 - 霓虹藍金漸變 */
+            --primary: #00d4ff;
+            --primary-dark: #0099cc;
+            --primary-glow: rgba(0, 212, 255, 0.3);
+
+            /* 💎 金色系 - 更亮眼的賽博金 */
+            --gold: #ffd93d;
+            --gold-bright: #ffe66d;
+            --gold-dark: #d4af37;
+            --gold-glow: rgba(255, 217, 61, 0.3);
+
+            /* 🔵 藍色系 - 電光藍 */
+            --blue: #00d4ff;
+            --blue-bright: #33ddff;
+            --blue-dark: #0099cc;
+            --blue-glow: rgba(0, 212, 255, 0.25);
+
+            /* 🟢 綠色系 - 霓虹綠 */
+            --green: #00ff88;
+            --green-bright: #33ffaa;
+            --green-glow: rgba(0, 255, 136, 0.25);
+
+            /* 🎮 遊戲陣營色 - 更鮮豔 */
+            --nezakan: #ff4757;
+            --zikel: #7bed9f;
+            --triniel: #70a1ff;
+            --ariel: #ffa502;
+            --asphel: #d63aff;
+            --baizel: #ff6348;
+            --arcana: #1dd1a1;
+
+            /* 🌈 漸變背景 */
+            --profile-bg: linear-gradient(135deg, #1a2332 0%, #0f1922 50%, #0a0e17 100%);
+            --card-bg: linear-gradient(145deg, rgba(26, 35, 50, 0.6), rgba(15, 25, 34, 0.4));
+            --accent-gradient: linear-gradient(135deg, var(--primary), var(--gold));
+            --glow-gradient: radial-gradient(circle at center, var(--primary-glow), transparent);
+        }
+
+        body {
+            background: var(--bg);
+            color: #e6edf3;
+            font-family: "Segoe UI", "Microsoft JhengHei", sans-serif;
+            margin: 0;
+            padding: 15px;
+            font-size: 15px;
+        }
+
+        .container {
+            width: 1400px;
+            min-width: 1400px;
+            margin: auto;
+        }
+
+        /* 強化後的匯入區塊 */
+        .input-area {
+            background: var(--card-bg);
+            border: 2px solid var(--gold);
+            padding: 25px;
+            border-radius: 16px;
+            margin-bottom: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6),
+                0 0 40px var(--gold-glow),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .input-area::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: var(--glow-gradient);
+            opacity: 0.05;
+            animation: rotate 20s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes rotate {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .import-section {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .api-input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .api-input-group input,
+        .api-input-group select {
+            background: rgba(10, 14, 23, 0.8);
+            border: 2px solid var(--border);
+            color: var(--blue-bright);
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-family: inherit;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: 500;
+        }
+
+        .api-input-group input:focus,
+        .api-input-group select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-glow),
+                0 0 20px var(--blue-glow);
+            background: rgba(10, 14, 23, 1);
+        }
+
+        #charNameInput {
+            flex: 2;
+            min-width: 200px;
+        }
+
+        #serverSelect {
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .import-controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            padding-top: 15px;
+            border-top: 1px solid var(--border);
+        }
+
+        textarea {
+            width: 90%;
+            height: 80px;
+            background: rgba(10, 14, 23, 0.8);
+            border: 2px solid var(--border);
+            color: var(--blue-bright);
+            padding: 12px;
+            border-radius: 8px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            resize: vertical;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-glow),
+                0 0 20px var(--blue-glow);
+            background: rgba(10, 14, 23, 1);
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .file-label {
+            background: linear-gradient(135deg, var(--panel-elevated), var(--panel));
+            color: var(--blue-bright);
+            padding: 12px 20px;
+            border-radius: 8px;
+            border: 2px solid var(--border);
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .file-label::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .file-label:hover {
+            background: linear-gradient(135deg, var(--panel-elevated), var(--border));
+            border-color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4),
+                0 0 20px var(--blue-glow);
+        }
+
+        .file-label:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .file-label:active {
+            transform: translateY(0);
+        }
+
+        .btn-api {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            border: 2px solid var(--primary);
+            padding: 0 30px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            min-height: 45px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-api::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn-api:hover {
+            background: linear-gradient(135deg, var(--blue-bright), var(--primary));
+            border-color: var(--blue-bright);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px var(--blue-glow),
+                0 0 30px var(--primary-glow);
+        }
+
+        .btn-api:hover::before {
+            left: 100%;
+        }
+
+        .btn-api:active {
+            transform: translateY(0);
+        }
+
+        button#parseBtn {
+            background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+            color: #0a0e17;
+            border: 2px solid var(--gold-bright);
+            padding: 12px 40px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 18px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        button#parseBtn::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        button#parseBtn:hover {
+            background: linear-gradient(135deg, var(--gold-bright), var(--gold));
+            border-color: var(--gold-bright);
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 10px 30px var(--gold-glow),
+                0 0 40px var(--gold-glow);
+        }
+
+        button#parseBtn:hover::after {
+            width: 400px;
+            height: 400px;
+        }
+
+        button#parseBtn:active {
+            transform: translateY(-1px) scale(1);
+        }
+
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+            color: var(--gold);
+            font-size: 24px;
+        }
+
+
+        /* 儀表板樣式 */
+        .dashboard {
+            display: none;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .profile-card {
+            background: var(--profile-bg);
+            border: 2px solid var(--gold);
+            border-radius: 16px;
+            padding: 25px;
+            display: flex;
+            align-items: center;
+            gap: 30px;
+            flex-wrap: wrap;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7),
+                0 0 40px var(--gold-glow),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .profile-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.1), transparent);
+            animation: shimmer 3s infinite;
+            pointer-events: none;
+        }
+
+        @keyframes shimmer {
+
+            0%,
+            100% {
+                left: -100%;
+            }
+
+            50% {
+                left: 100%;
+            }
+        }
+
+        .profile-img {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            border: 3px solid var(--gold);
+            padding: 3px;
+            background: linear-gradient(135deg, var(--gold), var(--primary));
+            box-shadow: 0 0 30px var(--gold-glow);
+        }
+
+        .profile-name {
+            font-size: 32px;
+            font-weight: 800;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            filter: drop-shadow(0 0 20px var(--gold-glow));
+        }
+
+        .rank-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .rank-badge {
+            background: linear-gradient(145deg, rgba(26, 35, 50, 0.6), rgba(15, 25, 34, 0.4));
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 160px;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .rank-badge:hover {
+            border-color: var(--primary);
+            box-shadow: 0 4px 15px var(--blue-glow);
+            transform: translateY(-2px);
+        }
+
+        .rank-badge img {
+            width: 32px;
+            height: 32px;
+        }
+
+        .rank-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .rank-title {
+            font-size: 14px;
+            color: #f1eae8;
+        }
+
+        .rank-val {
+            font-weight: bold;
+            font-size: 14px;
+            color: var(--gold-bright);
+            text-shadow: 0 0 10px var(--gold-glow);
+        }
+
+        .rank-change {
+            font-size: 10px;
+            margin-left: 5px;
+        }
+
+        .up {
+            color: #ff6c6c;
+        }
+
+        .down {
+            color: #3fb950;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            margin-bottom: 40px;
+            position: relative;
+        }
+
+        h3 {
+            color: var(--gold-bright);
+            margin: 0 0 15px 0;
+            font-size: 19px;
+            border-left: 5px solid var(--gold);
+            padding-left: 12px;
+            text-shadow: 0 0 20px var(--gold-glow);
+            font-weight: 700;
+        }
+
+        .sk-label {
+            font-size: 14px;
+            color: var(--blue-bright);
+            margin-bottom: 12px;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 8px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+        }
+
+        .stat-tabs-header {
+            display: flex;
+            gap: 2px;
+            margin-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 0 5px;
+        }
+
+        .stat-tab-btn {
+            padding: 10px 20px;
+            font-size: 13px;
+            font-weight: 800;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -1px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stat-tab-btn:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .stat-tab-btn.active {
+            color: var(--gold-bright);
+            border-bottom-color: var(--gold);
+            background: rgba(255, 217, 61, 0.05);
+        }
+
+        .stat-tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .stat-tab-content.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 精確設定：技能名稱純白，細節敘述灰白，數值金色 */
+        .stat-row-label {
+            color: #FFFFFF !important;
+            /* 標籤：純白 */
+            font-weight: bold;
+        }
+
+        .skill-description-box,
+        .stat-row-desc {
+            color: #94a3b8;
+            /* 敘述：灰白色 */
+        }
+
+        /* 數值專屬金色 */
+        .api-num-highlight,
+        .stat-row-val {
+            color: #FCC78B !important;
+            /* 數值：金色 */
+            font-weight: 900;
+            text-shadow: 0 0 8px rgba(252, 199, 139, 0.5);
+        }
+
+        .stat-list-container {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            margin-bottom: 20px;
+            background: rgba(0, 0, 0, 0.15);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            overflow: hidden;
+        }
+
+        .stat-general-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .stat-list-row {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            grid-template-areas:
+                "label val"
+                "desc desc";
+            padding: 10px 16px;
+            /* 縮小內邊距，因為可以展開查看細節 */
+            align-items: center;
+            /* 垂直居中 */
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            border-right: 1px solid rgba(255, 255, 255, 0.03);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            position: relative;
+            min-height: 40px;
+            /* 縮小最小高度，讓版面更緊湊 */
+        }
+
+        .stat-list-row:nth-child(2n) {
+            border-right: none;
+        }
+
+        .stat-list-row:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .stat-row-label {
+            grid-area: label;
+            font-size: 14px;
+            /* 略微調大 */
+            font-weight: 600;
+            color: #94a3b8;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stat-row-val {
+            grid-area: val;
+            font-size: 18px;
+            /* 縮小字體配合緊湊格子 */
+            font-weight: 800;
+            color: #fff;
+            text-align: right;
+            font-family: 'Inter', system-ui, sans-serif;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .stat-row-desc {
+            grid-area: desc;
+            font-size: 11px;
+            color: #4ed9ff;
+            opacity: 1;
+            padding: 0;
+            display: none;
+            flex-direction: column;
+            gap: 4px;
+            margin-top: 12px;
+            /* 增加間距 */
+            line-height: 1.5;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .stat-list-row.expanded .stat-row-desc {
+            display: flex;
+            /* 展開時顯示 */
+        }
+
+        .stat-row-desc div {
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+        }
+
+        .expand-hint {
+            font-size: 9px;
+            color: #4b5563;
+            margin-top: 2px;
+            transition: transform 0.2s;
+        }
+
+        .stat-list-row.expanded .expand-hint {
+            transform: rotate(180deg);
+        }
+
+        /* 針對關鍵指標頁面調強配色 */
+        .stat-tab-content#stat-tab-extra .stat-row-val {
+            color: var(--gold-bright);
+            text-shadow: 0 0 15px rgba(255, 217, 61, 0.3);
+        }
+
+        .stat-tab-content#stat-tab-extra .stat-row-desc {
+            color: #ffd93d;
+            /* 關鍵指標描述改用淡金色 */
+            opacity: 0.8;
+        }
+
+        .stat-list-row:last-child {
+            border-bottom: none;
+        }
+
+        .stat-list-row:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .stat-row-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #94a3b8;
+        }
+
+        .stat-row-desc {
+            font-size: 12px;
+            color: var(--primary);
+            opacity: 0.7;
+            padding: 0 15px;
+        }
+
+        .stat-row-val {
+            font-size: 18px;
+            font-weight: 800;
+            color: #fff;
+            text-align: right;
+            font-family: 'Inter', system-ui, sans-serif;
+        }
+
+        .stat-group-section.extra-group .stat-row-desc {
+            color: var(--gold);
+        }
+
+        /* 響應式優化：手機版自動隱藏中間描述或縮小字體 */
+        @media (max-width: 600px) {
+            .stat-list-row {
+                grid-template-columns: 1fr auto;
+                padding: 12px 15px;
+            }
+
+            .stat-row-desc {
+                display: none;
+            }
+        }
+
+        .stat-mini-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-left: 3px solid var(--primary);
+            border-radius: 6px;
+            padding: 12px 14px;
+            display: flex;
+            /* Changed from grid to flex */
+            flex-direction: column;
+            /* Stack items vertically */
+            justify-content: space-between;
+            /* Distribute space */
+            position: relative;
+            transition: all 0.2s ease;
+            cursor: help;
+            min-height: 60px;
+        }
+
+        .stat-mini-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: scale(1.02);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+            z-index: 5;
+        }
+
+        .stat-mini-label {
+            font-size: 12px;
+            color: #94a3b8;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .stat-mini-val {
+            font-size: 22px;
+            font-weight: 900;
+            color: #fff;
+            text-align: right;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            position: absolute;
+            /* Position value absolutely */
+            top: 12px;
+            right: 14px;
+        }
+
+        .stat-mini-desc {
+            font-size: 11px;
+            color: var(--primary);
+            opacity: 0.8;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-top: auto;
+            /* Push to bottom */
+            padding-right: 60px;
+            /* Make space for the absolute positioned value */
+        }
+
+        .stat-mini-card.extra-stat {
+            border-left-color: var(--gold);
+        }
+
+        .stat-mini-card.extra-stat .stat-mini-desc {
+            color: var(--gold);
+        }
+
+
+        .skill-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 8px;
+            margin-bottom: 25px;
+        }
+
+        .skill-card {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px;
+            background: linear-gradient(145deg, rgba(26, 35, 50, 0.4), rgba(15, 25, 34, 0.2));
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            cursor: help;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(5px);
+        }
+
+        .skill-card:hover {
+            background: linear-gradient(135deg, rgba(255, 217, 61, 0.2), rgba(255, 217, 61, 0.05));
+            border-color: var(--gold);
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 8px 25px var(--gold-glow),
+                0 0 20px var(--gold-glow);
+        }
+
+        .skill-card:hover img {
+            transform: scale(1.1) rotate(3deg);
+            box-shadow: 0 4px 15px rgba(212, 180, 131, 0.5);
+        }
+
+        .skill-card img {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .skill-card img {
+            width: 34px;
+            height: 34px;
+            border-radius: 6px;
+            border: 2px solid var(--gold);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 0 10px var(--gold-glow);
+        }
+
+        .sk-name {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--blue-bright);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 80px;
+            text-shadow: 0 0 10px var(--blue-glow);
+        }
+
+        .tooltip {
+            visibility: hidden;
+            min-width: 180px;
+            max-width: min(350px, calc(100vw - 40px));
+            width: auto;
+            overflow-wrap: break-word;
+            /* 💎 現代化深色質感配色 */
+            background: linear-gradient(145deg, rgba(26, 35, 50, 0.98), rgba(15, 25, 34, 0.98)) !important;
+            backdrop-filter: blur(20px) saturate(180%);
+            /* 強化磨砂玻璃效果 */
+            border: 2px solid rgba(0, 212, 255, 0.3);
+            border-top: 3px solid var(--primary);
+            border-radius: 12px;
+            padding: 16px;
+            position: absolute;
+            z-index: 9999 !important;
+            /* 顯示位置 */
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            margin-bottom: 10px;
+            opacity: 0;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            /* 柔和深邃陰影 + 霓虹光暈 */
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9),
+                0 0 30px var(--primary-glow),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            color: #e8f0ff !important;
+            pointer-events: none;
+            white-space: normal;
+            font-size: 13px;
+            line-height: 1.6;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        /* Tooltip 內部的標題樣式優化 */
+        .tooltip b {
+            color: var(--gold-bright) !important;
+            letter-spacing: 0.5px;
+            text-shadow: 0 0 10px var(--gold-glow);
+        }
+
+        /* 自定義滾動條樣式 (Tooltip 內部) */
+        .tooltip::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .tooltip::-webkit-scrollbar-thumb {
+            background: rgba(197, 160, 89, 0.5);
+            border-radius: 10px;
+        }
+
+        .tooltip::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        /* Tooltip 關閉按鈕樣式 */
+        .tooltip-close-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 22px;
+            height: 22px;
+            background: rgba(255, 60, 60, 0.8);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            line-height: 1;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 10001;
+            transition: all 0.2s;
+            padding: 0;
+        }
+
+        .tooltip-close-btn:hover {
+            background: rgba(255, 0, 0, 1);
+            transform: scale(1.1);
+        }
+
+        /* 當 tooltip 被固定時顯示關閉按鈕 */
+        .tooltip.tooltip-pinned {
+            visibility: visible !important;
+            opacity: 1 !important;
+            pointer-events: auto !important;
+        }
+
+        .tooltip.tooltip-pinned .tooltip-close-btn {
+            display: flex;
+        }
+
+        /* 防止 tooltip 超出左邊界 - 針對 grid 佈局 */
+        /* 主要能力值概覽是 4 欄 grid,所以每行第 1, 5, 9... 個元素需要左對齊 */
+        .stat-mini-card:nth-child(4n+1) .tooltip {
+            left: 0;
+            transform: translateX(0);
+        }
+
+        /* 防止 tooltip 超出右邊界 - 針對 grid 佈局 */
+        /* 主要能力值概覽是 4 欄 grid,所以每行第 4, 8, 12... 個元素需要右對齊 */
+        .stat-mini-card:nth-child(4n) .tooltip {
+            left: auto;
+            right: 0;
+            transform: translateX(0);
+        }
+
+        /* 🛡️ 技能卡片 Tooltip 定位 - 改由 JS 動態計算以支援 RWD */
+        .skill-card .tooltip {
+            /* 預設靠左, JS 會根據螢幕位置調整 */
+            left: 0;
+            transform: none;
+        }
+
+        /* 🛡️ 對帳總表邊界處理 - 讓右側欄位的 tooltip 靠右顯示,避免超出邊界 */
+        table td:nth-last-child(-n+4) .tooltip {
+            left: auto;
+            right: 0;
+            transform: translateX(0);
+        }
+
+        /* 表格中的 td 需要確保 z-index 與溢出設定正確 */
+        table td {
+            overflow: visible !important;
+        }
+
+        /* 確保 .hover-calc 容器也允許溢出 */
+        .hover-calc {
+            overflow: visible !important;
+        }
+
+        .th-hover,
+        .hover-calc,
+        .skill-card,
+        .stat-mini-card {
+            position: relative;
+        }
+
+        /* 統一的 hover 效果 */
+        .th-hover:hover .tooltip,
+        .hover-calc:hover .tooltip,
+        .skill-card:hover .tooltip,
+        .stat-mini-card:hover .tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* 💡 核心修正：懸停時提升容器層級，防止 Tooltip 被後方元素 (如表格的下一行) 遮擋 */
+        .th-hover:hover,
+        .hover-calc:hover,
+        .skill-card:hover,
+        .stat-mini-card:hover {
+            z-index: 2000;
+        }
+
+        /* 為三個區塊設置容器限制 */
+        .stat-grid-main,
+        .skill-list {
+            position: relative;
+            overflow: visible;
+        }
+
+
+        /* 表格容器:統一設定最大高度與自動滾動,以實現固定表頭 */
+        .table-wrapper {
+            position: relative;
+            max-height: 70vh;
+            /* 設定最大高度使表頭能固定在容器頂部 */
+            overflow: auto !important;
+            /* 同時支援水平與垂直滾動 */
+            -webkit-overflow-scrolling: touch;
+            margin-bottom: 80px;
+            /* 增加底部間距,讓 tooltip 有空間顯示 */
+            border: 1px solid var(--border);
+            border-radius: 8px;
+        }
+
+        /* 網頁版表頭凍結調整:黏在螢幕頂部,並留下一點頂部間距 */
+        thead th {
+            position: sticky !important;
+            top: 0 !important;
+            z-index: 100;
+            background: linear-gradient(145deg, #1a2332, #151b26);
+            box-shadow: inset 0 -2px 0 var(--primary);
+            vertical-align: middle !important;
+        }
+
+        /* 表頭的 tooltip 使用 fixed 定位,確保在最上層 */
+        thead th.th-hover .tooltip {
+            position: fixed !important;
+            /* 使用 fixed 避免被 sticky 元素遮擋 */
+            bottom: auto;
+            top: auto;
+            /* 位置由 JavaScript 動態計算 */
+            left: auto;
+            transform: none;
+            margin: 0;
+            border-top: none;
+            border-bottom: 3px solid var(--gold);
+            z-index: 99999 !important;
+            /* 極高的 z-index 確保在最上層 */
+        }
+
+        /* 💡 修正：針對「主要能力值概覽」區塊,將 Tooltip 改為向下顯示 */
+        .stat-mini-card .tooltip {
+            max-width: min(300px, calc(100vw - 40px));
+            /* 改為向下顯示 */
+            bottom: auto !important;
+            top: calc(100% + 5px) !important;
+            margin-top: 0;
+            margin-bottom: 0;
+            border-top: none;
+            border-bottom: 3px solid var(--primary);
+            z-index: 10000 !important;
+        }
+
+        /* 技能等級分解 - tooltip 最大寬度 */
+        .skill-card .tooltip {
+            max-width: min(250px, calc(100vw - 40px));
+        }
+
+        /* 屬性全來源對帳總表 - tooltip 最大寬度 */
+        .hover-calc .tooltip {
+            max-width: min(400px, calc(100vw - 40px));
+            max-height: 500px;
+        }
+
+        /* 💡 修正:針對表格前 12 行,將 Tooltip 改為向下顯示,避免被基本盤區塊遮擋 */
+        tbody tr:nth-child(-n+12) .hover-calc .tooltip {
+            bottom: auto !important;
+            top: calc(100% + 5px) !important;
+            margin-top: 0;
+            margin-bottom: 0;
+            border-top: none;
+            border-bottom: 3px solid var(--primary);
+            z-index: 10000 !important;
+        }
+
+
+        /* 5. 新版 Header 與排名樣式 (Step 1117) */
+        .profile-new-header {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.6), rgba(15, 23, 42, 0.8));
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .profile-left {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .profile-img-lg {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            border: 2px solid var(--gold);
+            object-fit: cover;
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.2);
+        }
+
+        .profile-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .profile-name-row {
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
+        }
+
+        .p-name-lg {
+            font-size: 24px;
+            font-weight: bold;
+            color: #fff;
+            letter-spacing: 0.5px;
+        }
+
+        .p-title-sm {
+            font-size: 13px;
+            color: var(--blue);
+            background: rgba(88, 166, 255, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .profile-badges {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-top: 4px;
+        }
+
+        .p-badge {
+            font-size: 11px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #94a3b8;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .profile-right {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        .item-score-box {
+            text-align: right;
+        }
+
+        .is-label {
+            font-size: 11px;
+            color: #64748b;
+            text-transform: uppercase;
+        }
+
+        .is-val {
+            font-size: 28px;
+            font-weight: bold;
+            color: var(--gold);
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .update-time {
+            font-size: 11px;
+            color: #475569;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .rank-grid-new {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .rank-card-new {
+            background: rgba(30, 41, 59, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 12px 15px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.2s ease;
+        }
+
+        .rank-card-new:hover {
+            background: rgba(30, 41, 59, 0.6);
+            border-color: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .rank-card-new::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 3px;
+            height: 100%;
+            background: var(--blue);
+            opacity: 0.5;
+        }
+
+        .rank-card-new.active-rank {
+            background: rgba(88, 166, 255, 0.15);
+            border-color: var(--primary);
+            box-shadow: 0 0 15px rgba(88, 166, 255, 0.3);
+        }
+
+        .rank-card-new.active-rank::before {
+            opacity: 1;
+            width: 4px;
+            background: var(--primary);
+        }
+
+        .rc-label {
+            font-size: 11px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .rc-val {
+            font-size: 20px;
+            font-weight: bold;
+            color: #f1f5f9;
+            margin-top: 4px;
+        }
+
+        .rc-diff {
+            font-size: 11px;
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            font-weight: bold;
+        }
+
+        .diff-up {
+            color: #4ade80;
+        }
+
+        .diff-down {
+            color: #f87171;
+        }
+
+        .diff-same {
+            color: #64748b;
+        }
+
+        .percentile-grid-new {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+        }
+
+        .percentile-box {
+            background: rgba(255, 255, 255, 0.02);
+            padding: 12px 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .pt-header {
+            display: flex;
+            /*  justify-content: space-between; */
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .pt-label {
+            font-size: 16px;
+            color: #94a3b8;
+        }
+
+        .pt-rank {
+            font-size: 11px;
+            color: var(--gold);
+            background: rgba(255, 215, 0, 0.1);
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+
+        .pt-val-lg {
+            font-size: 18px;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .pt-bar {
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            margin-top: 8px;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .pt-fill {
+            height: 100%;
+            background: var(--primary);
+            border-radius: 2px;
+        }
+
+
+        /* 5.1 新版 Header 樣式修正 (Step 1180) - 覆蓋舊樣式 */
+        .profile-new-header {
+            gap: 30px;
+            padding: 30px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95));
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .profile-img-lg {
+            width: 90px;
+            height: 90px;
+            border-width: 3px;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+        }
+
+        .p-name-lg {
+            font-size: 36px;
+            letter-spacing: 1.5px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .p-title-sm {
+            font-size: 16px;
+            padding: 5px 12px;
+            border-radius: 6px;
+        }
+
+        .profile-badges {
+            margin-top: 10px;
+            gap: 12px;
+        }
+
+        .p-badge {
+            font-size: 15px;
+            padding: 6px 14px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.15);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .is-label {
+            font-size: 14px;
+            letter-spacing: 1.5px;
+            margin-bottom: 4px;
+        }
+
+        .is-val {
+            font-size: 48px;
+            text-shadow: 0 0 25px rgba(255, 215, 0, 0.6);
+            line-height: 1;
+            margin-bottom: 5px;
+        }
+
+        .update-time {
+            font-size: 14px;
+            color: #4ade80;
+            background: rgba(74, 222, 128, 0.15);
+            padding: 6px 16px;
+            border-radius: 20px;
+            border: 1px solid rgba(74, 222, 128, 0.3);
+            letter-spacing: 0.5px;
+        }
+
+        .active-rank {
+            border-color: var(--gold) !important;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.2);
+            background: rgba(30, 41, 59, 0.8) !important;
+            transform: translateY(-2px);
+        }
+
+        .rank-card-new {
+            cursor: pointer;
+        }
+
+
+        /* 5.2 Header 與 Percentile 合併面板樣式 (Step 1272) */
+        .header-combine-card {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95));
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            margin-bottom: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        /* 重置 Header 在合併面板內的樣式 */
+        .profile-new-header {
+            background: none !important;
+            box-shadow: none !important;
+            border: none !important;
+            padding: 0 !important;
+            margin-bottom: 0 !important;
+            border-radius: 0 !important;
+        }
+
+
+        /* 暫時性提示框樣式 */
+        .temp-alert {
+            background: rgba(255, 193, 7, 0.15);
+            border: 1px solid rgba(255, 193, 7, 0.4);
+            color: #fbbf24;
+            padding: 12px 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            margin: 10px 0 15px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-out {
+            opacity: 0 !important;
+            transition: opacity 1s ease;
+        }
+
+        /* 4. 表格基礎設定 */
+        table {
+            border-collapse: separate;
+            border-spacing: 0;
+            width: 100%;
+            min-width: 900px;
+        }
+
+        table td,
+        table th {
+            border-right: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+            padding: 12px 10px;
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: middle !important;
+        }
+
+        /* 凍結首欄基礎樣式 */
+        .td-left {
+            text-align: left !important;
+            font-weight: bold;
+            color: #fff;
+            padding-left: 15px !important;
+            position: sticky;
+            left: 0;
+            background: #1a1f29 !important;
+            z-index: 90;
+            min-width: 140px;
+            box-shadow: 3px 0 6px rgba(0, 0, 0, 0.4);
+        }
+
+        /* 表頭樣式移至上方 table-wrapper 區塊統一管理 */
+
+        /* 左上角交叉點：需同時具備 top 與 left 凍結 */
+        thead th.td-left {
+            z-index: 110;
+            top: 0;
+            left: 0;
+        }
+
+        .hover-calc {
+            border-bottom: 1px dashed var(--primary);
+            cursor: help;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        .grid-box-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .info-box {
+            background: linear-gradient(145deg, rgba(255, 217, 61, 0.08), rgba(255, 217, 61, 0.03));
+            border: 2px solid var(--gold);
+            border-radius: 10px;
+            padding: 15px;
+            backdrop-filter: blur(5px);
+            height: 100%;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .box-header {
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 8px;
+            margin-bottom: 10px;
+            font-weight: 700;
+            color: var(--gold-bright);
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .title-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-top: 15px;
+        }
+
+        .title-label {
+            font-size: 12px;
+            color: inherit;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 8px;
+            padding-bottom: 5px;
+            font-weight: 600;
+            opacity: 0.9;
+        }
+
+        .title-val {
+            font-size: 16px;
+            font-weight: bold;
+            color: var(--blue-bright);
+            display: block;
+            margin-bottom: 8px;
+            text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .title-desc {
+            font-size: 14px;
+            color: #aaa;
+            line-height: 1.4;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 25px 0 15px 0;
+            color: var(--gold-bright);
+            font-size: 1.3em;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 10px;
+            font-weight: 700;
+            text-shadow: 0 0 15px var(--gold-glow);
+        }
+
+        #equip-armor-list,
+        #equip-accessory-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+            gap: 12px;
+        }
+
+        .equip-item-card {
+            background: linear-gradient(145deg, rgba(26, 35, 50, 0.4), rgba(15, 25, 34, 0.2));
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-top-width: 3px;
+            border-top-style: solid;
+            border-top-color: rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            display: flex;
+            min-height: 120px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(5px);
+        }
+
+        .equip-item-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 217, 61, 0.1), transparent);
+            transition: left 0.6s;
+        }
+
+        .equip-item-card:hover {
+            background: linear-gradient(145deg, rgba(26, 35, 50, 0.6), rgba(15, 25, 34, 0.4));
+            border-color: var(--gold);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px var(--gold-glow),
+                0 0 25px var(--gold-glow);
+        }
+
+        .equip-item-card:hover::before {
+            left: 100%;
+        }
+
+        .equip-left-section {
+            flex: 5;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .equip-right-section {
+            flex: 5;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        /* 機體健檢報告樣式 */
+        .health-check-container {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .health-score-box {
+            flex: 1;
+            background: linear-gradient(135deg, rgba(30, 30, 40, 0.8), rgba(20, 20, 20, 0.9));
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .health-score-val {
+            font-size: 48px;
+            font-weight: 900;
+            background: linear-gradient(to bottom, #fff, #ffd700);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+            line-height: 1;
+        }
+
+        .health-score-label {
+            color: #8b949e;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        .health-details-box {
+            flex: 2;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .advice-item {
+            background: rgba(255, 255, 255, 0.03);
+            border-left: 3px solid #8b949e;
+            padding: 10px 15px;
+            border-radius: 4px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .advice-item.critical {
+            border-left-color: #ff4757;
+            background: rgba(255, 71, 87, 0.1);
+        }
+
+        .advice-item.warning {
+            border-left-color: #ffa502;
+            background: rgba(255, 165, 2, 0.1);
+        }
+
+        .advice-item.good {
+            border-left-color: #2ed573;
+            background: rgba(46, 213, 115, 0.1);
+        }
+
+        .stat-highlight-row {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 5px;
+            font-size: 13px;
+            color: #ccc;
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
+            padding-bottom: 5px;
+        }
+
+        .equip-img-container {
+            position: relative;
+            width: 44px;
+            height: 44px;
+            flex-shrink: 0;
+        }
+
+        .equip-img-container img {
+            width: 44px;
+            height: 44px;
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .exceed-badge {
+            position: absolute;
+            top: -7px;
+            right: -7px;
+            background: #ff3e3e;
+            color: white;
+            border: 1px solid #ffd700;
+            font-size: 10px;
+            padding: 1px 4px;
+            border-radius: 4px;
+            font-weight: bold;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+            z-index: 2;
+        }
+
+        .equip-name {
+            font-weight: bold;
+            font-size: 14px;
+            line-height: 1.4;
+            display: flex;
+            align-items: center;
+            color: var(--blue-bright);
+            white-space: normal;
+        }
+
+        .base-stat-row {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 4px 0;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .random-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--green);
+            margin-bottom: 3px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .skill-badge-mini {
+            color: var(--primary);
+            margin-top: 5px;
+            display: block;
+            font-weight: bold;
+            border-left: 3px solid var(--primary);
+            padding-left: 8px;
+            font-size: 12px;
+            text-shadow: 0 0 10px var(--blue-glow);
+        }
+
+        /* 趨勢圖切換按鈕樣式 */
+        .trend-tab {
+            padding: 8px 16px;
+            border: 1px solid var(--border);
+            background: rgba(30, 41, 59, 0.8);
+            /* 稍微亮一點的背景 */
+            color: #c9d1d9;
+            /* 更亮的文字顏色 */
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            /* 字體稍微加大 */
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .trend-tab:hover {
+            background: rgba(48, 54, 61, 0.9);
+            color: #fff;
+            border-color: #8b949e;
+        }
+
+        .trend-tab.active {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
+            box-shadow: 0 0 10px rgba(88, 166, 255, 0.4);
+            /* 增加發光效果 */
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
+        }
+
+        .charts-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 25px;
+            align-items: start;
+        }
+
+        .charts-row>div {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .charts-row .grid-box-container {
+            flex: 1;
+            align-content: start;
+        }
+
+        /* RWD 調整 */
+        /* RWD 調整 */
+        @media (min-width: 0px) {
+            .main-layout-wrapper {
+                display: grid;
+                grid-template-columns: 1fr 2fr;
+                gap: 20px;
+                align-items: stretch;
+            }
+        }
+
+        @media (max-width: 0px) {
+            .profile-card {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .api-input-group {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .api-input-group input,
+            .api-input-group select,
+            .btn-api {
+                min-width: unset;
+            }
+
+            .stat-grid-main {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            /* 手機版：針對能力值卡片 (2 欄) */
+            /* 左側卡片 (1, 3, 5...) */
+            .stat-mini-card:nth-child(odd) .tooltip {
+                left: 0 !important;
+                right: auto !important;
+                transform: translateX(0) !important;
+            }
+
+            /* 右側卡片 (2, 4, 6...) */
+            .stat-mini-card:nth-child(even) .tooltip {
+                left: auto !important;
+                right: 0 !important;
+                transform: translateX(0) !important;
+            }
+
+            /* 手機版：針對技能卡片 (一排 2 欄) */
+            .skill-list {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 8px;
+            }
+
+            /* 🛡️ 手機版技能卡片 Tooltip 邊界處理 (針對一排 2 欄) */
+            /* 每排第 1 個 (1, 3, 5...) - 靠左對齊 */
+            .skill-card:nth-child(2n+1) .tooltip {
+                left: 0 !important;
+                right: auto !important;
+                transform: translateX(0) !important;
+                width: 80vw !important;
+                max-width: 250px !important;
+            }
+
+            /* 每排第 2 個 (2, 4, 6...) - 靠右對齊 (right: 0) */
+            .skill-card:nth-child(2n) .tooltip {
+                left: auto !important;
+                right: 0 !important;
+                transform: translateX(0) !important;
+                width: 80vw !important;
+                max-width: 250px !important;
+            }
+
+            #equip-armor-list,
+            #equip-accessory-list {
+                grid-template-columns: 1fr;
+            }
+
+            .grid-box-container {
+                grid-template-columns: 1fr;
+            }
+
+            /* 手機版：健檢與數據分析改為垂直排列 */
+            .health-combat-wrapper {
+                flex-direction: column !important;
+            }
+
+            /* 手機版：基礎數據分析改為 1 欄 */
+            #combat-stats-grid {
+                grid-template-columns: 1fr !important;
+                gap: 8px !important;
+            }
+
+            .title-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .rank-badge {
+                width: 100%
+            }
+
+            .charts-row {
+                grid-template-columns: 1fr;
+            }
+
+        }
+
+
+
+        /* 手機版：針對表格設置固定高度與內部捲動 */
+        @media (max-width: 0px) {
+            .table-wrapper {
+                max-height: 500px;
+                /* 手機版通常螢幕較小，縮減最大高度 */
+                overflow: auto !important;
+            }
+
+            /* 手機版：表頭需黏在容器頂部 */
+            thead th {
+                top: 0 !important;
+            }
+
+            /* 手機版個人資訊優化 */
+            .profile-new-header {
+                flex-direction: column !important;
+                align-items: center !important;
+                gap: 15px !important;
+                padding: 20px 15px !important;
+            }
+
+            .profile-left {
+                flex-direction: column !important;
+                justify-content: center !important;
+                text-align: center !important;
+                gap: 15px !important;
+                width: 100% !important;
+            }
+
+            .profile-img-lg {
+                width: 100px !important;
+                height: 100px !important;
+                margin: 0 auto !important;
+            }
+
+            .profile-info {
+                align-items: center !important;
+                width: 100% !important;
+            }
+
+            .profile-name-row {
+                flex-direction: column !important;
+                gap: 5px !important;
+                align-items: center !important;
+                margin-bottom: 10px !important;
+            }
+
+            .p-name-lg {
+                font-size: 28px !important;
+            }
+
+            .p-title-sm {
+                font-size: 14px !important;
+                padding: 4px 10px !important;
+            }
+
+            .profile-badges {
+                justify-content: center !important;
+                flex-wrap: wrap !important;
+                gap: 8px !important;
+            }
+
+            .profile-right {
+                width: 100% !important;
+                justify-content: center !important;
+                border-left: none !important;
+                border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+                padding-top: 15px !important;
+                padding-left: 0 !important;
+            }
+
+            .item-score-box {
+                margin-bottom: 10px !important;
+            }
+        }
+
+        /* 表格腳步輔助樣式已整合至上方 */
+
+        /* 7. 行內懸停效果 (Hover) */
+        /* 增加這段能讓使用者在看長表格時,不容易看錯行 */
+        tbody tr {
+            position: relative;
+        }
+
+        tbody tr:hover td {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        tbody td {
+            position: relative;
+            /* 確保 tooltip 能夠基於 td 定位 */
+        }
+
+        /* 8. 捲動條美化 */
+        .table-wrapper::-webkit-scrollbar {
+            height: 6px;
+            width: 6px;
+        }
+
+        .table-wrapper::-webkit-scrollbar-thumb {
+            background: var(--gold, #c5a059);
+            border-radius: 10px;
+        }
+
+        .table-wrapper::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        /* 11. 摺疊面板相關樣式 */
+        .collapsible-header {
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            margin-top: 25px;
+            border-left: 5px solid var(--gold);
+            transition: all 0.2s;
+        }
+
+        .collapsible-header:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .collapsible-header h3 {
+            margin: 0;
+            border-left: none;
+            padding-left: 0;
+            font-size: 17px;
+        }
+
+        .collapsible-content {
+            overflow: hidden;
+            max-height: 2500px;
+            transition: max-height 0.5s cubic-bezier(0, 1, 0, 1), opacity 0.3s, margin 0.3s;
+            opacity: 1;
+            margin-top: 15px;
+        }
+
+        .collapsible-content.collapsed {
+            max-height: 0;
+            opacity: 0;
+            margin-top: 0;
+        }
+
+        .toggle-icon {
+            color: var(--gold);
+            transition: transform 0.3s;
+            font-size: 12px;
+        }
+
+        .collapsed .toggle-icon {
+            transform: rotate(-90deg);
+        }
+
+        /* 12. Toast Notification */
+        .toast-wrapper-right {
+            position: absolute;
+            bottom: 80px;
+            right: 25px;
+            width: auto;
+            max-width: 70%;
+            /* 防止在超小螢幕完全遮擋標題，但通常足夠顯示一行 */
+            height: auto;
+            overflow: hidden;
+            pointer-events: none;
+            z-index: 60;
+        }
+
+        .combat-toast {
+            background: rgba(255, 62, 62, 0.95);
+            /* 稍微加深不透明度 */
+            color: white;
+            padding: 8px 15px;
+            border-radius: 6px;
+            font-size: 13px;
+            transform: translateY(150%);
+            /* 從下方滑入 */
+            transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+            pointer-events: auto;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            margin-right: 0;
+            width: auto;
+            white-space: normal;
+            /* 強制一行不截斷 */
+            box-sizing: border-box;
+            line-height: 1.5;
+            /* display: inline-flex; */
+            /* 改為 inline-flex 以適應內容寬度 */
+            align-items: center;
+            gap: 8px;
+            border-left: 4px solid #ffcece;
+        }
+
+        .combat-toast.show {
+            transform: translateY(0);
+        }

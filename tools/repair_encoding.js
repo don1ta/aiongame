@@ -1,3 +1,10 @@
+/**
+ * 檔案結構與編碼修復工具 (repair_encoding.js)
+ * 
+ * 此工具用於處理 aion.html 檔案中可能出現的結構錯誤（如重複的 HTML 標籤或是意外的截斷），
+ * 並確保引用正確的腳本檔案（如 health_check.js）。
+ */
+
 const fs = require('fs');
 const path = 'd:/c150075/Desktop/aiongame/aion.html';
 

@@ -1,11 +1,16 @@
 /**
- * Aion 2 技能資料庫 API 整合 - 閃電快取 + 視覺修復版
- * 保留 API 原生顏色，並透過 localStorage 加速
+ * Aion2 技能 API 整合模組 (skill-api.js)
+ * 
+ * 此檔案提供了與 QuestLog 技能數據庫互動的進階介面，主要負責：
+ * 1. 遠端數據抓取：根據技能 ID 與等級，異步獲取詳細的技能描述與效果。
+ * 2. 說明文字解析：解析 API 回傳的模板標籤（如 {abe:xxx}），將其轉換為正確的屬性數值。
+ * 3. 視覺格式化：保留 API 原生的 HTML 顏色標籤（如被動技能金字），並提供格式化輸出的功能。
+ * 4. 高效能快取：利用 localStorage 管理技能數據，大幅縮短重複查看技能時的載入延遲。
  */
 
 const SKILL_API_BASE = 'https://questlog.gg/aion-2/api/trpc/database.getSkill';
-const CACHE_PREFIX = 'aion_skill_v7_'; // 強制刷新快取代 v7 (全面數值偵測版)
-const CACHE_EXPIRE = 86400000 * 7;
+const CACHE_PREFIX = 'aion_skill_v16_'; // 強制刷新快取代 v7 (全面數值偵測版)
+const CACHE_EXPIRE = 0;
 
 // 處理 descriptionData 模板變數解析 (移至頂部確保可用)
 function processDescriptionData(dd, targetLevel) {

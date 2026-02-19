@@ -1,3 +1,10 @@
+/**
+ * API 職業參數測試工具 (check_class_param.js)
+ * 
+ * 專門用於測試與驗證 `class` 與 `className` 參數在排行 API 中的支援情況，
+ * 以確保治癒星、魔道星等職業能正確被過濾。
+ */
+
 const https = require('https');
 
 function fetchApi(url) {

@@ -1,5 +1,10 @@
-// 在 questlog.gg 技能頁面的 Console 中運行此腳本
-// 用於批量抓取技能數據
+/**
+ * QuestLog 技能數據萃取工具 (extract-skills-from-questlog.js)
+ * 
+ * 此腳本設計為在 questlog.gg 技能列表頁面的瀏覽器開發者工具 (Console) 中執行。
+ * 其目的是批量抓取當前頁面的技能名稱與 ID，並將其格式化為本系統可用的 JSON 結構，
+ * 以便快速更新本地技能資料庫。
+ */
 
 (function () {
     // 職業名稱對照表 (questlog 標題通常含英文職業名)
