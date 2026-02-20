@@ -1,26 +1,28 @@
 /* 搜尋結果網格系統 - RWD Optimized */
 .search-results-grid {
     display: grid;
-    /* 預設: 桌面版每欄至少 280px (比 300px 稍窄以適應更多螢幕) */
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 12px;
+    /* 強制一行最多 3 個 (大型螢幕下) */
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
     margin-bottom: 20px;
     animation: fadeIn 0.5s ease;
+    padding: 20px;
 }
 
 .search-card {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 10px;
-    background: rgba(30, 35, 45, 0.9);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 16px 20px;
+    /* 加大內層距離 */
+    background: #1e2024;
+    border: 1px solid rgba(255, 255, 255, 0.05);
     border-radius: 8px;
     cursor: pointer;
-    transition: transform 0.2s, background 0.2s, border-color 0.2s;
+    transition: transform 0.2s, background 0.2s, border-color 0.2s, box-shadow 0.2s;
     position: relative;
     overflow: hidden;
-    min-height: 64px;
+    min-height: 95px;
 }
 
 .search-card::before {
@@ -30,7 +32,7 @@
     left: 0;
     width: 4px;
     height: 100%;
-    background: var(--border);
+    background: var(--card-score-color, #555);
     transition: background 0.3s;
 }
 
@@ -38,78 +40,13 @@
     transform: translateY(-2px);
     background: rgba(40, 45, 55, 1);
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
-    border-color: var(--primary);
+    border-color: var(--card-score-color, var(--primary));
 }
 
 .search-card:hover::before {
-    background: var(--primary);
+    background: var(--card-score-color, var(--primary));
 }
 
-/* 職業特化邊框色 */
-.search-card[data-class="gladiator"]::before,
-.search-card[data-class="劍星"]::before {
-    background: #e67e22;
-}
-
-.search-card[data-class="templar"]::before,
-.search-card[data-class="守護星"]::before {
-    background: #27ae60;
-}
-
-.search-card[data-class="assassin"]::before,
-.search-card[data-class="殺星"]::before {
-    background: #1abc9c;
-}
-
-.search-card[data-class="ranger"]::before,
-.search-card[data-class="弓星"]::before {
-    background: #9b59b6;
-}
-
-.search-card[data-class="sorcerer"]::before,
-.search-card[data-class="魔道星"]::before {
-    background: #e74c3c;
-}
-
-.search-card[data-class="spirit_master"]::before,
-.search-card[data-class="精靈星"]::before {
-    background: #3498db;
-}
-
-.search-card[data-class="cleric"]::before,
-.search-card[data-class="治癒星"]::before {
-    background: #f1c40f;
-}
-
-.search-card[data-class="chanter"]::before,
-.search-card[data-class="護法星"]::before {
-    background: #f39c12;
-}
-
-.search-card[data-class="painter"]::before,
-.search-card[data-class="彩繪星"]::before {
-    background: #ff9ff3;
-}
-
-.search-card[data-class="gunner"]::before,
-.search-card[data-class="槍擊星"]::before {
-    background: #ffcccc;
-}
-
-.search-card[data-class="bard"]::before,
-.search-card[data-class="吟遊星"]::before {
-    background: #22a6b3;
-}
-
-.search-card[data-class="rider"]::before,
-.search-card[data-class="機甲星"]::before {
-    background: #30336b;
-}
-
-.search-card[data-class="thunderer"]::before,
-.search-card[data-class="雷擊星"]::before {
-    background: #be2edd;
-}
 
 .search-card-img {
     width: 42px;
@@ -161,7 +98,16 @@
     flex-direction: column;
     align-items: flex-end;
     justify-content: center;
-    min-width: 80px;
+    min-width: 60px;
+    margin-left: auto;
+}
+
+.search-card-action .peek-score-result {
+    font-size: 20px !important;
+    font-weight: 900 !important;
+    color: #f1c40f !important;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    letter-spacing: 0.5px;
 }
 
 .peek-score-result {
@@ -171,18 +117,19 @@
 
 /* === Responsive Web Design (RWD) 對應 === */
 
-/* 大型平板與筆電 (1024px 以下) */
-@media (max-width: 1024px) {
+/* 大型平板與筆電 (1100px 以下)：降為雙欄 */
+@media (max-width: 1100px) {
     .search-results-grid {
-        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        grid-template-columns: repeat(2, 1fr);
+
     }
 }
 
-/* 平板直立 (768px 以下) */
+/* 平板直立 (768px 以下)：單欄 */
 @media (max-width: 768px) {
     .search-results-grid {
-        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-        gap: 10px;
+        grid-template-columns: 1fr;
+        gap: 12px;
     }
 
     .search-card {

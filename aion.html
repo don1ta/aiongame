@@ -8,7 +8,7 @@
     <title>Aion2 高階解析 - 角色名稱快速查詢版</title>
     <!-- 引入外部 CSS -->
     <link rel="stylesheet" href="css/aion.css?v=anti_shake_v1">
-    <link rel="stylesheet" href="css/search.css?v=overflow_fix">
+    <link rel="stylesheet" href="css/search.css?v=score_colors_v4">
 
     <!-- 引入共用配置與圖表庫 -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
@@ -159,14 +159,12 @@
 
                 </div>
                 <div class="right-column">
-                    <div class="health-main-stats-wrapper"
-                        style="display:flex; gap:15px; align-items:stretch; flex-wrap:wrap;">
+                    <div class="health-main-stats-wrapper" style="display:flex; gap:15px; align-items:stretch;">
                         <!-- 機體健檢報告 -->
-                        <div id="health-check-card" class="card"
-                            style="display:none; flex:1; margin-top:0; min-width:250px;"></div>
+                        <div id="health-check-card" class="card" style="display:none; flex:1; margin-top:0;"></div>
 
                         <!-- 主要能力值概覽 (已移動至此) -->
-                        <div class="card" style="flex:1; margin-top:0; min-width:250px;">
+                        <div class="card" style="flex:1; margin-top:0;">
                             <div class="stat-card-header"
                                 style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:10px;">
                                 <div style="display:flex; flex-direction:column;">
@@ -188,29 +186,20 @@
                     </div>
 
                     <!-- 戰鬥數據分析區塊 (移至下方與全寬) -->
-                    <div class="card" style="padding:0; overflow:visible;">
-                        <div class="card-sticky-header">
-                            <div
-                                style="display:flex; justify-content:space-between; align-items:center; padding-right:25px; padding-top:2px; padding-bottom:2px; border-bottom:1px solid rgba(255,255,255,0.05);">
-                                <h3 style="margin:0; padding:12px 25px; border:none;">⚔️ 基礎數據分析</h3>
-                                <div id="combat-analysis-global-controls"
-                                    style="display:flex; gap:10px; align-items:center;">
-                                    <!-- 按鈕將動態注入 -->
-                                </div>
+                    <div class="card">
+                        <h3>⚔️ 基礎數據分析</h3>
+                        <!-- 增益效果控制面板 -->
+                        <div id="gain-effect-controls"
+                            style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.05); border-radius:8px; padding:15px; margin-bottom:15px;">
+                            <div style="font-size:13px; font-weight:bold; color:#bdc3c7; margin-bottom:10px;">⚙️ 增益效果
                             </div>
-                            <!-- 增益效果控制面板 -->
-                            <div id="gain-effect-controls" style="padding:15px 25px; margin:0;">
-                                <div style="font-size:13px; font-weight:bold; color:#bdc3c7; margin-bottom:10px;">⚙️
-                                </div>
-                                <div style="display:flex; flex-wrap:wrap; gap:15px;" id="ge-checkbox-container"></div>
-                                <!-- 翅膀選擇獨立行 -->
-                                <div id="wing-selection-row"
-                                    style="display:none; margin-top:10px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.06);">
-                                </div>
+                            <div style="display:flex; flex-wrap:wrap; gap:15px;" id="ge-checkbox-container"></div>
+                            <!-- 翅膀選擇獨立行（不影響 checkbox 排版） -->
+                            <div id="wing-selection-row"
+                                style="display:none; margin-top:10px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.06);">
                             </div>
                         </div>
-                        <div id="combat-stats-grid" class="grid-box-container" style="padding:5px 25px 25px 25px;">
-                        </div>
+                        <div id="combat-stats-grid" class="grid-box-container"></div>
                     </div>
 
 
@@ -251,8 +240,8 @@
     <script src="js/skill-api.js?v=99"></script>
     <script src="js/equipment-score.js?v=UI_FIX_FINAL"></script>
     <script src="js/health_check.js"></script>
-    <script src="js/peek_score.js"></script>
-    <script src="js/aion.js"></script>
+    <script src="js/peek_score.js?v=score_colors_v5"></script>
+    <script src="js/aion.js?v=score_colors_v5"></script>
     <script src="js/class_distribution.js"></script>
     <script src="js/server_stats.js"></script>
 </body>

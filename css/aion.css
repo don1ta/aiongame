@@ -2678,8 +2678,62 @@
             padding: 15px 25px !important;
         }
 
-        /* 恢復全域滾動的預設行為 */
+        /* 恢復全域滾動的預設行為及平滑滾動 */
+        html {
+            scroll-behavior: smooth;
+        }
+
         html,
         body {
             overflow: visible !important;
+        }
+
+        /* 手機版快速導覽列 */
+        #mobile-quick-nav {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(13, 18, 28, 0.95);
+            border: 1px solid rgba(255, 217, 61, 0.4);
+            border-radius: 30px;
+            padding: 8px 20px;
+            z-index: 9999;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.9), 0 0 15px rgba(255, 217, 61, 0.2);
+            backdrop-filter: blur(10px);
+            width: 85%;
+            max-width: 400px;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #mobile-quick-nav .nav-btn {
+            color: #bdc3c7;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: bold;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 5px;
+            transition: all 0.2s;
+        }
+
+        #mobile-quick-nav .nav-btn:hover,
+        #mobile-quick-nav .nav-btn:active {
+            color: var(--gold);
+            transform: translateY(-2px);
+            text-shadow: 0 0 5px var(--gold-glow);
+        }
+
+        @media (max-width: 768px) {
+            #mobile-quick-nav {
+                display: flex;
+            }
+
+            body {
+                padding-bottom: 80px;
+            }
         }

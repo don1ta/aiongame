@@ -228,7 +228,7 @@
         const stigmaHtml = await renderTabContent('stigma');
 
         const warningHtml = `
-            <div style="background: rgba(255, 193, 7, 0.15); border: 1px solid rgba(255, 193, 7, 0.4); border-radius: 6px; padding: 8px 12px; margin-bottom: 15px; display: flex; align-items: flex-start; gap: 8px;">
+            <div style=" border: 1px solid rgba(255, 193, 7, 0.4); border-radius: 6px; padding: 8px 12px; margin-bottom: 15px; display: flex; align-items: flex-start; gap: 8px;">
                 <span style="font-size: 18px;">⚠️</span>
                 <div style="flex: 1;">
                     <div style="color: #ffc107; font-weight: bold; font-size: 13px; margin-bottom: 3px;">道具等級偵測</div>
