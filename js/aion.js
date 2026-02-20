@@ -67,7 +67,7 @@ const WING_STAT_KEY_MAP = {
     'pveaccuracy': 'PvE命中',
     'pveadddamage': 'PvE攻擊力',
     'pveamplifydamage': 'PvE傷害增幅',
-    'pvedamagedefense': 'PvE傷害耐性',
+    'pvedamagedefense': 'PvE防禦力',
     'cooltimedecrease': '冷卻縮短',
     'hppotionrate': '生命力藥水恢復增加',
     'abnormalaccuracy': '異常狀態命中',
@@ -79,7 +79,7 @@ const WING_STAT_KEY_MAP = {
 const WING_PERCENT_KEYS = new Set([
     'amplifyalldamage', 'decreasedamage',
     'bossnpcamplifydamage', 'bossnpcdecreasedamage',
-    'pveamplifydamage', 'pvedamagedefense',
+    'pveamplifydamage',
     'hppotionrate', 'cooltimedecrease',
     'criticaladddamage',
 ]);
@@ -920,8 +920,10 @@ function updatePassiveSkills(data) {
 
     if (hasPassive) {
         window.__PASSIVE_SKILLS_HTML__ = passiveHtml;
+        window.__PASSIVE_STATS_READY__ = true; // 標記為精確數據已就緒
     } else {
         window.__PASSIVE_SKILLS_HTML__ = '<div style="padding:20px; text-align:center; color:#8b949e;">未偵測到被動技能加成</div>';
+        window.__PASSIVE_STATS_READY__ = false;
     }
 }
 
@@ -1643,10 +1645,12 @@ function renderRankings(rankingList, gameRankings) {
 // 🟢 標準化屬性名稱 (確保 被動技能 與 主表 欄位對齊)
 function normalizeKey(name, forcePerc = null) {
     // 🚫 嚴格區分：哪些屬性「永遠」是百分比
-    const alwaysPercent = ['戰鬥速度', '移動速度', '攻擊速度', '飛行速度', '暴擊傷害增幅', '物理致命一擊', '魔法致命一擊', '暴擊抵抗增加', '強擊', '多段打擊', '完美', '再生', '鐵壁', '冷卻時間', '傷害增幅', '武器傷害增幅', '後方傷害增幅'];
+    const alwaysPercent = ['戰鬥速度', '移動速度', '攻擊速度', '飛行速度', '暴擊傷害增幅', '物理致命一擊', '魔法致命一擊', '暴擊抵抗增加', '強擊', '多段打擊', '完美', '再生', '鐵壁', '冷卻時間', '傷害增幅', '傷害耐性', '武器傷害增幅', '後方傷害增幅'];
     const protectPercNames = ['攻擊力增加', '生命力增加', '精神力增加', '防禦力增加', '命中增加', '迴避增加', '暴擊增加', '格擋增加', '暴擊抵抗增加'];
 
-    let cleanName = name.replace('%', '').trim();
+    let cleanName = name.replace('%', '').replace(/\s+/g, '').trim();
+    // 🚨 強制修正：PVE/PVP 大寫統一
+    cleanName = cleanName.replace(/PvE/i, 'PVE').replace(/PvP/i, 'PVP');
 
     // 贅字清理 (保護名單除外)
     if (!protectPercNames.includes(cleanName)) {
@@ -1660,7 +1664,6 @@ function normalizeKey(name, forcePerc = null) {
     if (forcePerc === false) return cleanName;
 
     // 自動判定
-    // 🚨 修正：移除 protectPercNames 的強制百分比行為，僅允許 alwaysPercent 或顯式 %
     if (alwaysPercent.some(k => name.includes(k)) || name.includes('%')) {
         return cleanName + '%';
     }
@@ -2232,6 +2235,7 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                     else if (board.name.includes("阿斯佩爾")) e.asphel += v;
                     else {
                         e.other += v;
+                        e.subtotals.gainEffect += v;
                         // 📝 添加詳細來源說明 (僅非主神板塊)
                         e.detailGroups.gainEffect.push(`[板塊] ${board.name}: +${v}${isPerc ? '%' : ''}`);
                     }
@@ -2303,6 +2307,7 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
             else if (b.boardName.includes("阿斯佩爾")) e.asphel += v;
             else {
                 e.other += v;
+                e.subtotals.gainEffect += v;
                 // 📝 添加詳細來源說明 (僅非主神板塊)
                 // 避免重複添加 (如果是重新渲染)
                 const detailStr = `[板塊] ${b.boardName}: +${v}${isPerc ? '%' : ''}`;
@@ -2411,12 +2416,16 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                     // Use normalizeKey to ensure consistency (e.g. 額外迴避 -> 迴避) and correct aggregation
                     let normName = normalizeKey(statName, (isDecimal || matchesKeyword));
 
+                    // 🚨 強制修正：PVE/PVP 大寫統一 (解決 PvE攻擊力 vs PVE攻擊力 分離問題)
+                    normName = normName.replace(/PvE/i, 'PVE').replace(/PvP/i, 'PVP');
+
                     let entry = getEntry(normName);
                     entry.other += val;
                     entry.subtotals.wing += val;
 
                     const unit = normName.includes('%') ? '%' : '';
-                    entry.detailGroups.wing.push(`[${wingName}](${typeLabel}): +${parseFloat(val.toFixed(2))}${unit}`);
+                    // 修正格式: 將 [翅膀名稱](類型) 改為 [翅膀名稱 類型]，避免解析時的括號殘留問題
+                    entry.detailGroups.wing.push(`[${wingName} ${typeLabel}]: +${parseFloat(val.toFixed(2))}${unit}`);
                     wingBonusHtml += `<div class="random-row"><span>${typeLabel}-${normName}</span><span style="color:#fff;">+${parseFloat(val.toFixed(2))}${unit}</span></div>`;
                 }
             };
@@ -2597,7 +2606,7 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                 entry.subtotals.wingHold += val;
 
                 const unit = normName.includes('%') ? '%' : '';
-                entry.detailGroups.wingHold.push(`[${wingName}](持有): +${parseFloat(val.toFixed(2))}${unit}`);
+                entry.detailGroups.wingHold.push(`[${wingName} 持有]: +${parseFloat(val.toFixed(2))}${unit}`);
             }
         }
     });
@@ -3536,7 +3545,7 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
             },
             {
                 name: "防禦力", icon: "🛡️",
-                bases: ["防禦力"], extras: ["額外防禦力"], percs: ["防禦力增加"], fixeds: ["PVE防禦力", "首領防禦力"]
+                bases: ["防禦力"], extras: ["額外防禦力"], percs: ["防禦力增加"], fixeds: ["PVE防禦力", "PVE傷害耐性", "首領防禦力", "首領傷害耐性"]
             },
 
             {
@@ -3606,7 +3615,7 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                 let items = [];
                 let allDetails = [];
 
-                const alwaysPercKeys = ['戰鬥速度', '移動速度', '攻擊速度', '飛行速度', '暴擊傷害增幅', '冷卻時間', '傷害增幅', '武器傷害增幅', '後方傷害增幅', '強擊', '多段打擊', '完美', '再生', '鐵壁', '擊中', '抵抗'];
+                const alwaysPercKeys = ['戰鬥速度', '移動速度', '攻擊速度', '飛行速度', '暴擊傷害增幅', '冷卻時間', '傷害增幅', '傷害耐性', '武器傷害增幅', '後方傷害增幅', '強擊', '多段打擊', '完美', '再生', '鐵壁', '擊中', '抵抗', '耐性'];
 
 
                 (keyList || []).forEach(searchKey => {
@@ -3632,9 +3641,10 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                         }
 
                         const boardVal = (e.nezakan || 0) + (e.zikel || 0) + (e.baizel || 0) + (e.triniel || 0) + (e.ariel || 0) + (e.asphel || 0);
-                        const equipVal = (e.equipMain || 0);
+                        const wingVal = (e.subtotals?.wing || 0) + (e.subtotals?.wingHold || 0);
+                        const equipVal = (e.equipMain || 0) + wingVal;
                         const stoneVal = (e.equipSub || 0);
-                        const otherVal = (e.other || 0);
+                        const otherVal = (e.other || 0) - wingVal;
                         const val = boardVal + equipVal + stoneVal + otherVal;
 
                         if (Math.abs(val) > 0.001) {
@@ -3647,7 +3657,7 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                             });
 
                             if (e.detailGroups) {
-                                ['gainEffect', 'title', 'wing', 'wingHold', 'set', 'arcana', 'stone', 'random'].forEach(g => {
+                                ['base', 'skill', 'gainEffect', 'title', 'wing', 'wingHold', 'set', 'arcana', 'stone', 'random', 'mainStat', 'etc'].forEach(g => {
                                     if (e.detailGroups[g] && e.detailGroups[g].length > 0) {
                                         allDetails.push(...e.detailGroups[g]);
                                     }
@@ -3716,15 +3726,8 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
             // 去重詳細資訊
             gatheredDetails = [...new Set(gatheredDetails)];
 
-            // 使用者要求隱藏來源分項
+            // 隱藏詳細來源分項 (由使用者要求移除)
             const detailsHtml = "";
-            /*
-            const detailsHtml = gatheredDetails.length > 0
-                ? `<div style="margin-top:6px; padding-top:4px; border-top:1px dashed rgba(255,255,255,0.1); font-size:10px; color:#888;">
-                    來源分項: ${gatheredDetails.map(d => `<span style="background:rgba(255,255,255,0.1); padding:1px 4px; border-radius:3px; margin-right:2px;">${d}</span>`).join(' ')}
-                   </div>`
-                : "";
-            */
 
             const displayVal = (() => {
                 // 特殊邏輯：冷卻時間 (無論正負都視為減少量，並加總顯示為負值)
@@ -4763,7 +4766,9 @@ function renderSkills(data, boardSkillMap, cardSkillMap, stats) {
         return false;
     };
 
-    const skillList = (data.skill ? data.skill.skillList : []) || (data.skills ? (Array.isArray(data.skills) ? data.skills : data.skills.skillList) : []) || [];
+    const rawSkillList = (data.skill ? data.skill.skillList : []) || (data.skills ? (Array.isArray(data.skills) ? data.skills : data.skills.skillList) : []) || [];
+    const skillList = Array.isArray(rawSkillList) ? rawSkillList : Object.values(rawSkillList);
+
     skillList.forEach(s => {
         let bLv = boardSkillMap[s.name] || 0;
         let cLv = (cardSkillMap[s.name] || []).reduce((a, b) => a + b.lv, 0);
@@ -4833,7 +4838,11 @@ function renderSkills(data, boardSkillMap, cardSkillMap, stats) {
     document.getElementById('sk-stigma').innerHTML = sti || "<div style='color:#8b949e; padding:10px;'>無特殊技能</div>";
 
     // 儲存詳細版被動技能 HTML 以便在概覽分頁使用
-    window.__PASSIVE_SKILLS_HTML__ = pasDetailed || "<div style='color:#8b949e; padding:40px; text-align:center;'>此職業無被動加成技能</div>";
+    // 🛡️ 優先保留 updatePassiveSkills 所產生的 精確數據 HTML 
+    const isCalculating = !window.__PASSIVE_SKILLS_HTML__ || window.__PASSIVE_SKILLS_HTML__.includes('⌛');
+    if (isCalculating || !window.__PASSIVE_STATS_READY__) {
+        window.__PASSIVE_SKILLS_HTML__ = pasDetailed || "<div style='color:#8b949e; padding:40px; text-align:center;'>此職業無被動加成技能</div>";
+    }
 }
 
 function renderCombatAnalysis(stats, data) {
@@ -4914,31 +4923,43 @@ function renderCombatAnalysis(stats, data) {
             }
         });
 
-        // 🚨 補丁：確保被動技能的細項 (儲存在 global GAIN_EFFECT_DATABASE) 被納入顯示
-        if (window.GAIN_EFFECT_DATABASE && window.GAIN_EFFECT_DATABASE['被動技能']) {
-            const passiveDB = window.GAIN_EFFECT_DATABASE['被動技能'];
-            // 嘗試匹配 key (支援 % 變體)
-            const breakdownKey = Object.keys(passiveDB.breakdowns || {}).find(k => {
-                const cleanK = k.replace('%', '').trim();
-                return cleanK === baseKey || cleanK === '物理' + baseKey || cleanK === '魔法' + baseKey;
-            });
+        // 🚨 補丁：確保各類增益效果的細項 (儲存在 global GAIN_EFFECT_DATABASE) 被納入顯示
+        // 這包含被動技能、稱號、套裝效果等
+        const gainEffectMap = {
+            '被動技能': 'skill',
+            '稱號': 'title',
+            '套裝效果': 'set',
+            '手動增益': 'gainEffect',
+            '能力轉化': 'mainStat'
+        };
 
-            if (breakdownKey && passiveDB.breakdowns[breakdownKey]) {
-                passiveDB.breakdowns[breakdownKey].forEach(str => {
-                    // 避免重複添加 (如果已經在 stats 裡合並過)
-                    if (!entry.detailGroups.skill.includes(str)) {
-                        entry.detailGroups.skill.push(str);
-                        // 同步加總數值以免漏算 (雖通常 stats 已包含數值，但為了保險)
-                        // 解析 str: "[技能名]: +數值"
-                        const match = str.match(/:\s*\+?([\d\.]+)/);
-                        if (match) {
-                            // 注意：這裡不加總到 entry.total，因為 entry.total 通常來自 main stats object
-                            // 我們只確保它出現在 subtotal 以供參考
-                            entry.subtotals.skill += parseFloat(match[1]);
-                        }
-                    }
+        if (window.GAIN_EFFECT_DATABASE) {
+            Object.keys(gainEffectMap).forEach(dbKey => {
+                const groupKey = gainEffectMap[dbKey];
+                const db = window.GAIN_EFFECT_DATABASE[dbKey];
+                if (!db || !db.breakdowns) return;
+
+                // 嘗試匹配 key (支援 % 變體)
+                const breakdownKey = Object.keys(db.breakdowns).find(k => {
+                    const cleanK = k.replace('%', '').trim();
+                    return cleanK === baseKey || cleanK === '物理' + baseKey || cleanK === '魔法' + baseKey;
                 });
-            }
+
+                if (breakdownKey && db.breakdowns[breakdownKey]) {
+                    db.breakdowns[breakdownKey].forEach(str => {
+                        // 避免重複添加 (如果已經在 stats 裡合並過)
+                        if (!entry.detailGroups[groupKey].includes(str)) {
+                            entry.detailGroups[groupKey].push(str);
+
+                            // 同步加總數值以免漏算
+                            const match = str.match(/:\s*\+?([\d\.]+)/);
+                            if (match) {
+                                entry.subtotals[groupKey] += parseFloat(match[1]);
+                            }
+                        }
+                    });
+                }
+            });
         }
 
         // 官方值兜底 (包含變體查找)
