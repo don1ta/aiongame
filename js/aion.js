@@ -3048,12 +3048,12 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
     // 更新突破件數到標題 (武器防具)
     const armorHeader = document.getElementById('armor-header');
     if (armorHeader) {
-        let headerHtml = `🛡️ 武器與防具`;
+        let headerHtml = `武器與防具`;
         if (armorBreakCount > 0) {
-            headerHtml += ` <span style="background:rgba(0,212,255,0.2); color:#00d4ff; padding:4px 10px; border-radius:4px; font-size:13px; font-weight:bold; margin-left:8px;">💎 ${armorBreakCount}件突破</span>`;
+            headerHtml += ` <span style="background:rgba(83, 81, 80, 0.2); color:#00d4ff; padding:4px 10px; border-radius:4px; font-size:13px; font-weight:bold; margin-left:8px;">💎 ${armorBreakCount}件突破</span>`;
         }
         if (sourceStats.armor.break5Count > 0) {
-            headerHtml += ` <span style="background:rgba(255,215,0,0.2); color:#ffd700; padding:4px 10px; border-radius:4px; font-size:13px; font-weight:bold; margin-left:4px;">⭐ ${sourceStats.armor.break5Count}件+5</span>`;
+            headerHtml += ` <span style="background:rgba(255, 0, 13, 0.2); color:#ffd700; padding:4px 10px; border-radius:4px; font-size:13px; font-weight:bold; margin-left:4px;">⭐ ${sourceStats.armor.break5Count}件突五</span>`;
         }
         armorHeader.innerHTML = headerHtml;
     }
@@ -3061,12 +3061,12 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
     // 更新突破件數到標題 (飾品配件)
     const accessoryHeader = document.getElementById('accessory-header');
     if (accessoryHeader) {
-        let headerHtml = `💍 飾品與配件`;
+        let headerHtml = `飾品與配件`;
         if (accessoryBreakCount > 0) {
-            headerHtml += ` <span style="background:rgba(52, 152, 219, 0.2); color:#3498db; padding:4px 10px; border-radius:4px; font-size:13px; font-weight:bold; margin-left:8px;">💎 ${accessoryBreakCount}件突破</span>`;
+            headerHtml += ` <span style="background:rgba(83, 81, 80, 0.2); color:#3498db; padding:4px 10px; border-radius:4px; font-size:13px; font-weight:bold; margin-left:8px;">💎 ${accessoryBreakCount}件突破</span>`;
         }
         if (sourceStats.accessory.break5Count > 0) {
-            headerHtml += ` <span style="background:rgba(241, 196, 15, 0.2); color:#f1c40f; padding:4px 10px; border-radius:4px; font-size:13px; font-weight:bold; margin-left:4px;">⭐ ${sourceStats.accessory.break5Count}件+5</span>`;
+            headerHtml += ` <span style="background:rgba(255, 0, 13, 0.2); color:#f1c40f; padding:4px 10px; border-radius:4px; font-size:13px; font-weight:bold; margin-left:4px;">⭐ ${sourceStats.accessory.break5Count}件突五</span>`;
         }
         accessoryHeader.innerHTML = headerHtml;
     }
