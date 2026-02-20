@@ -5314,7 +5314,21 @@ function renderCombatAnalysis(stats, data) {
     // 🛡️ 全局控制按鈕 (移動至置頂標頭容器)
     const activeHeaderControls = document.getElementById('combat-analysis-global-controls');
     if (activeHeaderControls) {
+        const isStickyDisabled = localStorage.getItem('sticky_header_disabled') === 'true';
+        const headerEl = document.querySelector('.card-sticky-header');
+        if (headerEl) {
+            if (isStickyDisabled) headerEl.classList.add('sticky-disabled');
+            else headerEl.classList.remove('sticky-disabled');
+        }
+
         activeHeaderControls.innerHTML = `
+            <button onclick="window.toggleStickyHeader()" 
+                style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#8b949e; cursor:pointer; font-size:11px; padding:4px 10px; border-radius:4px; transition:all 0.2s;"
+                onmouseover="this.style.borderColor='var(--gold)'; this.style.color='#fff';"
+                onmouseout="this.style.borderColor='rgba(255,255,255,0.1)'; this.style.color='#8b949e';">
+                ${isStickyDisabled ? '📌 釘選標頭' : '🔓 取消固定'}
+            </button>
+            <div style="width:1px; height:15px; background:rgba(255,255,255,0.1); margin:0 5px;"></div>
             <button onclick="(function(){
                 for(let i=0;i<${totalSections};i++){
                     const c=document.getElementById('combat-section-'+i);
@@ -5332,6 +5346,18 @@ function renderCombatAnalysis(stats, data) {
                 }
             })()" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#8b949e; cursor:pointer; font-size:11px; padding:4px 12px; border-radius:4px; transition:all 0.2s; white-space:nowrap;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">全部收合 ▲</button>
         `;
+    }
+
+    // 定義切換函數
+    if (!window.toggleStickyHeader) {
+        window.toggleStickyHeader = function () {
+            const header = document.querySelector('.card-sticky-header');
+            if (!header) return;
+            const isDisabled = header.classList.toggle('sticky-disabled');
+            localStorage.setItem('sticky_header_disabled', isDisabled);
+            // 重新觸發自身函數以更新按鈕文字
+            renderCombatAnalysis(stats, data);
+        }
     }
 
     sections.forEach((section, sIdx) => {

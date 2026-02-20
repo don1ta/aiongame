@@ -1888,9 +1888,14 @@
                 gap: 20px;
                 align-items: stretch;
             }
+
+            .left-column,
+            .right-column {
+                min-width: 0;
+            }
         }
 
-        @media (max-width: 0px) {
+        @media (max-width: 600px) {
             .profile-card {
                 flex-direction: column;
                 text-align: center;
@@ -2617,14 +2622,21 @@
             top: 0;
             z-index: 1000;
             background: #0d121c;
-            /* 使用完全不透明的背景色 */
             border-bottom: 2px solid var(--gold);
             border-radius: 0 0 12px 12px;
-            /* 頂部平整，下方圓角 */
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
             margin: 0;
             width: 100%;
-            transition: none;
+            transition: all 0.3s ease;
+        }
+
+        /* 🔓 取消置頂時的樣式 */
+        .card-sticky-header.sticky-disabled {
+            position: relative !important;
+            top: auto !important;
+            border-radius: 12px 12px 0 0 !important;
+            box-shadow: none !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
         }
 
         .card-sticky-header::before {
