@@ -946,7 +946,7 @@ function updatePassiveSkills(data) {
                     iconUrl = 'https://assets.playnccdn.com/static-aion2-gamedata/resources/' + filename + '.png';
                 }
                 detailHtml += `
-                    <div style="background: rgba(10, 10, 15, 0.3); border-radius: 8px; padding: 12px; margin-bottom: 8px; border: 1px solid rgba(255,255,255,0.03); border-left: 3px solid #ffffff; backdrop-filter: blur(4px); box-shadow: 0 2px 10px rgba(0,0,0,0.2);">
+                    <div style="background: rgba(10, 10, 15, 0.3); border-radius: 8px; padding: 12px; margin-bottom: 8px; border: 1px solid rgba(255,255,255,0.03); border-left: 3px solid rgba(255,255,255,0.2); backdrop-filter: blur(4px); box-shadow: 0 2px 10px rgba(0,0,0,0.2);">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
                             <div style="color: rgba(255, 255, 255, 0.85); font-weight: bold; font-size: 14px; display:flex; align-items:center; gap:8px;">
                                 ${iconUrl ? `<img src="${iconUrl}" style="width:24px; height:24px; border-radius:4px; border: 1px solid rgba(255,255,255,0.1);">` : ''}
