@@ -1858,12 +1858,12 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                                 ${(ratingsData && ratingsData.PVE) ? `
                                 <div class="item-score-card" style="background:linear-gradient(135deg, rgba(243,156,18,0.1), rgba(0,0,0,0)); border-color:rgba(243,156,18,0.3); border-left-color:#f39c12;">
                                     <div class="score-header"><span class="score-icon">🐲</span> PVE 裝分</div>
-                                    <div class="score-value-container"><div class="score-value" style="color:#f39c12;">${ratingsData.PVE.score.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</div></div>
+                                    <div class="score-value-container"><div class="score-value pve-score">${ratingsData.PVE.score.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</div></div>
                                 </div>` : ''}
                                 ${(ratingsData && ratingsData.PVP) ? `
                                 <div class="item-score-card" style="background:linear-gradient(135deg, rgba(155,89,182,0.1), rgba(0,0,0,0)); border-color:rgba(155,89,182,0.3); border-left-color:#9b59b6;">
                                     <div class="score-header"><span class="score-icon">⚔️</span> PVP 裝分</div>
-                                    <div class="score-value-container"><div class="score-value" style="color:#9b59b6;">${Math.floor(ratingsData.PVP.score).toLocaleString()}</div></div>
+                                    <div class="score-value-container"><div class="score-value pvp-score">${Math.floor(ratingsData.PVP.score).toLocaleString()}</div></div>
                                 </div>` : ''}
                             </div>
                             <div class="update-time-pill" title="官方數據更新時間">

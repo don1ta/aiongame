@@ -2570,6 +2570,22 @@
             background-clip: text;
         }
 
+        .score-value.pve-score {
+            background: linear-gradient(180deg, #fff 20%, #f39c12 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 20px rgba(243, 156, 18, 0.6);
+        }
+
+        .score-value.pvp-score {
+            background: linear-gradient(180deg, #fff 20%, #9b59b6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 20px rgba(155, 89, 182, 0.6);
+        }
+
         /* 6. Update Time Pill */
         .update-time-pill {
             display: flex;
