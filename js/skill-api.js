@@ -212,7 +212,7 @@ async function fetchSkillFromAPI(skillId, level) {
 }
 
 function formatSkillEffects(skillInfo) {
-    if (!skillInfo) return `<span style="color:#8b949e; font-size:11px;">⏳ 載入中...</span>`;
+    if (!skillInfo) return `<span style="color:rgba(255,255,255,0.75); font-size:11px;">⏳ 載入中...</span>`;
     let html = '';
 
     // 技巧：如果描述裡沒有 HTML 標籤，我們自動幫數字上色，增加易讀性
@@ -221,18 +221,18 @@ function formatSkillEffects(skillInfo) {
         desc = desc.replace(/(\d+%?)/g, '<span style="color:#FCC78B">$1</span>');
     }
 
-    if (desc) html += `<span style="color:var(--green);">▹ ${desc}</span><br>`;
+    if (desc) html += `<span style="color:rgba(255,255,255,0.75);">${desc}</span><br>`;
 
     if (skillInfo.effects && Array.isArray(skillInfo.effects)) {
         skillInfo.effects.forEach(eff => {
             if (eff?.trim()) {
                 // 也幫效果裡的數字上色
                 let e = eff.replace(/(\d+%?)/g, '<span style="color:#FCC78B">$1</span>');
-                html += `<span style="color:var(--green);">▹ ${e}</span><br>`;
+                html += `<span style="color:rgba(255,255,255,0.75);">${e}</span><br>`;
             }
         });
     }
-    return html || `<span style="color:#8b949e; font-size:11px;">💡 數據尚未收錄</span>`;
+    return html || `<span style="color:rgba(255,255,255,0.75); font-size:11px;">💡 數據尚未收錄</span>`;
 }
 
 window.SkillAPI = {
