@@ -2012,7 +2012,7 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
 
                 rankHtml += `
                             <div class="rank-card-new ${activeClass}" style="${cursorStyle}" ${clickAttr} title="點擊查看趨勢">
-                                <div class="rc-label" style="font-size:13px; color:rgba(255,255,255,0.7);">${name}</div>
+                                <div class="rc-label" style="font-size:11px; color:rgba(255,255,255,0.7);">${name}</div>
                                 <div class="rc-val" style="font-size: 18px; margin-top:2px;">${mainVal}</div>
                                 ${subVal ? `<div style="font-size:11px; color:#64748b; margin-top:0px;">${subVal}</div>` : ''}
                                 ${diffHtml}
@@ -5278,8 +5278,8 @@ function renderCombatAnalysis(stats, data) {
             });
         };
 
-        renderGroup('base', '🛡️', '#bdc3c7', '裝備基礎/主體');
-        renderGroup('random', '🎲', '#95a5a6', '裝備隨機/附加');
+        renderGroup('base', '🛡️', '#bdc3c7', '裝備/主體');
+        renderGroup('random', '🎲', '#95a5a6', '裝備/強化');
         renderGroup('stone', '💎', '#e67e22', '磨石鑲嵌');
         renderGroup('set', '📦', '#fab1a0', '套裝效果');
         renderGroup('skill', '⚡', '#fd79a8', '被動技能');
