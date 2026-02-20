@@ -2781,6 +2781,8 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
             let cat = d.category || originalItem.category || '';
             let iLv = originalItem.itemLevel || d.itemLevel || 0;
             let elv = i.enchantLevel || 0;
+            let exceedLv = originalItem.exceedLevel || d.exceedLevel || 0;
+            let exceedHtml = exceedLv > 0 ? ` <span style="display:inline-block; background: rgba(231, 76, 60, 0.15); border: 1px solid rgba(231, 76, 60, 0.4); padding: 1px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; color: #ff7b7b; vertical-align: middle; line-height: 1.2; margin-left: 4px; white-space: nowrap; text-shadow: none; letter-spacing: 0.5px;">突破+${exceedLv}</span>` : "";
 
             let cardSimpleHtml = `
             <div class="equip-item-card-simple" style="
@@ -2799,7 +2801,7 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                 border-bottom: none;
             ">
                 <div style="flex: 1; z-index: 2; display: flex; flex-direction: column;">
-                    <div style="font-size: 16px; font-weight: bold; color: ${gradeColor}; text-shadow: 0 0 5px ${gradeColor}44; white-space: normal; line-height: 1.2; padding-right: 40px;">${d.name} <span style="font-size:14px; color:#fff; white-space: nowrap;">(+${elv})</span></div>
+                    <div style="font-size: 16px; font-weight: bold; color: ${gradeColor}; text-shadow: 0 0 5px ${gradeColor}44; white-space: normal; line-height: 1.2; padding-right: 40px;">${d.name} <span style="font-size:14px; color:#fff; white-space: nowrap; text-shadow: none;">(+${elv})</span>${exceedHtml}</div>
                     <div style="font-size: 13px; color: ${gradeColor}; opacity: 0.9; margin-top: auto;">${locGrade} ${cat}</div>
                 </div>
 
