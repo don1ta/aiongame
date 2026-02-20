@@ -1618,7 +1618,7 @@
         #equip-armor-list,
         #equip-accessory-list {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr));
             gap: 12px;
         }
 
@@ -2007,8 +2007,7 @@
 
             /* 1. 主版面佈局：改為單欄垂直排列 */
             .main-layout-wrapper,
-            .stats-source-wrapper,
-            .health-main-stats-wrapper {
+            .stats-source-wrapper {
                 display: flex !important;
                 flex-direction: column !important;
                 gap: 20px !important;
@@ -2016,7 +2015,10 @@
                 box-sizing: border-box !important;
             }
 
-            .left-column,
+            .left-column {
+                display: none !important;
+            }
+
             .right-column {
                 width: 100% !important;
                 flex: none !important;
@@ -2059,6 +2061,14 @@
                 left: 0;
                 z-index: 11;
                 /* 比表頭高 */
+            }
+
+        }
+
+        /* 手機版直向 (768px 以下) */
+        @media (max-width: 768px) {
+            .health-main-stats-wrapper {
+                flex-direction: column !important;
             }
 
             /* 3. 個人資訊面板 RWD */
@@ -2109,10 +2119,11 @@
                 font-size: 32px !important;
                 /* Reduce font size on mobile */
             }
-        }
 
-        /* 手機版直向 (768px 以下) */
-        @media (max-width: 768px) {
+            .left-column {
+                display: flex !important;
+                flex-direction: column;
+            }
 
             /* 容器邊距縮減 */
             body {
@@ -2133,6 +2144,16 @@
             .stat-general-grid {
                 grid-template-columns: 1fr;
                 /* 單欄 */
+            }
+
+            .equip-item-card {
+                flex-direction: column;
+                height: auto;
+            }
+
+            .equip-left-section {
+                border-right: none;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.05);
             }
 
             /* 列表行佈局調整：標籤與數值分行 */
@@ -2238,7 +2259,7 @@
 
         .collapsible-content {
             overflow: hidden;
-            max-height: 2500px;
+            max-height: 20000px;
             transition: max-height 0.5s cubic-bezier(0, 1, 0, 1), opacity 0.3s, margin 0.3s;
             opacity: 1;
             margin-top: 15px;
