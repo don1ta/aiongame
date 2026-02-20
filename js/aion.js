@@ -3618,6 +3618,13 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
             };
         }
 
+        // 🔍 狀態保存：記錄目前概覽分頁的展開項目
+        const expandedLabels = new Set();
+        overviewGrid.querySelectorAll('.stat-list-row.expanded').forEach(row => {
+            const label = row.querySelector('.stat-row-label');
+            if (label) expandedLabels.add(label.textContent.trim());
+        });
+
         let overviewHtml = `
                     <div class="stat-tabs-header">
                         <div class="stat-tab-btn active" onclick="switchStatTab(this, 'stat-tab-extra')">⚔️ 戰鬥指標</div>
@@ -3819,17 +3826,27 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
 `;
 
         overviewGrid.innerHTML = overviewHtml;
+
+        // 🔍 狀態還原：遍歷新生成的行，若名稱在記錄中則還原展開狀態
+        overviewGrid.querySelectorAll('.stat-list-row').forEach(row => {
+            const label = row.querySelector('.stat-row-label');
+            if (label && expandedLabels.has(label.textContent.trim())) {
+                row.classList.add('expanded');
+            }
+        });
     }
 
     renderCombatAnalysis(stats, data);
-    renderTrendChart(json, 'itemLevel'); // 預設顯示裝備等級
+
+    if (!statsOnly) {
+        renderTrendChart(json, 'itemLevel'); // 預設顯示裝備等級
+        // 觸發排行榜載入 (強制更新，因為角色已變更)
+        loadClassLeaderboard();
+    }
 
     if (!skipScroll) {
         window.scrollTo({ top: document.getElementById('main-content').offsetTop - 20, behavior: 'smooth' });
     }
-
-    // 觸發排行榜載入 (強制更新，因為角色已變更)
-    loadClassLeaderboard();
 } // End of processData
 
 
@@ -4869,6 +4886,14 @@ function renderCombatAnalysis(stats, data) {
     const grid = document.getElementById('combat-stats-grid');
     if (!grid) return;
 
+    // 🔍 狀態保存：記錄目前各區塊與明細行的展開狀態
+    const savedStates = {};
+    grid.querySelectorAll('[id^="combat-section-"], [id^="row-detail-"]').forEach(el => {
+        if (el.style.display && el.style.display !== 'none') {
+            savedStates[el.id] = el.style.display;
+        }
+    });
+
     // 切換為單欄佈局以適應新表格
     grid.style.display = 'block';
     grid.style.gridTemplateColumns = 'none';
@@ -4957,7 +4982,8 @@ function renderCombatAnalysis(stats, data) {
             Object.keys(gainEffectMap).forEach(dbKey => {
                 const groupKey = gainEffectMap[dbKey];
                 const db = window.GAIN_EFFECT_DATABASE[dbKey];
-                if (!db || !db.breakdowns) return;
+                // 🚨 修正：如果該增益效果未開啟，則不應強行加入細項與數值
+                if (!db || !db.breakdowns || db.active === false) return;
 
                 // 嘗試匹配 key (支援 % 變體)
                 const breakdownKey = Object.keys(db.breakdowns).find(k => {
@@ -5289,7 +5315,7 @@ function renderCombatAnalysis(stats, data) {
         }
     ];
 
-    let html = `<div style="display:flex; flex-direction:column; gap:15px;">`;
+    let html = `<div style="display:flex; flex-direction:column; gap:10px; padding-top:12px;">`;
 
     // 定義需要收合的區塊標題（所有區塊都可收合）
     const collapsibleTitles = ["主要能力值", "百分比增加", "戰鬥", "PVE", "PVP", "判定", "異常狀態", "種族", "屬性", "特殊", "資源"];
@@ -5297,26 +5323,58 @@ function renderCombatAnalysis(stats, data) {
     const defaultCollapsedTitles = ["百分比增加", "戰鬥", "PVE", "PVP", "判定", "異常狀態", "種族", "屬性", "特殊", "資源"];
     const totalSections = sections.length;
 
-    // 全部展開 / 全部收合 按鈕列
-    html += `
-            <div style="display:flex; gap:8px; justify-content:flex-end; margin-bottom:4px;">
-                <button onclick="(function(){
-                    for(let i=0;i<${totalSections};i++){
-                        const c=document.getElementById('combat-section-'+i);
-                        const ic=document.getElementById('combat-icon-'+i);
-                        if(c){c.style.display='block';}
-                        if(ic){ic.style.transform='rotate(0deg)';}
-                    }
-                })()" style="background:rgba(88,166,255,0.15); border:1px solid rgba(88,166,255,0.3); color:#58a6ff; cursor:pointer; font-size:11px; padding:4px 10px; border-radius:4px; transition:all 0.2s;" onmouseover="this.style.background='rgba(88,166,255,0.25)'" onmouseout="this.style.background='rgba(88,166,255,0.15)'">全部展開 ▼</button>
-                <button onclick="(function(){
-                    for(let i=0;i<${totalSections};i++){
-                        const c=document.getElementById('combat-section-'+i);
-                        const ic=document.getElementById('combat-icon-'+i);
-                        if(c){c.style.display='none';}
-                        if(ic){ic.style.transform='rotate(-90deg)';}
-                    }
-                })()" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#8b949e; cursor:pointer; font-size:11px; padding:4px 10px; border-radius:4px; transition:all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">全部收合 ▲</button>
-            </div>`;
+    // 🛡️ 全局控制按鈕 (移動至置頂標頭容器)
+    const activeHeaderControls = document.getElementById('combat-analysis-global-controls');
+    if (activeHeaderControls) {
+        const isStickyDisabled = localStorage.getItem('sticky_header_disabled') === 'true';
+        const headerEl = document.querySelector('.card-sticky-header');
+        if (headerEl) {
+            if (isStickyDisabled) headerEl.classList.add('sticky-disabled');
+            else headerEl.classList.remove('sticky-disabled');
+        }
+
+        activeHeaderControls.innerHTML = `
+            <button onclick="window.toggleStickyHeader()" 
+                style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#8b949e; cursor:pointer; font-size:11px; padding:4px 10px; border-radius:4px; transition:all 0.2s; white-space:nowrap;"
+                onmouseover="this.style.borderColor='var(--gold)'; this.style.color='#fff';"
+                onmouseout="this.style.borderColor='rgba(255,255,255,0.1)'; this.style.color='#8b949e';">
+                ${isStickyDisabled ? '📌 釘選標頭' : '🔓 取消固定'}
+            </button>
+            <div style="width:1px; height:15px; background:rgba(255,255,255,0.1); margin:0 5px;"></div>
+            <button onclick="(function(){
+                for(let i=0;i<${totalSections};i++){
+                    const c=document.getElementById('combat-section-'+i);
+                    const ic=document.getElementById('combat-icon-'+i);
+                    if(c){c.style.display='block';}
+                    if(ic){ic.style.transform='rotate(0deg)';}
+                }
+            })()" style="background:rgba(88,166,255,0.15); border:1px solid rgba(88,166,255,0.3); color:#58a6ff; cursor:pointer; font-size:11px; padding:4px 12px; border-radius:4px; transition:all 0.2s; white-space:nowrap;" onmouseover="this.style.background='rgba(88,166,255,0.25)'" onmouseout="this.style.background='rgba(88,166,255,0.15)'">全部展開 ▼</button>
+            <button onclick="(function(){
+                for(let i=0;i<${totalSections};i++){
+                    const c=document.getElementById('combat-section-'+i);
+                    const ic=document.getElementById('combat-icon-'+i);
+                    if(c){c.style.display='none';}
+                    if(ic){ic.style.transform='rotate(-90deg)';}
+                }
+            })()" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#8b949e; cursor:pointer; font-size:11px; padding:4px 12px; border-radius:4px; transition:all 0.2s; white-space:nowrap;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">全部收合 ▲</button>
+        `;
+    }
+
+    // 定義全局切換函數
+    if (!window.toggleStickyHeader) {
+        window.toggleStickyHeader = function () {
+            const header = document.querySelector('.card-sticky-header');
+            if (!header) return;
+            const isDisabled = header.classList.toggle('sticky-disabled');
+            localStorage.setItem('sticky_header_disabled', isDisabled);
+
+            // 不刷新重新渲染資料以免遺失狀態，只更新按鈕文字
+            const btn = document.querySelector('button[onclick="window.toggleStickyHeader()"]');
+            if (btn) {
+                btn.innerHTML = isDisabled ? '📌 釘選標頭' : '🔓 取消固定';
+            }
+        }
+    }
 
     sections.forEach((section, sIdx) => {
         const isCollapsible = collapsibleTitles.includes(section.title);
@@ -5410,6 +5468,18 @@ function renderCombatAnalysis(stats, data) {
 
     html += `</div>`;
     grid.innerHTML = html;
+
+    // 🔍 狀態還原：根據記錄恢復展開狀態
+    Object.keys(savedStates).forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.style.display = savedStates[id];
+            // 同步更新箭頭旋轉狀態
+            const iconId = id.replace('combat-section-', 'combat-icon-').replace('row-detail-', 'row-icon-');
+            const icon = document.getElementById(iconId);
+            if (icon) icon.style.transform = 'rotate(0deg)';
+        }
+    });
 }
 
 

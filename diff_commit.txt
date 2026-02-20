@@ -1,0 +1,533 @@
+﻿commit db698a49dbba6ad9653abb34c996b783a7a9d3b1
+Author: Don1ta <97503052+don1ta@users.noreply.github.com>
+Date:   Fri Feb 20 17:57:39 2026 +0800
+
+    20260220憓??箏??瑁遘
+
+diff --git a/aion.html b/aion.html
+index 804f27c..fa8fe35 100644
+--- a/aion.html
++++ b/aion.html
+@@ -186,20 +186,29 @@
+                     </div>
+ 
+                     <!-- ?圈洛?豢????憛?(蝘餉銝?撖? -->
+-                    <div class="card">
+-                        <h3>?? ?箇??豢???</h3>
+-                        <!-- 憓????批?Ｘ -->
+-                        <div id="gain-effect-controls"
+-                            style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.05); border-radius:8px; padding:15px; margin-bottom:15px;">
+-                            <div style="font-size:13px; font-weight:bold; color:#bdc3c7; margin-bottom:10px;">?? 憓???
++                    <div class="card" style="padding:0; overflow:visible;">
++                        <div class="card-sticky-header">
++                            <div
++                                style="display:flex; justify-content:space-between; align-items:center; padding-right:25px; padding-top:2px; padding-bottom:2px; border-bottom:1px solid rgba(255,255,255,0.05);">
++                                <h3 style="margin:0; padding:12px 25px; border:none;">?? ?箇??豢???</h3>
++                                <div id="combat-analysis-global-controls"
++                                    style="display:flex; gap:10px; align-items:center;">
++                                    <!-- ??撠??釣??-->
++                                </div>
+                             </div>
+-                            <div style="display:flex; flex-wrap:wrap; gap:15px;" id="ge-checkbox-container"></div>
+-                            <!-- 蝧??豢??函?銵?銝蔣??checkbox ??嚗?-->
+-                            <div id="wing-selection-row"
+-                                style="display:none; margin-top:10px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.06);">
++                            <!-- 憓????批?Ｘ -->
++                            <div id="gain-effect-controls" style="padding:15px 25px; margin:0;">
++                                <div style="font-size:13px; font-weight:bold; color:#bdc3c7; margin-bottom:10px;">??
++                                </div>
++                                <div style="display:flex; flex-wrap:wrap; gap:15px;" id="ge-checkbox-container"></div>
++                                <!-- 蝧??豢??函?銵?-->
++                                <div id="wing-selection-row"
++                                    style="display:none; margin-top:10px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.06);">
++                                </div>
+                             </div>
+                         </div>
+-                        <div id="combat-stats-grid" class="grid-box-container"></div>
++                        <div id="combat-stats-grid" class="grid-box-container" style="padding:5px 25px 25px 25px;">
++                        </div>
+                     </div>
+ 
+ 
+diff --git a/css/aion.css b/css/aion.css
+index 14fa2f3..546b13a 100644
+--- a/css/aion.css
++++ b/css/aion.css
+@@ -80,7 +80,7 @@
+             max-width: 1400px;
+             margin: auto;
+             box-sizing: border-box;
+-            /* Ensure padding doesn't overflow width */
++            overflow: visible !important;
+         }
+ 
+         /* 撘瑕?敺??臬?憛?*/
+@@ -357,6 +357,7 @@
+             display: none;
+             flex-direction: column;
+             gap: 20px;
++            overflow: visible !important;
+         }
+ 
+         .profile-card {
+@@ -1539,6 +1540,7 @@
+             grid-template-columns: 1fr 1fr;
+             gap: 15px;
+             margin-bottom: 20px;
++
+         }
+ 
+         .info-box {
+@@ -2601,4 +2603,50 @@
+             .profile-meta-grid {
+                 justify-content: center;
+             }
++        }
++
++        /* 撘瑕??∠?摰孵嚗Ⅱ靽蔭????鋡急??*/
++        .card {
++            overflow: visible !important;
++        }
++
++        /* ?儭??憛蝵桅?璅 - 蝎暹?撠???*/
++        .card-sticky-header {
++            position: -webkit-sticky !important;
++            position: sticky !important;
++            top: 0;
++            z-index: 1000;
++            background: #0d121c;
++            /* 雿輻摰銝????航 */
++            border-bottom: 2px solid var(--gold);
++            border-radius: 0 0 12px 12px;
++            /* ?撟單嚗??孵?閫?*/
++            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
++            margin: 0;
++            width: 100%;
++            transition: none;
++        }
++
++        .card-sticky-header::before {
++            display: none !important;
++        }
++
++        .card-sticky-header:hover {
++            background: rgba(10, 14, 23, 1);
++        }
++
++        /* 蝣箔??批?Ｘ?折銝???蝵桅????頝?蝒?*/
++        #gain-effect-controls {
++            background: transparent !important;
++            border: none !important;
++            box-shadow: none !important;
++            backdrop-filter: none !important;
++            margin: 0 !important;
++            padding: 15px 25px !important;
++        }
++
++        /* ?Ｗ儔?典?皛曉???閮剛???*/
++        html,
++        body {
++            overflow: visible !important;
+         }
+\ No newline at end of file
+diff --git a/fix_css.py b/fix_css.py
+new file mode 100644
+index 0000000..ff89f60
+--- /dev/null
++++ b/fix_css.py
+@@ -0,0 +1,67 @@
++import os
++
++file_path = r'c:\Users\zxc15\Documents\GitHub\aiongame\css\aion.css'
++
++with open(file_path, 'r', encoding='utf-8') as f:
++    lines = f.readlines()
++
++# Look for the last media query close
++# We know it's around the end
++new_lines = []
++for line in lines:
++    new_lines.append(line)
++    if '.profile-meta-grid {' in line:
++        pass
++
++# Actually, let's just rewrite the end strictly
++# Find where .profile-meta-grid ends
++found_idx = -1
++for i in range(len(lines)-1, -1, -1):
++    if 'justify-content: center;' in lines[i]:
++        found_idx = i
++        break
++
++if found_idx != -1:
++    # Keep up to the closing brace of the media query
++    # The structure was:
++    # 2601:             .profile-meta-grid {
++    # 2602:                 justify-content: center;
++    # 2603:             }
++    # 2604:         }
++    
++    final_lines = lines[:found_idx+3] # Keep through 2603
++    
++    # Check if lines[found_idx+2] is indeed the closing brace for meta-grid
++    # and lines[found_idx+3] is the closing brace for media query
++    
++    # New styles
++    style = """
++        /* ?儭?憓????批?蔭?摰見撘?*/
++        #gain-effect-controls {
++            position: sticky;
++            top: 10px;
++            z-index: 1000;
++            background: rgba(21, 27, 38, 0.95);
++            backdrop-filter: blur(10px);
++            border: 1px solid rgba(255, 255, 255, 0.1);
++            border-radius: 12px;
++            padding: 15px;
++            margin-bottom: 20px;
++            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 15px rgba(0, 212, 255, 0.1);
++            transition: all 0.3s ease;
++            border-top: 2px solid var(--gold);
++        }
++
++        #gain-effect-controls:hover {
++            border-color: var(--gold);
++            background: rgba(21, 27, 38, 0.98);
++            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6), 0 0 20px rgba(255, 217, 61, 0.15);
++        }
++"""
++    # Write back
++    with open(file_path, 'w', encoding='utf-8') as f:
++        f.writelines(final_lines)
++        f.write(style)
++    print("Fixed CSS file.")
++else:
++    print("Could not find anchor in CSS file.")
+diff --git a/fix_css_final.py b/fix_css_final.py
+new file mode 100644
+index 0000000..ee86041
+--- /dev/null
++++ b/fix_css_final.py
+@@ -0,0 +1,15 @@
++import sys
++
++file_path = r'c:\Users\zxc15\Documents\GitHub\aiongame\css\aion.css'
++with open(file_path, 'r', encoding='utf-8') as f:
++    lines = f.readlines()
++
++# Check if the last line is just a brace with potential whitespace
++if lines and lines[-1].strip() == '}':
++    # Check if the line before it or the structure suggests it's redundant
++    # In our case, we know it is.
++    with open(file_path, 'w', encoding='utf-8') as f:
++        f.writelines(lines[:-1])
++    print("Successfully removed redundant brace.")
++else:
++    print("Last line was not a standalone brace or file is empty.")
+diff --git a/fix_css_final_v2.py b/fix_css_final_v2.py
+new file mode 100644
+index 0000000..24e6e6e
+--- /dev/null
++++ b/fix_css_final_v2.py
+@@ -0,0 +1,21 @@
++import sys
++
++file_path = r'c:\Users\zxc15\Documents\GitHub\aiongame\css\aion.css'
++with open(file_path, 'r', encoding='utf-8') as f:
++    text = f.read()
++
++# Remove the very last closing brace if it's redundant
++# The end of the file currently is:
++#         }
++#         }
++# Let's count the braces or just look at the last few lines.
++
++lines = text.splitlines()
++if lines and lines[-1].strip() == '}':
++    # Remove one closing brace
++    new_text = "\n".join(lines[:-1])
++    with open(file_path, 'w', encoding='utf-8') as f:
++        f.write(new_text)
++    print("Fixed CSS syntax (removed trailing brace).")
++else:
++    print("No trailing brace found or file empty.")
+diff --git a/js/aion.js b/js/aion.js
+index 478bf90..eec6bf0 100644
+--- a/js/aion.js
++++ b/js/aion.js
+@@ -919,10 +919,8 @@ function updatePassiveSkills(data) {
+ 
+ 
+     if (hasPassive) {
+-        window.__PASSIVE_SKILLS_HTML__ = passiveHtml;
+-        window.__PASSIVE_STATS_READY__ = true; // 璅??箇移蝣箸?歇撠梁?
++        window.__PASSIVE_STATS_READY__ = true; // 璅??箇移蝣箸?歇撠梁?嚗?銝??摰?     } else {
+-        window.__PASSIVE_SKILLS_HTML__ = '<div style="padding:20px; text-align:center; color:#8b949e;">?芸皜砍鋡怠???賢???/div>';
+         window.__PASSIVE_STATS_READY__ = false;
+     }
+ }
+@@ -1084,11 +1082,11 @@ function initGainControls() {
+                         </label>
+                         <span style="margin-left:5px; cursor:help; font-size:12px; color:#58a6ff; opacity:0.8;">??/span>
+                         
+-                        <!-- Tooltip -->
++                        <!-- Tooltip (??憿舐內隞仿甇Ｚ◤閬???格?) -->
+                         <div class="custom-tooltip-content" style="
+                             display: none;
+                             position: absolute;
+-                            bottom: 120%;
++                            top: 120%;
+                             left: 50%;
+                             transform: translateX(-50%);
+                             background: rgba(15, 20, 25, 0.98);
+@@ -1097,7 +1095,7 @@ function initGainControls() {
+                             padding: 10px;
+                             width: 280px;
+                             z-index: 1002;
+-                            box-shadow: 0 4px 20px rgba(0,0,0,0.6);
++                            box-shadow: 0 4px 25px rgba(0,0,0,0.7);
+                             pointer-events: none;
+                             font-size: 12px;
+                             color: #8b949e;
+@@ -1107,8 +1105,8 @@ function initGainControls() {
+                         ">
+                             <b style="color:var(--gold); display:block; border-bottom:1px solid rgba(255,255,255,0.1); margin-bottom:8px; padding-bottom:5px;">${key} ??蝝圈?</b>
+                             <div style="line-height: 1.5; word-break: break-word;">${statsInfo}</div>
+-                            <!-- Arrow -->
+-                            <div style="position:absolute; top:100%; left:50%; transform:translateX(-50%); border-width:6px; border-style:solid; border-color:rgba(15,20,25,0.98) transparent transparent transparent;"></div>
++                            <!-- Arrow (???) -->
++                            <div style="position:absolute; bottom:100%; left:50%; transform:translateX(-50%); border-width:6px; border-style:solid; border-color:transparent transparent rgba(15,20,25,0.98) transparent;"></div>
+                         </div>
+                     </div>
+                 `;
+@@ -2579,37 +2577,41 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
+ 
+     // ????蝧?????敺?頂蝯梧?
+     const ownedWings = JSON.parse(localStorage.getItem('ownedWings') || '[]');
+-    ownedWings.forEach(wingName => {
+-        const wing = WING_DATABASE[wingName];
+-        if (wing && wing.hold) {
+-            for (let statName in wing.hold) {
+-                let val = wing.hold[statName];
+-                let absVal = Math.abs(val);
+-                let isDecimal = (absVal > 0 && absVal < 1);
++    const wingCollActive = GAIN_EFFECT_DATABASE['蝧??嗉?']?.active;
++
++    if (wingCollActive) {
++        ownedWings.forEach(wingName => {
++            const wing = WING_DATABASE[wingName];
++            if (wing && wing.hold) {
++                for (let statName in wing.hold) {
++                    let val = wing.hold[statName];
++                    let absVal = Math.abs(val);
++                    let isDecimal = (absVal > 0 && absVal < 1);
+ 
+-                // ?寞??摮撥?嗉??箇?? (?支?撠?文?憭?
+-                const percentKeywords = ['憓?', '憓?', '皜?', '??, '??];
+-                const matchesKeyword = percentKeywords.some(k => statName.includes(k));
++                    // ?寞??摮撥?嗉??箇?? (?支?撠?文?憭?
++                    const percentKeywords = ['憓?', '憓?', '皜?', '??, '??];
++                    const matchesKeyword = percentKeywords.some(k => statName.includes(k));
+ 
+-                if (isDecimal) val = val * 100;
++                    if (isDecimal) val = val * 100;
+ 
+-                // 璅??惇?批?蝔?(銝??駁 "憿?" ?韌嚗誑靘蹂蝙?刻??函??)
+-                let normName = statName;
++                    // 璅??惇?批?蝔?(銝??駁 "憿?" ?韌嚗誑靘蹂蝙?刻??函??)
++                    let normName = statName;
+ 
+-                // ?交撠頧???嚗??迂??曉?瘥??萄?嚗?蝣箔??迂??%
+-                if ((isDecimal || matchesKeyword) && !normName.includes('%')) {
+-                    normName += '%';
+-                }
++                    // ?交撠頧???嚗??迂??曉?瘥??萄?嚗?蝣箔??迂??%
++                    if ((isDecimal || matchesKeyword) && !normName.includes('%')) {
++                        normName += '%';
++                    }
+ 
+-                let entry = getEntry(normName);
+-                entry.other += val;
+-                entry.subtotals.wingHold += val;
++                    let entry = getEntry(normName);
++                    entry.other += val;
++                    entry.subtotals.wingHold += val;
+ 
+-                const unit = normName.includes('%') ? '%' : '';
+-                entry.detailGroups.wingHold.push(`[${wingName} ??]: +${parseFloat(val.toFixed(2))}${unit}`);
++                    const unit = normName.includes('%') ? '%' : '';
++                    entry.detailGroups.wingHold.push(`[${wingName} ??]: +${parseFloat(val.toFixed(2))}${unit}`);
++                }
+             }
+-        }
+-    });
++        });
++    }
+ 
+ 
+ 
+@@ -3602,6 +3604,13 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
+             };
+         }
+ 
++        // ?? ???摮?閮??桀?撌脣?????迂
++        const expandedLabels = new Set();
++        overviewGrid.querySelectorAll('.stat-list-row.expanded').forEach(row => {
++            const label = row.querySelector('.stat-row-label');
++            if (label) expandedLabels.add(label.textContent.trim());
++        });
++
+         let overviewHtml = `
+                     <div class="stat-tabs-header">
+                         <div class="stat-tab-btn active" onclick="switchStatTab(this, 'stat-tab-extra')">?? ?圈洛??</div>
+@@ -3646,8 +3655,12 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
+                         const boardVal = (e.nezakan || 0) + (e.zikel || 0) + (e.baizel || 0) + (e.triniel || 0) + (e.ariel || 0) + (e.asphel || 0);
+                         const wingVal = (e.subtotals?.wing || 0) + (e.subtotals?.wingHold || 0);
+                         const setVal = (e.subtotals?.set || 0);
++
++                        // 撘瑕?甇賊?嚗quipVal ? 鋆?銝駁? + 撘瑕? + 憟? + 蝧?
+                         const equipVal = (e.equipMain || 0) + wingVal + setVal;
++                        // stoneVal ? 蝤函 + ?冽?撅祆?                         const stoneVal = (e.equipSub || 0);
++                        // otherVal ???誑銝??桃??園??典? (蝔梯??◤??????)
+                         const otherVal = (e.other || 0) - wingVal - setVal;
+                         const val = boardVal + equipVal + stoneVal + otherVal;
+ 
+@@ -3803,17 +3816,27 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
+ `;
+ 
+         overviewGrid.innerHTML = overviewHtml;
++
++        // ?? ??????風?啁???銵??亙?蝔勗閮?銝剖???撅????+        overviewGrid.querySelectorAll('.stat-list-row').forEach(row => {
++            const label = row.querySelector('.stat-row-label');
++            if (label && expandedLabels.has(label.textContent.trim())) {
++                row.classList.add('expanded');
++            }
++        });
+     }
+ 
+     renderCombatAnalysis(stats, data);
+-    renderTrendChart(json, 'itemLevel'); // ?身憿舐內鋆?蝑?
++
++    if (!statsOnly) {
++        renderTrendChart(json, 'itemLevel'); // ?身憿舐內鋆?蝑?
++        // 閫貊??璁???(撘瑕?湔嚗??箄??脣歇霈)
++        loadClassLeaderboard();
++    }
+ 
+     if (!skipScroll) {
+         window.scrollTo({ top: document.getElementById('main-content').offsetTop - 20, behavior: 'smooth' });
+     }
+-
+-    // 閫貊??璁???(撘瑕?湔嚗??箄??脣歇霈)
+-    loadClassLeaderboard();
+ } // End of processData
+ 
+ 
+@@ -4843,16 +4866,22 @@ function renderSkills(data, boardSkillMap, cardSkillMap, stats) {
+ 
+     // ?脣?閰喟敦?◤????HTML 隞乩噶?冽?閬賢??蝙??     // ?儭??芸?靽? updatePassiveSkills ??Ｙ???蝎曄Ⅱ?豢? HTML 
+-    const isCalculating = !window.__PASSIVE_SKILLS_HTML__ || window.__PASSIVE_SKILLS_HTML__.includes('??);
+-    if (isCalculating || !window.__PASSIVE_STATS_READY__) {
+-        window.__PASSIVE_SKILLS_HTML__ = pasDetailed || "<div style='color:#8b949e; padding:40px; text-align:center;'>甇方璆剔鋡怠??????/div>";
+-    }
++    // 憪?雿輻 API 憸冽璅?? (?怠?蝷箄?閰喟敦?膩)
++    window.__PASSIVE_SKILLS_HTML__ = pasDetailed || "<div style='color:#8b949e; padding:40px; text-align:center;'>甇方璆剔鋡怠??????/div>";
+ }
+ 
+ function renderCombatAnalysis(stats, data) {
+     const grid = document.getElementById('combat-stats-grid');
+     if (!grid) return;
+ 
++    // ?? ???摮?閮??桀???憛??敦銵?撅????+    const savedStates = {};
++    grid.querySelectorAll('[id^="combat-section-"], [id^="row-detail-"]').forEach(el => {
++        if (el.style.display && el.style.display !== 'none') {
++            savedStates[el.id] = el.style.display;
++        }
++    });
++
+     // ???箏甈?撅隞仿?銵冽
+     grid.style.display = 'block';
+     grid.style.gridTemplateColumns = 'none';
+@@ -4941,7 +4970,8 @@ function renderCombatAnalysis(stats, data) {
+             Object.keys(gainEffectMap).forEach(dbKey => {
+                 const groupKey = gainEffectMap[dbKey];
+                 const db = window.GAIN_EFFECT_DATABASE[dbKey];
+-                if (!db || !db.breakdowns) return;
++                // ? 靽格迤嚗??府憓????芷??????撥銵??亦敦???詨?+                if (!db || !db.breakdowns || db.active === false) return;
+ 
+                 // ?岫?寥? key (?舀 % 霈?)
+                 const breakdownKey = Object.keys(db.breakdowns).find(k => {
+@@ -5273,7 +5303,7 @@ function renderCombatAnalysis(stats, data) {
+         }
+     ];
+ 
+-    let html = `<div style="display:flex; flex-direction:column; gap:15px;">`;
++    let html = `<div style="display:flex; flex-direction:column; gap:10px; padding-top:12px;">`;
+ 
+     // 摰儔?閬???憛?憿????憛?舀??
+     const collapsibleTitles = ["銝餉??賢???, "?曉?瘥???, "?圈洛", "PVE", "PVP", "?文?", "?啣虜???, "蝔格?", "撅祆?, "?寞?", "鞈?"];
+@@ -5281,26 +5311,28 @@ function renderCombatAnalysis(stats, data) {
+     const defaultCollapsedTitles = ["?曉?瘥???, "?圈洛", "PVE", "PVP", "?文?", "?啣虜???, "蝔格?", "撅祆?, "?寞?", "鞈?"];
+     const totalSections = sections.length;
+ 
+-    // ?券撅? / ?券?嗅? ????-    html += `
+-            <div style="display:flex; gap:8px; justify-content:flex-end; margin-bottom:4px;">
+-                <button onclick="(function(){
+-                    for(let i=0;i<${totalSections};i++){
+-                        const c=document.getElementById('combat-section-'+i);
+-                        const ic=document.getElementById('combat-icon-'+i);
+-                        if(c){c.style.display='block';}
+-                        if(ic){ic.style.transform='rotate(0deg)';}
+-                    }
+-                })()" style="background:rgba(88,166,255,0.15); border:1px solid rgba(88,166,255,0.3); color:#58a6ff; cursor:pointer; font-size:11px; padding:4px 10px; border-radius:4px; transition:all 0.2s;" onmouseover="this.style.background='rgba(88,166,255,0.25)'" onmouseout="this.style.background='rgba(88,166,255,0.15)'">?券撅? ??/button>
+-                <button onclick="(function(){
+-                    for(let i=0;i<${totalSections};i++){
+-                        const c=document.getElementById('combat-section-'+i);
+-                        const ic=document.getElementById('combat-icon-'+i);
+-                        if(c){c.style.display='none';}
+-                        if(ic){ic.style.transform='rotate(-90deg)';}
+-                    }
+-                })()" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#8b949e; cursor:pointer; font-size:11px; padding:4px 10px; border-radius:4px; transition:all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">?券?嗅? ??/button>
+-            </div>`;
++    // ?儭??典??批?? (蝘餃??喟蔭???剖捆??
++    const activeHeaderControls = document.getElementById('combat-analysis-global-controls');
++    if (activeHeaderControls) {
++        activeHeaderControls.innerHTML = `
++            <button onclick="(function(){
++                for(let i=0;i<${totalSections};i++){
++                    const c=document.getElementById('combat-section-'+i);
++                    const ic=document.getElementById('combat-icon-'+i);
++                    if(c){c.style.display='block';}
++                    if(ic){ic.style.transform='rotate(0deg)';}
++                }
++            })()" style="background:rgba(88,166,255,0.15); border:1px solid rgba(88,166,255,0.3); color:#58a6ff; cursor:pointer; font-size:11px; padding:4px 12px; border-radius:4px; transition:all 0.2s; white-space:nowrap;" onmouseover="this.style.background='rgba(88,166,255,0.25)'" onmouseout="this.style.background='rgba(88,166,255,0.15)'">?券撅? ??/button>
++            <button onclick="(function(){
++                for(let i=0;i<${totalSections};i++){
++                    const c=document.getElementById('combat-section-'+i);
++                    const ic=document.getElementById('combat-icon-'+i);
++                    if(c){c.style.display='none';}
++                    if(ic){ic.style.transform='rotate(-90deg)';}
++                }
++            })()" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#8b949e; cursor:pointer; font-size:11px; padding:4px 12px; border-radius:4px; transition:all 0.2s; white-space:nowrap;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">?券?嗅? ??/button>
++        `;
++    }
+ 
+     sections.forEach((section, sIdx) => {
+         const isCollapsible = collapsibleTitles.includes(section.title);
+@@ -5394,6 +5426,18 @@ function renderCombatAnalysis(stats, data) {
+ 
+     html += `</div>`;
+     grid.innerHTML = html;
++
++    // ?? ??????寞?閮??Ｗ儔撅????+    Object.keys(savedStates).forEach(id => {
++        const el = document.getElementById(id);
++        if (el) {
++            el.style.display = savedStates[id];
++            // ?郊?湔蝞剝?????+            const iconId = id.replace('combat-section-', 'combat-icon-').replace('row-detail-', 'row-icon-');
++            const icon = document.getElementById(iconId);
++            if (icon) icon.style.transform = 'rotate(0deg)';
++        }
++    });
+ }
+ 
+ 
