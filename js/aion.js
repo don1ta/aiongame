@@ -868,14 +868,6 @@ function updatePassiveSkills(data) {
 
             GAIN_EFFECT_DATABASE['被動技能'].breakdowns[key].push(`[${skillName}]: +${displayNum}${unit}${sourceMark}`);
 
-            hasPassive = true;
-            passiveHtml += `
-                        <div class="stat-list-row">
-                            <div class="stat-row-label" style="color:#FFFFFF !important;">${skillName}</div>
-                            <div class="stat-row-val" style="color:#FCC78B !important;">+${displayNum}${unit}${sourceMark}</div>
-                            <div class="stat-row-desc" style="color:#94a3b8;">${key}</div>
-                        </div>`;
-
         }
     };
 
@@ -931,12 +923,52 @@ function updatePassiveSkills(data) {
         }
     });
 
+    // 4. 非同步生成被動技能 UI：使用 API 回傳的原始文字格式
+    if (Object.keys(targetSkills).length > 0) {
+        window.__PASSIVE_STATS_READY__ = true;
+        Promise.all(Object.values(targetSkills).map(skill => {
+            const skillId = skill.skillId || skill.id;
+            const level = skill.level || skill.skillLevel || 1;
+            return window.SkillAPI.fetchSkill(skillId, level).then(info => ({ skill, info }));
+        })).then(results => {
+            let detailHtml = '';
+            results.forEach(({ skill, info }) => {
+                if (!info) return;
+                const skillNameForDisplay = skill.baseName;
+                const level = skill.level || skill.skillLevel || 1;
+                let iconUrl = info.icon ? info.icon : (skill.icon ? skill.icon : '');
+                if (iconUrl && !iconUrl.startsWith('http')) {
+                    let parts = iconUrl.split('/');
+                    let filename = parts[parts.length - 1];
+                    if (filename.includes('.')) filename = filename.split('.')[0];
+                    iconUrl = 'https://assets.playnccdn.com/static-aion2-gamedata/resources/' + filename + '.png';
+                }
+                detailHtml += `
+                    <div style="background: rgba(255,255,255,0.05); border-radius: 4px; padding: 12px; margin-bottom: 8px; border-left: 3px solid #f39c12;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;">
+                            <div style="color: #fff; font-weight: bold; font-size: 14px; display:flex; align-items:center; gap:8px;">
+                                ${iconUrl ? '<img src="' + iconUrl + '" style="width:24px; height:24px; border-radius:4px;">' : ''}
+                                <span>${skillNameForDisplay}</span>
+                            </div>
+                            <span style="color:#e67e22; font-weight:bold; font-size:12px;">Lv.${level}</span>
+                        </div>
+                        <div style="font-size:12px; line-height:1.6; color:#e0e0e0;">
+                            ${window.SkillAPI.formatEffects(info)}
+                        </div>
+                    </div>
+                `;
+            });
+            window.__PASSIVE_SKILLS_HTML__ = detailHtml || '<div style="padding:20px; text-align:center; color:#8b949e;">未偵測到被動技能加成</div>';
 
-
-
-    if (hasPassive) {
-        window.__PASSIVE_SKILLS_HTML__ = passiveHtml;
-        window.__PASSIVE_STATS_READY__ = true; // 標記為精確數據已就緒
+            // 若 DOM 已經生成，則即時更新 UI
+            const container = document.getElementById('stat-tab-passive');
+            if (container) {
+                const grid = container.querySelector('.stat-general-grid');
+                if (grid) grid.innerHTML = window.__PASSIVE_SKILLS_HTML__;
+            }
+        }).catch(e => {
+            console.error('Failed to generate passive skill detail HTML', e);
+        });
     } else {
         window.__PASSIVE_SKILLS_HTML__ = '<div style="padding:20px; text-align:center; color:#8b949e;">未偵測到被動技能加成</div>';
         window.__PASSIVE_STATS_READY__ = false;
@@ -4849,8 +4881,15 @@ function renderSkills(data, boardSkillMap, cardSkillMap, stats) {
             });
         }
 
+        let iconUrl = s.icon || '';
+        if (iconUrl && !iconUrl.startsWith('http')) {
+            let parts = iconUrl.split('/');
+            let filename = parts[parts.length - 1];
+            if (filename.includes('.')) filename = filename.split('.')[0];
+            iconUrl = 'https://assets.playnccdn.com/static-aion2-gamedata/resources/' + filename + '.png';
+        }
         let tip = `<div class="tooltip"><button class="tooltip-close-btn" onclick="this.parentElement.classList.remove('tooltip-pinned'); event.stopPropagation();">✕</button><b>${s.name}</b><br>基礎: Lv.${Math.max(0, s.skillLevel - bLv - cLv)}<br>板塊: +${bLv}<br>卡片: +${cLv}${effectsHtml}</div>`;
-        let h = `<div class="skill-card"><img src="${getCorrectIcon(s.icon)}"><div><span class="sk-name">${s.name}</span><span style="color:var(--blue);font-size:14px">Lv.${s.skillLevel}</span></div>${tip}</div>`;
+        let h = `<div class="skill-card"><img src="${iconUrl}"><div><span class="sk-name">${s.name}</span><span style="color:var(--blue);font-size:14px">Lv.${s.skillLevel}</span></div>${tip}</div>`;
 
         if (s.category === "Active") act += h;
         else if (s.category === "Passive") {
@@ -4859,7 +4898,7 @@ function renderSkills(data, boardSkillMap, cardSkillMap, stats) {
             pasDetailed += `
                         <div class="stat-list-row expanded" style="cursor:default; border-bottom:1px solid rgba(255,255,255,0.03); display:block; padding:12px 15px;">
                             <div style="display:flex; align-items:flex-start; gap:12px;">
-                                <img src="${getCorrectIcon(s.icon)}" style="width:32px; height:32px; border-radius:4px; border:1px solid rgba(255,255,255,0.1); margin-top:2px;">
+                                <img src="${iconUrl}" style="width:32px; height:32px; border-radius:4px; border:1px solid rgba(255,255,255,0.1); margin-top:2px;">
                                 <div style="flex:1;">
                                     <div style="font-size:14px; line-height:1.4;">
                                         <span style="font-weight:bold; color:var(--gold);">${s.name}:</span>
