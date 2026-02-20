@@ -9,11 +9,10 @@
  */
 
 // 初始化：讀取上次搜尋的角色與伺服器
+// 初始化：讀取上次搜尋的角色
 window.onload = function () {
     const savedName = localStorage.getItem('last_char_name');
-    const savedServer = localStorage.getItem('last_server');
     if (savedName) document.getElementById('charNameInput').value = savedName;
-    if (savedServer) document.getElementById('serverSelect').value = savedServer;
 
     // 啟動 QuestLog 資料庫同步 (強化評分準確度)
     if (typeof fetchItemDetailsFromQuestLog === 'function') {
@@ -446,118 +445,194 @@ async function fetchAllTitles(serverId, characterId, initialTitleList, ownedCoun
 }
 
 // --- 核心 API 請求邏輯 ---
-async function fetchFromApi() {
-    let charName = document.getElementById('charNameInput').value.trim();
-    const serverName = document.getElementById('serverSelect').value;
 
-    if (!charName) {
-        alert("請輸入角色名稱");
-        return;
-    }
-
-    // 儲存設定
-    localStorage.setItem('last_char_name', charName);
-    localStorage.setItem('last_server', serverName);
-
+// Helper: 直接載入角色數據 (已知 ID 時使用)
+async function loadCharacterData(serverId, characterId, charName = '') {
+    // 顯示載入中
     document.getElementById('loading').style.display = 'flex';
+    document.getElementById('search-results').style.display = 'none'; // 隱藏搜尋結果
+    document.getElementById('main-content').style.display = 'none'; // 隱藏舊資料
 
     try {
-        // === 步驟 1: 先查詢一次角色資料,獲取 characterId ===
-        //   console.log('步驟 1: 查詢角色以獲取 characterId...');
-        const queryUrl = `https://aion-api.bnshive.com/character/query?name=${encodeURIComponent(charName)}&server=${encodeURIComponent(serverName)}`;
-        const queryProxyUrl = getProxyUrl(queryUrl);
-
-        //   console.log('查詢 URL:', queryUrl);
-
-        const firstResponse = await fetch(queryProxyUrl);
-        //    console.log('初次查詢狀態:', firstResponse.status);
-
-        if (!firstResponse.ok) {
-            const errorText = await firstResponse.text();
-            throw new Error(`查詢失敗: ${firstResponse.status}\n${errorText.substring(0, 200)}`);
-        }
-
-        const firstJson = await firstResponse.json();
-        //   console.log('初次查詢結果:', firstJson);
-
-        // 檢查結果
-        if (!firstJson || (firstJson.result === "Fail")) {
-            throw new Error(firstJson.message || "找不到該角色,請確認名稱與伺服器是否正確。");
-        }
-
-        // 從查詢結果中提取 characterId 和 serverId
-        let characterId = null;
-        let serverId = null;
-
-        // 嘗試從不同的資料結構中提取
-        const data = firstJson.queryResult ? firstJson.queryResult.data : (firstJson.data ? firstJson.data : firstJson);
-
-        if (data && data.profile) {
-            characterId = data.profile.characterId;
-            serverId = data.profile.serverId;
-        }
-
-        if (!characterId || !serverId) {
-            // console.warn('⚠ 無法獲取 characterId,跳過更新步驟');
-            // 如果無法獲取 characterId,直接顯示第一次查詢的結果
-            processData(firstJson);
-            // document.getElementById('jsonInput').value = `角色 [${charName}] 數據讀取成功!`;
-            return;
-        }
-
-        //   console.log('✓ 找到角色 ID:', characterId, '伺服器 ID:', serverId);
+        console.log(`[DirectLoad] Loading ${charName} (${serverId}, ${characterId})...`);
 
         // === 步驟 2: 使用 refresh=true 觸發更新並獲取最新資料 ===
-        //   console.log('步驟 2: 觸發更新並查詢最新資料...');
         const refreshUrl = `https://aion-api.bnshive.com/character/query?serverId=${serverId}&characterId=${encodeURIComponent(characterId)}&refresh=true`;
         const refreshProxyUrl = getProxyUrl(refreshUrl);
 
-        //   console.log('更新查詢 URL:', refreshUrl);
-        //   console.log('⏳ 正在從官方 API 獲取最新資料,請稍候...');
-
         const refreshResponse = await fetch(refreshProxyUrl);
-        //   console.log('更新查詢狀態:', refreshResponse.status);
 
-        let finalJson = firstJson; // 預設使用初次查詢的資料
+        let finalJson = null;
 
         if (refreshResponse.ok) {
-            const refreshJson = await refreshResponse.json();
-            //   console.log('✓ 更新查詢結果:', refreshJson);
-
-            if (refreshJson && refreshJson.result !== "Fail") {
-                finalJson = refreshJson;
-                //   console.log('✓ 已獲取最新資料!');
-            } else {
-                // console.warn('⚠ 更新查詢返回失敗,使用初次查詢的資料');
+            finalJson = await refreshResponse.json();
+            if (!finalJson || finalJson.result === "Fail") {
+                throw new Error(finalJson.message || "讀取角色詳細資料失敗");
             }
         } else {
-            // console.warn('⚠ 更新查詢失敗,使用初次查詢的資料');
+            throw new Error("連線至角色資料 API 失敗");
         }
 
-        // === 步驟 3: 記錄訪問 (可選,不影響主要功能) ===
+        // === 步驟 3: 記錄訪問 ===
         try {
-            //   console.log('步驟 3: 記錄訪問...');
             const visitUrl = `https://aion-api.bnshive.com/character/${serverId}/${encodeURIComponent(characterId)}/visit`;
-            const visitProxyUrl = getProxyUrl(visitUrl);
-
-            await fetch(visitProxyUrl, { method: 'POST' });
-            //   console.log('✓ 訪問已記錄');
-        } catch (visitError) {
-            // console.log('訪問記錄失敗(不影響主要功能):', visitError.message);
-        }
+            getProxyUrl(visitUrl); // Just get URL, fire and forget via fetch
+            fetch(getProxyUrl(visitUrl), { method: 'POST' }).catch(() => { });
+        } catch (e) { }
 
         // 顯示資料
+        document.getElementById('main-content').style.display = 'block';
         processData(finalJson);
-        // document.getElementById('jsonInput').value = `角色 [${charName}] 數據讀取成功! (已從官方 API 更新)`;
-        //   console.log('✓ 完成!已顯示最新資料');
+
+        // 更新輸入框顯示 (若有)
+        if (charName) document.getElementById('charNameInput').value = charName;
 
     } catch (err) {
-        // console.error('❌ 完整錯誤:', err);
-        alert("讀取失敗:\n" + err.message);
+        alert("讀取詳細資料失敗:\n" + err.message);
+        document.getElementById('search-results').style.display = 'grid'; // 恢復顯示搜尋結果
     } finally {
         document.getElementById('loading').style.display = 'none';
     }
 }
+
+
+// 新增：搜尋角色 (List Mode)
+// Debounce timer
+let searchDebounceTimer = null;
+
+async function searchCharacters(keyword) {
+    if (!keyword) {
+        document.getElementById('search-results').innerHTML = '';
+        document.getElementById('search-results').style.display = 'none';
+        return;
+    }
+
+    // Clear previous timer
+    if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+
+    // Set new timer
+    searchDebounceTimer = setTimeout(async () => {
+        await executeSearch(keyword);
+    }, 500); // 500ms debounce
+}
+
+async function executeSearch(keyword) {
+
+    document.getElementById('loading').style.display = 'flex';
+    document.getElementById('main-content').style.display = 'none';
+    const resultsContainer = document.getElementById('search-results');
+    resultsContainer.innerHTML = '';
+    resultsContainer.style.display = 'none';
+
+    try {
+        const searchUrl = `https://aion-api.bnshive.com/character/search?keyword=${encodeURIComponent(keyword)}&page=1&size=30`;
+        const proxyUrl = getProxyUrl(searchUrl);
+
+        const res = await fetch(proxyUrl);
+        if (!res.ok) throw new Error("搜尋失敗");
+
+        const json = await res.json();
+
+        const list = json.results || [];
+
+        if (list.length === 0) {
+            resultsContainer.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding:40px; color:#888;">
+                找不到符合 "<b>${keyword}</b>" 的角色
+            </div>`;
+            resultsContainer.style.display = 'grid';
+            return;
+        }
+
+        // Render List with Header
+        let html = `<div style="grid-column: 1/-1; margin-bottom: 20px; color: #8b949e; font-size: 14px;">
+            <i class="fas fa-search"></i> 找到 <b>${json.total || list.length}</b> 筆結果
+        </div>`;
+
+        list.forEach(char => {
+            // Mapping class names to English keys for CSS border colors
+            const classMap = {
+                '劍星': 'gladiator', '守護星': 'templar', '殺星': 'assassin', '弓星': 'ranger',
+                '魔道星': 'sorcerer', '精靈星': 'spirit_master', '治癒星': 'cleric', '護法星': 'chanter',
+                '槍擊星': 'gunner', '吟遊星': 'bard', '機甲星': 'rider', '彩繪星': 'painter', '雷擊星': 'thunderer'
+            };
+            const className = char.className || '未知';
+            const classKey = classMap[className] || 'common';
+
+            let imgUrl = char.profileImageUrl || 'https://cms-static.plaync.com/img/common/avatar_default.png';
+            if (imgUrl.startsWith('/')) {
+                imgUrl = 'https://profileimg.plaync.com' + imgUrl;
+            }
+
+            // Race Detection
+            let raceName = char.raceName;
+            if (!raceName && char.raceId) {
+                raceName = (char.raceId === 1) ? '天族' : ((char.raceId === 2) ? '魔族' : '未知');
+            }
+            const raceColor = (char.raceId === 2 || raceName === '魔族') ? '#ff4757' : '#00d4ff';
+
+            const scoreContainerId = `score-box-${char.characterId}`;
+
+            html += `
+            <div class="search-card" data-class="${classKey}" onclick="loadCharacterData(${char.serverId}, '${char.characterId}', '${char.characterName}')">
+                
+                <img src="${imgUrl}" class="search-card-img" onerror="this.src='https://cms-static.plaync.com/img/common/avatar_default.png'">
+                
+                <div class="search-card-info">
+                    <div class="search-card-name">${char.characterName}</div>
+                    <div class="search-card-detail">
+                        <span style="color:${raceColor}; font-weight:bold;">${raceName || '未知'}</span>
+                        <span style="color:#444;">|</span>
+                        <span>${char.serverName}</span>
+                        <span style="color:#444;">•</span>
+                        <span>Lv.${char.characterLevel}</span>
+                        <span class="search-card-badge">${className}</span>
+                    </div>
+                </div>
+                
+                 <div class="search-card-action">
+                    <div id="${scoreContainerId}" class="peek-score-result" style="display:block; text-align:right;">
+                       <span style="font-size:10px; color:#666;"><i class="fas fa-circle-notch fa-spin"></i> 計算中</span>
+                    </div>
+                </div>
+            </div>
+            `;
+        });
+
+        resultsContainer.innerHTML = html;
+        resultsContainer.style.display = 'grid';
+
+        // 🚀 自動觸發分數獲取 (使用佇列機制)
+        if (typeof queueScoreFetch === 'function') {
+            list.forEach(char => {
+                queueScoreFetch(char.serverId, char.characterId, `score-box-${char.characterId}`);
+            });
+        }
+
+    } catch (e) {
+        console.error("搜尋發生錯誤: " + e.message);
+        resultsContainer.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding:20px; color:#f00;">搜尋發生錯誤，請稍後再試</div>`;
+        resultsContainer.style.display = 'grid';
+    } finally {
+        document.getElementById('loading').style.display = 'none';
+    }
+}
+
+async function fetchFromApi() {
+    let charName = document.getElementById('charNameInput').value.trim();
+
+    if (!charName) {
+        document.getElementById('search-results').style.display = 'none';
+        return;
+    }
+
+    // Always use search mode
+    searchCharacters(charName);
+
+    // 儲存設定
+    localStorage.setItem('last_char_name', charName);
+}
+
+
 
 // 🧬 被動技能數據庫 (從 JSON 載入，用於定義應追蹤的技能與屬性名稱)
 window.PASSIVE_SKILL_DATABASE = {};

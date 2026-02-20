@@ -7,7 +7,8 @@
     <meta name="referrer" content="no-referrer">
     <title>Aion2 高階解析 - 角色名稱快速查詢版</title>
     <!-- 引入外部 CSS -->
-    <link rel="stylesheet" href="css/aion.css">
+    <link rel="stylesheet" href="css/aion.css?v=anti_shake_v1">
+    <link rel="stylesheet" href="css/search.css?v=overflow_fix">
 
     <!-- 引入共用配置與圖表庫 -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
@@ -27,57 +28,19 @@
             <div class="import-section">
                 <div style="font-size: 14px; color: var(--gold); font-weight: bold;">🔍 方法 A：快速角色查詢</div>
                 <div class="api-input-group">
-                    <input type="text" id="charNameInput" placeholder="輸入角色名稱 (例如: 我愛小紅線)...">
+                    <input type="text" id="charNameInput" placeholder="輸入角色名稱 (例如: 我愛小紅線)..." oninput="fetchFromApi()">
 
-                    <select id="serverSelect">
-                        <optgroup label="─── 天族伺服器 ───">
-                            <option value="尤斯迪埃">尤斯迪埃</option>
-                            <option value="希埃爾">希埃爾</option>
-                            <option value="奈薩肯">奈薩肯</option>
-                            <option value="白傑爾">白傑爾</option>
-                            <option value="凱西內爾">凱西內爾</option>
-                            <option value="艾瑞爾">艾瑞爾</option>
-                            <option value="普雷奇翁">普雷奇翁</option>
-                            <option value="梅斯蘭泰達">梅斯蘭泰達</option>
-                            <option value="希塔尼耶">希塔尼耶</option>
-                            <option value="納尼亞">納尼亞</option>
-                            <option value="塔哈巴達">塔哈巴達</option>
-                            <option value="路特斯">路特斯</option>
-                            <option value="菲爾諾斯">菲爾諾斯</option>
-                            <option value="達彌努">達彌努</option>
-                            <option value="卡薩卡">卡薩卡</option>
-                            <option value="巴卡爾摩">巴卡爾摩</option>
-                            <option value="天加隆">天加隆</option>
-                            <option value="科奇隆">科奇隆</option>
-                        </optgroup>
-                        <optgroup label="─── 魔族伺服器 ───">
-                            <option value="伊斯拉佩爾">伊斯拉佩爾</option>
-                            <option value="吉凱爾">吉凱爾</option>
-                            <option value="崔妮爾">崔妮爾</option>
-                            <option value="露梅爾">露梅爾</option>
-                            <option value="瑪爾庫坦">瑪爾庫坦</option>
-                            <option value="阿斯佩爾">阿斯佩爾</option>
-                            <option value="艾萊修奇卡">艾萊修奇卡</option>
-                            <option value="布里特拉">布里特拉</option>
-                            <option value="奈蒙">奈蒙</option>
-                            <option value="哈達爾">哈達爾</option>
-                            <option value="盧德萊">盧德萊</option>
-                            <option value="鄔爾古倫">鄔爾古倫</option>
-                            <option value="默尼">默尼</option>
-                            <option value="奧達爾">奧達爾</option>
-                            <option value="簡卡卡">簡卡卡</option>
-                            <option value="克羅梅德">克羅梅德</option>
-                            <option value="奎靈">奎靈</option>
-                            <option value="巴巴隆">巴巴隆</option>
-                        </optgroup>
-                    </select>
 
-                    <button class="btn-api" onclick="fetchFromApi()">立即查詢</button>
+
+                    <button class="btn-api" onclick="fetchFromApi()" style="display:none;">立即查詢</button>
                 </div>
 
                 興趣製作非商業用途，請勿用於營利行為，資料有誤依官方為主。
             </div>
         </div>
+
+        <!-- 搜尋結果區塊 -->
+        <div id="search-results" class="search-results-grid" style="display:none;"></div>
 
         <div id="main-content" class="dashboard">
             <div class="header-combine-card">
@@ -276,6 +239,7 @@
     <script src="js/skill-api.js?v=99"></script>
     <script src="js/equipment-score.js?v=UI_FIX_FINAL"></script>
     <script src="js/health_check.js"></script>
+    <script src="js/peek_score.js"></script>
     <script src="js/aion.js"></script>
     <script src="js/class_distribution.js"></script>
     <script src="js/server_stats.js"></script>

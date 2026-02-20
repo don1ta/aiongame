@@ -1,0 +1,247 @@
+/* 搜尋結果網格系統 - RWD Optimized */
+.search-results-grid {
+    display: grid;
+    /* 預設: 桌面版每欄至少 280px (比 300px 稍窄以適應更多螢幕) */
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+    animation: fadeIn 0.5s ease;
+}
+
+.search-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px;
+    background: rgba(30, 35, 45, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.2s, background 0.2s, border-color 0.2s;
+    position: relative;
+    overflow: hidden;
+    min-height: 64px;
+}
+
+.search-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: var(--border);
+    transition: background 0.3s;
+}
+
+.search-card:hover {
+    transform: translateY(-2px);
+    background: rgba(40, 45, 55, 1);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+    border-color: var(--primary);
+}
+
+.search-card:hover::before {
+    background: var(--primary);
+}
+
+/* 職業特化邊框色 */
+.search-card[data-class="gladiator"]::before,
+.search-card[data-class="劍星"]::before {
+    background: #e67e22;
+}
+
+.search-card[data-class="templar"]::before,
+.search-card[data-class="守護星"]::before {
+    background: #27ae60;
+}
+
+.search-card[data-class="assassin"]::before,
+.search-card[data-class="殺星"]::before {
+    background: #1abc9c;
+}
+
+.search-card[data-class="ranger"]::before,
+.search-card[data-class="弓星"]::before {
+    background: #9b59b6;
+}
+
+.search-card[data-class="sorcerer"]::before,
+.search-card[data-class="魔道星"]::before {
+    background: #e74c3c;
+}
+
+.search-card[data-class="spirit_master"]::before,
+.search-card[data-class="精靈星"]::before {
+    background: #3498db;
+}
+
+.search-card[data-class="cleric"]::before,
+.search-card[data-class="治癒星"]::before {
+    background: #f1c40f;
+}
+
+.search-card[data-class="chanter"]::before,
+.search-card[data-class="護法星"]::before {
+    background: #f39c12;
+}
+
+.search-card[data-class="painter"]::before,
+.search-card[data-class="彩繪星"]::before {
+    background: #ff9ff3;
+}
+
+.search-card[data-class="gunner"]::before,
+.search-card[data-class="槍擊星"]::before {
+    background: #ffcccc;
+}
+
+.search-card[data-class="bard"]::before,
+.search-card[data-class="吟遊星"]::before {
+    background: #22a6b3;
+}
+
+.search-card[data-class="rider"]::before,
+.search-card[data-class="機甲星"]::before {
+    background: #30336b;
+}
+
+.search-card[data-class="thunderer"]::before,
+.search-card[data-class="雷擊星"]::before {
+    background: #be2edd;
+}
+
+.search-card-img {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    background: #000;
+    flex-shrink: 0;
+}
+
+.search-card-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.search-card-name {
+    font-size: 15px;
+    font-weight: bold;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.search-card-detail {
+    font-size: 12px;
+    color: #8b949e;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    line-height: 1.4;
+}
+
+.search-card-badge {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 11px;
+    white-space: nowrap;
+}
+
+.search-card-action {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: center;
+    min-width: 80px;
+}
+
+.peek-score-result {
+    text-align: right;
+    animation: fadeIn 0.3s;
+}
+
+/* === Responsive Web Design (RWD) 對應 === */
+
+/* 大型平板與筆電 (1024px 以下) */
+@media (max-width: 1024px) {
+    .search-results-grid {
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    }
+}
+
+/* 平板直立 (768px 以下) */
+@media (max-width: 768px) {
+    .search-results-grid {
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        gap: 10px;
+    }
+
+    .search-card {
+        padding: 8px;
+        gap: 10px;
+    }
+
+    .search-card-img {
+        width: 38px;
+        height: 38px;
+    }
+
+    .search-card-name {
+        font-size: 14px;
+    }
+
+    .search-card-detail {
+        font-size: 11px;
+        gap: 4px;
+    }
+
+    .search-card-action {
+        min-width: 70px;
+    }
+}
+
+/* 手機版 (480px 以下) */
+@media (max-width: 480px) {
+    .search-results-grid {
+        grid-template-columns: 1fr;
+        /* 強制單欄，確保資訊完整顯示 */
+        gap: 8px;
+    }
+
+    .search-card {
+        padding: 8px 10px;
+        border-radius: 6px;
+        min-height: 60px;
+    }
+
+    /* 手機版 (480px 以下) */
+    .search-card-img {
+        width: 42px;
+        height: 42px;
+    }
+
+    .search-card-info {
+        gap: 3px;
+    }
+
+    .search-card-name {
+        font-size: 16px;
+    }
+
+    .search-card-detail {
+        font-size: 12px;
+    }
+
+    .search-card-action {
+        min-width: 80px;
+    }
+}
