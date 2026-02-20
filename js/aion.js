@@ -2069,6 +2069,8 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
     let processedSets = new Set();
     let armorHtml = "";
     let accessoryHtml = "";
+    let armorSimpleHtml = "";
+    let accessorySimpleHtml = "";
     let titleHtml = "";
 
     const getEntry = (k) => {
@@ -2768,12 +2770,61 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
             let soulBindHtml = (sbRate !== undefined) ? `<span style="float:right; color:#bdc3c7;">靈魂刻印 ${sbRate}%</span>` : "";
 
 
-            // 更新卡片樣式: 使用新的 gradeColor 並確保邊框顯示明顯 (全框包覆)
             let cardHtml = `<div class="equip-item-card" style="border-color: ${gradeColor}; border-top-color: ${gradeColor}; box-shadow: 0 0 10px ${gradeColor}44;"><div class="equip-left-section"><div style="display:flex; align-items:center; gap:10px;"><div class="equip-img-container" style="border-color: ${gradeColor};"><img src="${finalIcon}">${exceedBadge}</div><div style="flex:1;"><span class="equip-name" style="color:${gradeColor}; font-weight:bold; text-shadow:0 0 5px ${gradeColor}44;">${d.name}</span>${sourcesHtml}<div><span style="color:#fff; font-weight:bold;">+${i.enchantLevel}</span></div></div></div><div style="margin-top:8px;">${mainStatsD}</div></div><div class="equip-right-section"><div style="color:#8b949e; font-size:13px; font-weight:bold; border-bottom:1px solid rgba(255,255,255,0.1); margin-bottom:5px;">附加屬性/神石 ${soulBindHtml}</div>${(d.subStats || []).map(s => `<div class="random-row"><span>${s.name}</span><span style="color:#fff;">+${s.value}</span></div>`).join('')}${(d.subSkills || []).map(sk => `<div class="skill-badge-mini" style="border-color:${gradeColor};">${sk.name} Lv.${sk.level}</div>`).join('')}${godStoneHtml}${(d.magicStoneStat || []).map(ms => {
                 let msColor = getGradeColor(ms.grade);
                 return `<div class="random-row" style="color:${msColor}; font-size:12px;"><span>[磨石] ${ms.name}</span><span>${ms.value}</span></div>`;
             }).join('')}</div></div>`;
-            if (isArmor) armorHtml += cardHtml; else accessoryHtml += cardHtml;
+
+            let gradeNameMap = { 'Myth': '神話', 'Unique': '唯一', 'Legend': '傳說', 'Epic': '史詩', 'Rare': '稀有', 'Ancient': '古代' };
+            let rawGrade = d.gradeName || originalItem.gradeName || d.grade || originalItem.grade || '';
+            let locGrade = gradeNameMap[rawGrade] || rawGrade || '特殊';
+            let cat = d.category || originalItem.category || '';
+            let iLv = originalItem.itemLevel || d.itemLevel || 0;
+            let elv = i.enchantLevel || 0;
+
+            let cardSimpleHtml = `
+            <div class="equip-item-card-simple" style="
+                position: relative;
+                border-radius: 8px;
+                overflow: hidden;
+                background: linear-gradient(90deg, ${gradeColor}33 0%, rgba(20,20,30,0.95) 50%, rgba(10,10,15,0.95) 100%);
+                border-left: 4px solid ${gradeColor};
+                padding: 10px 15px;
+                display: flex;
+                height: 85px;
+                box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+                border: 1px solid rgba(255,255,255,0.05);
+                border-right: none;
+                border-top: none;
+                border-bottom: none;
+            ">
+                <div style="flex: 1; z-index: 2; display: flex; flex-direction: column;">
+                    <div style="font-size: 16px; font-weight: bold; color: ${gradeColor}; text-shadow: 0 0 5px ${gradeColor}44; white-space: normal; line-height: 1.2; padding-right: 40px;">${d.name} <span style="font-size:14px; color:#fff; white-space: nowrap;">(+${elv})</span></div>
+                    <div style="font-size: 13px; color: ${gradeColor}; opacity: 0.9; margin-top: auto;">${locGrade} ${cat}</div>
+                </div>
+
+                <div style="
+                    position: absolute;
+                    right: -10px;
+                    top: -10px;
+                    width: 105px;
+                    height: 105px;
+                    z-index: 1;
+                    -webkit-mask-image: linear-gradient(to right, transparent 5%, black 50%);
+                    mask-image: linear-gradient(to right, transparent 5%, black 50%);
+                    opacity: 0.95;
+                ">
+                    <img src="${finalIcon}" style="width: 100%; height: 100%; object-fit: contain; transform: scale(1.3); filter: drop-shadow(0 0 10px ${gradeColor}88);">
+                </div>
+            </div>`;
+
+            if (isArmor) {
+                armorHtml += cardHtml;
+                armorSimpleHtml += cardSimpleHtml;
+            } else {
+                accessoryHtml += cardHtml;
+                accessorySimpleHtml += cardSimpleHtml;
+            }
             // 🔹 已移除此處重複的 normalizeKey，改用上層定義的統一版本，確保屬性分類一致 🔹
             let mainStatAcc = {};
 
@@ -3018,6 +3069,8 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
 
     document.getElementById('equip-armor-list').innerHTML = armorHtml || "<div>無資料</div>";
     document.getElementById('equip-accessory-list').innerHTML = accessoryHtml || "<div>無資料</div>";
+    document.getElementById('equip-armor-list-simple').innerHTML = armorSimpleHtml || "<div>無資料</div>";
+    document.getElementById('equip-accessory-list-simple').innerHTML = accessorySimpleHtml || "<div>無資料</div>";
 
     // 生成來源分析 HTML (改為橫向堆疊長條圖)
     // 生成來源分析 HTML (改為橫向堆疊長條圖)
@@ -5826,5 +5879,25 @@ window.switchMainChartTab = function (tabName) {
         if (typeof window.renderServerDistributionTab === 'function') {
             window.renderServerDistributionTab();
         }
+    }
+};
+window.switchEquipTab = function (tab) {
+    const detailTab = document.getElementById('equip-tab-detail');
+    const simpleTab = document.getElementById('equip-tab-simple');
+    const btnDetail = document.getElementById('tab-btn-equip-detail');
+    const btnSimple = document.getElementById('tab-btn-equip-simple');
+
+    if (!detailTab || !simpleTab) return;
+
+    if (tab === 'detail') {
+        detailTab.style.display = 'block';
+        simpleTab.style.display = 'none';
+        if (btnDetail) btnDetail.classList.add('active');
+        if (btnSimple) btnSimple.classList.remove('active');
+    } else {
+        detailTab.style.display = 'none';
+        simpleTab.style.display = 'block';
+        if (btnDetail) btnDetail.classList.remove('active');
+        if (btnSimple) btnSimple.classList.add('active');
     }
 };

@@ -62,10 +62,29 @@
                 </div>
 
                 <div id="equipment-wrapper" class="collapsible-content collapsed" style="margin-top: 20px;">
-                    <div class="section-header" id="armor-header">武器與防具</div>
-                    <div id="equip-armor-list"></div>
-                    <div class="section-header" id="accessory-header">飾品與配件</div>
-                    <div id="equip-accessory-list"></div>
+                    <div class="stat-tabs-header" style="margin-bottom: 20px;">
+                        <div id="tab-btn-equip-simple" class="stat-tab-btn active" onclick="switchEquipTab('simple')">
+                            簡易
+                        </div>
+                        <div id="tab-btn-equip-detail" class="stat-tab-btn" onclick="switchEquipTab('detail')">
+                            完整</div>
+                    </div>
+
+                    <div id="equip-tab-simple">
+                        <div class="section-header" id="armor-header-simple">武器與防具</div>
+                        <div id="equip-armor-list-simple" class="grid-box-container"
+                            style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));"></div>
+                        <div class="section-header" id="accessory-header-simple">飾品與配件</div>
+                        <div id="equip-accessory-list-simple" class="grid-box-container"
+                            style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));"></div>
+                    </div>
+
+                    <div id="equip-tab-detail" style="display:none;">
+                        <div class="section-header" id="armor-header">武器與防具</div>
+                        <div id="equip-armor-list"></div>
+                        <div class="section-header" id="accessory-header">飾品與配件</div>
+                        <div id="equip-accessory-list"></div>
+                    </div>
                 </div>
             </div>
 
