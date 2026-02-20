@@ -919,10 +919,8 @@ function updatePassiveSkills(data) {
 
 
     if (hasPassive) {
-        window.__PASSIVE_SKILLS_HTML__ = passiveHtml;
-        window.__PASSIVE_STATS_READY__ = true; // 標記為精確數據已就緒
+        window.__PASSIVE_STATS_READY__ = true; // 標記為精確數據已就緒，但不覆蓋內容
     } else {
-        window.__PASSIVE_SKILLS_HTML__ = '<div style="padding:20px; text-align:center; color:#8b949e;">未偵測到被動技能加成</div>';
         window.__PASSIVE_STATS_READY__ = false;
     }
 }
@@ -1084,11 +1082,11 @@ function initGainControls() {
                         </label>
                         <span style="margin-left:5px; cursor:help; font-size:12px; color:#58a6ff; opacity:0.8;">ⓘ</span>
                         
-                        <!-- Tooltip -->
+                        <!-- Tooltip (向下顯示以防止被視窗頂部遮擋) -->
                         <div class="custom-tooltip-content" style="
                             display: none;
                             position: absolute;
-                            bottom: 120%;
+                            top: 120%;
                             left: 50%;
                             transform: translateX(-50%);
                             background: rgba(15, 20, 25, 0.98);
@@ -1097,7 +1095,7 @@ function initGainControls() {
                             padding: 10px;
                             width: 280px;
                             z-index: 1002;
-                            box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+                            box-shadow: 0 4px 25px rgba(0,0,0,0.7);
                             pointer-events: none;
                             font-size: 12px;
                             color: #8b949e;
@@ -1107,8 +1105,8 @@ function initGainControls() {
                         ">
                             <b style="color:var(--gold); display:block; border-bottom:1px solid rgba(255,255,255,0.1); margin-bottom:8px; padding-bottom:5px;">${key} 加成細項</b>
                             <div style="line-height: 1.5; word-break: break-word;">${statsInfo}</div>
-                            <!-- Arrow -->
-                            <div style="position:absolute; top:100%; left:50%; transform:translateX(-50%); border-width:6px; border-style:solid; border-color:rgba(15,20,25,0.98) transparent transparent transparent;"></div>
+                            <!-- Arrow (指向頂部) -->
+                            <div style="position:absolute; bottom:100%; left:50%; transform:translateX(-50%); border-width:6px; border-style:solid; border-color:transparent transparent rgba(15,20,25,0.98) transparent;"></div>
                         </div>
                     </div>
                 `;
@@ -2579,37 +2577,41 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
 
     // 處理持有翅膀的效果（從收藏系統）
     const ownedWings = JSON.parse(localStorage.getItem('ownedWings') || '[]');
-    ownedWings.forEach(wingName => {
-        const wing = WING_DATABASE[wingName];
-        if (wing && wing.hold) {
-            for (let statName in wing.hold) {
-                let val = wing.hold[statName];
-                let absVal = Math.abs(val);
-                let isDecimal = (absVal > 0 && absVal < 1);
+    const wingCollActive = GAIN_EFFECT_DATABASE['翅膀收藏']?.active;
 
-                // 根據關鍵字強制視為百分比 (除了小數判定外)
-                const percentKeywords = ['增幅', '增加', '減少', '率', '耐性'];
-                const matchesKeyword = percentKeywords.some(k => statName.includes(k));
+    if (wingCollActive) {
+        ownedWings.forEach(wingName => {
+            const wing = WING_DATABASE[wingName];
+            if (wing && wing.hold) {
+                for (let statName in wing.hold) {
+                    let val = wing.hold[statName];
+                    let absVal = Math.abs(val);
+                    let isDecimal = (absVal > 0 && absVal < 1);
 
-                if (isDecimal) val = val * 100;
+                    // 根據關鍵字強制視為百分比 (除了小數判定外)
+                    const percentKeywords = ['增幅', '增加', '減少', '率', '耐性'];
+                    const matchesKeyword = percentKeywords.some(k => statName.includes(k));
 
-                // 標準化屬性名稱 (不再去除 "額外" 前綴，以便使用者能看到獨立項目)
-                let normName = statName;
+                    if (isDecimal) val = val * 100;
 
-                // 若是小數轉換而來，或名稱包含百分比關鍵字，則確保名稱有 %
-                if ((isDecimal || matchesKeyword) && !normName.includes('%')) {
-                    normName += '%';
+                    // 標準化屬性名稱 (不再去除 "額外" 前綴，以便使用者能看到獨立項目)
+                    let normName = statName;
+
+                    // 若是小數轉換而來，或名稱包含百分比關鍵字，則確保名稱有 %
+                    if ((isDecimal || matchesKeyword) && !normName.includes('%')) {
+                        normName += '%';
+                    }
+
+                    let entry = getEntry(normName);
+                    entry.other += val;
+                    entry.subtotals.wingHold += val;
+
+                    const unit = normName.includes('%') ? '%' : '';
+                    entry.detailGroups.wingHold.push(`[${wingName} 持有]: +${parseFloat(val.toFixed(2))}${unit}`);
                 }
-
-                let entry = getEntry(normName);
-                entry.other += val;
-                entry.subtotals.wingHold += val;
-
-                const unit = normName.includes('%') ? '%' : '';
-                entry.detailGroups.wingHold.push(`[${wingName} 持有]: +${parseFloat(val.toFixed(2))}${unit}`);
             }
-        }
-    });
+        });
+    }
 
 
 
@@ -3602,6 +3604,13 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
             };
         }
 
+        // 🔍 狀態保存：記錄目前已展開的項目名稱
+        const expandedLabels = new Set();
+        overviewGrid.querySelectorAll('.stat-list-row.expanded').forEach(row => {
+            const label = row.querySelector('.stat-row-label');
+            if (label) expandedLabels.add(label.textContent.trim());
+        });
+
         let overviewHtml = `
                     <div class="stat-tabs-header">
                         <div class="stat-tab-btn active" onclick="switchStatTab(this, 'stat-tab-extra')">⚔️ 戰鬥指標</div>
@@ -3646,8 +3655,12 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                         const boardVal = (e.nezakan || 0) + (e.zikel || 0) + (e.baizel || 0) + (e.triniel || 0) + (e.ariel || 0) + (e.asphel || 0);
                         const wingVal = (e.subtotals?.wing || 0) + (e.subtotals?.wingHold || 0);
                         const setVal = (e.subtotals?.set || 0);
+
+                        // 強化歸類：equipVal 包含 裝備主體 + 強化 + 套裝 + 翅膀
                         const equipVal = (e.equipMain || 0) + wingVal + setVal;
+                        // stoneVal 包含 磨石 + 隨機屬性
                         const stoneVal = (e.equipSub || 0);
+                        // otherVal 則是排除掉以上項目的其餘部分 (稱號、被動、手動增益等)
                         const otherVal = (e.other || 0) - wingVal - setVal;
                         const val = boardVal + equipVal + stoneVal + otherVal;
 
@@ -3803,17 +3816,27 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
 `;
 
         overviewGrid.innerHTML = overviewHtml;
+
+        // 🔍 狀態還原：遍歷新生成的行，若名稱在記錄中則還原展開狀態
+        overviewGrid.querySelectorAll('.stat-list-row').forEach(row => {
+            const label = row.querySelector('.stat-row-label');
+            if (label && expandedLabels.has(label.textContent.trim())) {
+                row.classList.add('expanded');
+            }
+        });
     }
 
     renderCombatAnalysis(stats, data);
-    renderTrendChart(json, 'itemLevel'); // 預設顯示裝備等級
+
+    if (!statsOnly) {
+        renderTrendChart(json, 'itemLevel'); // 預設顯示裝備等級
+        // 觸發排行榜載入 (強制更新，因為角色已變更)
+        loadClassLeaderboard();
+    }
 
     if (!skipScroll) {
         window.scrollTo({ top: document.getElementById('main-content').offsetTop - 20, behavior: 'smooth' });
     }
-
-    // 觸發排行榜載入 (強制更新，因為角色已變更)
-    loadClassLeaderboard();
 } // End of processData
 
 
@@ -4843,15 +4866,21 @@ function renderSkills(data, boardSkillMap, cardSkillMap, stats) {
 
     // 儲存詳細版被動技能 HTML 以便在概覽分頁使用
     // 🛡️ 優先保留 updatePassiveSkills 所產生的 精確數據 HTML 
-    const isCalculating = !window.__PASSIVE_SKILLS_HTML__ || window.__PASSIVE_SKILLS_HTML__.includes('⌛');
-    if (isCalculating || !window.__PASSIVE_STATS_READY__) {
-        window.__PASSIVE_SKILLS_HTML__ = pasDetailed || "<div style='color:#8b949e; padding:40px; text-align:center;'>此職業無被動加成技能</div>";
-    }
+    // 始終使用 API 風格樣式 (含圖示與詳細描述)
+    window.__PASSIVE_SKILLS_HTML__ = pasDetailed || "<div style='color:#8b949e; padding:40px; text-align:center;'>此職業無被動加成技能</div>";
 }
 
 function renderCombatAnalysis(stats, data) {
     const grid = document.getElementById('combat-stats-grid');
     if (!grid) return;
+
+    // 🔍 狀態保存：記錄目前各區塊與明細行的展開狀態
+    const savedStates = {};
+    grid.querySelectorAll('[id^="combat-section-"], [id^="row-detail-"]').forEach(el => {
+        if (el.style.display && el.style.display !== 'none') {
+            savedStates[el.id] = el.style.display;
+        }
+    });
 
     // 切換為單欄佈局以適應新表格
     grid.style.display = 'block';
@@ -4941,7 +4970,8 @@ function renderCombatAnalysis(stats, data) {
             Object.keys(gainEffectMap).forEach(dbKey => {
                 const groupKey = gainEffectMap[dbKey];
                 const db = window.GAIN_EFFECT_DATABASE[dbKey];
-                if (!db || !db.breakdowns) return;
+                // 🚨 修正：如果該增益效果未開啟，則不應強行加入細項與數值
+                if (!db || !db.breakdowns || db.active === false) return;
 
                 // 嘗試匹配 key (支援 % 變體)
                 const breakdownKey = Object.keys(db.breakdowns).find(k => {
@@ -5273,7 +5303,7 @@ function renderCombatAnalysis(stats, data) {
         }
     ];
 
-    let html = `<div style="display:flex; flex-direction:column; gap:15px;">`;
+    let html = `<div style="display:flex; flex-direction:column; gap:10px; padding-top:12px;">`;
 
     // 定義需要收合的區塊標題（所有區塊都可收合）
     const collapsibleTitles = ["主要能力值", "百分比增加", "戰鬥", "PVE", "PVP", "判定", "異常狀態", "種族", "屬性", "特殊", "資源"];
@@ -5281,26 +5311,28 @@ function renderCombatAnalysis(stats, data) {
     const defaultCollapsedTitles = ["百分比增加", "戰鬥", "PVE", "PVP", "判定", "異常狀態", "種族", "屬性", "特殊", "資源"];
     const totalSections = sections.length;
 
-    // 全部展開 / 全部收合 按鈕列
-    html += `
-            <div style="display:flex; gap:8px; justify-content:flex-end; margin-bottom:4px;">
-                <button onclick="(function(){
-                    for(let i=0;i<${totalSections};i++){
-                        const c=document.getElementById('combat-section-'+i);
-                        const ic=document.getElementById('combat-icon-'+i);
-                        if(c){c.style.display='block';}
-                        if(ic){ic.style.transform='rotate(0deg)';}
-                    }
-                })()" style="background:rgba(88,166,255,0.15); border:1px solid rgba(88,166,255,0.3); color:#58a6ff; cursor:pointer; font-size:11px; padding:4px 10px; border-radius:4px; transition:all 0.2s;" onmouseover="this.style.background='rgba(88,166,255,0.25)'" onmouseout="this.style.background='rgba(88,166,255,0.15)'">全部展開 ▼</button>
-                <button onclick="(function(){
-                    for(let i=0;i<${totalSections};i++){
-                        const c=document.getElementById('combat-section-'+i);
-                        const ic=document.getElementById('combat-icon-'+i);
-                        if(c){c.style.display='none';}
-                        if(ic){ic.style.transform='rotate(-90deg)';}
-                    }
-                })()" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#8b949e; cursor:pointer; font-size:11px; padding:4px 10px; border-radius:4px; transition:all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">全部收合 ▲</button>
-            </div>`;
+    // 🛡️ 全局控制按鈕 (移動至置頂標頭容器)
+    const activeHeaderControls = document.getElementById('combat-analysis-global-controls');
+    if (activeHeaderControls) {
+        activeHeaderControls.innerHTML = `
+            <button onclick="(function(){
+                for(let i=0;i<${totalSections};i++){
+                    const c=document.getElementById('combat-section-'+i);
+                    const ic=document.getElementById('combat-icon-'+i);
+                    if(c){c.style.display='block';}
+                    if(ic){ic.style.transform='rotate(0deg)';}
+                }
+            })()" style="background:rgba(88,166,255,0.15); border:1px solid rgba(88,166,255,0.3); color:#58a6ff; cursor:pointer; font-size:11px; padding:4px 12px; border-radius:4px; transition:all 0.2s; white-space:nowrap;" onmouseover="this.style.background='rgba(88,166,255,0.25)'" onmouseout="this.style.background='rgba(88,166,255,0.15)'">全部展開 ▼</button>
+            <button onclick="(function(){
+                for(let i=0;i<${totalSections};i++){
+                    const c=document.getElementById('combat-section-'+i);
+                    const ic=document.getElementById('combat-icon-'+i);
+                    if(c){c.style.display='none';}
+                    if(ic){ic.style.transform='rotate(-90deg)';}
+                }
+            })()" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#8b949e; cursor:pointer; font-size:11px; padding:4px 12px; border-radius:4px; transition:all 0.2s; white-space:nowrap;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">全部收合 ▲</button>
+        `;
+    }
 
     sections.forEach((section, sIdx) => {
         const isCollapsible = collapsibleTitles.includes(section.title);
@@ -5394,6 +5426,18 @@ function renderCombatAnalysis(stats, data) {
 
     html += `</div>`;
     grid.innerHTML = html;
+
+    // 🔍 狀態還原：根據記錄恢復展開狀態
+    Object.keys(savedStates).forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.style.display = savedStates[id];
+            // 同步更新箭頭旋轉狀態
+            const iconId = id.replace('combat-section-', 'combat-icon-').replace('row-detail-', 'row-icon-');
+            const icon = document.getElementById(iconId);
+            if (icon) icon.style.transform = 'rotate(0deg)';
+        }
+    });
 }
 
 

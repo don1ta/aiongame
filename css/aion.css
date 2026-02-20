@@ -80,7 +80,7 @@
             max-width: 1400px;
             margin: auto;
             box-sizing: border-box;
-            /* Ensure padding doesn't overflow width */
+            overflow: visible !important;
         }
 
         /* 強化後的匯入區塊 */
@@ -357,6 +357,7 @@
             display: none;
             flex-direction: column;
             gap: 20px;
+            overflow: visible !important;
         }
 
         .profile-card {
@@ -1539,6 +1540,7 @@
             grid-template-columns: 1fr 1fr;
             gap: 15px;
             margin-bottom: 20px;
+
         }
 
         .info-box {
@@ -2601,4 +2603,50 @@
             .profile-meta-grid {
                 justify-content: center;
             }
+        }
+
+        /* 強化卡片容器，確保置頂效果不被截斷 */
+        .card {
+            overflow: visible !important;
+        }
+
+        /* 🛡️ 區塊內置頂標頭 - 精準對齊版 */
+        .card-sticky-header {
+            position: -webkit-sticky !important;
+            position: sticky !important;
+            top: 0;
+            z-index: 1000;
+            background: #0d121c;
+            /* 使用完全不透明的背景色 */
+            border-bottom: 2px solid var(--gold);
+            border-radius: 0 0 12px 12px;
+            /* 頂部平整，下方圓角 */
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            margin: 0;
+            width: 100%;
+            transition: none;
+        }
+
+        .card-sticky-header::before {
+            display: none !important;
+        }
+
+        .card-sticky-header:hover {
+            background: rgba(10, 14, 23, 1);
+        }
+
+        /* 確保控制面板內部不再重複置頂或產生邊距衝突 */
+        #gain-effect-controls {
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            backdrop-filter: none !important;
+            margin: 0 !important;
+            padding: 15px 25px !important;
+        }
+
+        /* 恢復全域滾動的預設行為 */
+        html,
+        body {
+            overflow: visible !important;
         }

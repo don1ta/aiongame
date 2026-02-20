@@ -186,20 +186,29 @@
                     </div>
 
                     <!-- 戰鬥數據分析區塊 (移至下方與全寬) -->
-                    <div class="card">
-                        <h3>⚔️ 基礎數據分析</h3>
-                        <!-- 增益效果控制面板 -->
-                        <div id="gain-effect-controls"
-                            style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.05); border-radius:8px; padding:15px; margin-bottom:15px;">
-                            <div style="font-size:13px; font-weight:bold; color:#bdc3c7; margin-bottom:10px;">⚙️ 增益效果
+                    <div class="card" style="padding:0; overflow:visible;">
+                        <div class="card-sticky-header">
+                            <div
+                                style="display:flex; justify-content:space-between; align-items:center; padding-right:25px; padding-top:2px; padding-bottom:2px; border-bottom:1px solid rgba(255,255,255,0.05);">
+                                <h3 style="margin:0; padding:12px 25px; border:none;">⚔️ 基礎數據分析</h3>
+                                <div id="combat-analysis-global-controls"
+                                    style="display:flex; gap:10px; align-items:center;">
+                                    <!-- 按鈕將動態注入 -->
+                                </div>
                             </div>
-                            <div style="display:flex; flex-wrap:wrap; gap:15px;" id="ge-checkbox-container"></div>
-                            <!-- 翅膀選擇獨立行（不影響 checkbox 排版） -->
-                            <div id="wing-selection-row"
-                                style="display:none; margin-top:10px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.06);">
+                            <!-- 增益效果控制面板 -->
+                            <div id="gain-effect-controls" style="padding:15px 25px; margin:0;">
+                                <div style="font-size:13px; font-weight:bold; color:#bdc3c7; margin-bottom:10px;">⚙️
+                                </div>
+                                <div style="display:flex; flex-wrap:wrap; gap:15px;" id="ge-checkbox-container"></div>
+                                <!-- 翅膀選擇獨立行 -->
+                                <div id="wing-selection-row"
+                                    style="display:none; margin-top:10px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.06);">
+                                </div>
                             </div>
                         </div>
-                        <div id="combat-stats-grid" class="grid-box-container"></div>
+                        <div id="combat-stats-grid" class="grid-box-container" style="padding:5px 25px 25px 25px;">
+                        </div>
                     </div>
 
 
