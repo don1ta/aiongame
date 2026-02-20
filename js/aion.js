@@ -1136,7 +1136,7 @@ function initGainControls() {
                         <div class="custom-tooltip-content" style="
                             display: none;
                             position: absolute;
-                            bottom: 120%;
+                            top: 130%;
                             left: 50%;
                             transform: translateX(-50%);
                             background: rgba(15, 20, 25, 0.98);
@@ -1156,7 +1156,7 @@ function initGainControls() {
                             <b style="color:var(--gold); display:block; border-bottom:1px solid rgba(255,255,255,0.1); margin-bottom:8px; padding-bottom:5px;">${key} 加成細項</b>
                             <div style="line-height: 1.5; word-break: break-word;">${statsInfo}</div>
                             <!-- Arrow -->
-                            <div style="position:absolute; top:100%; left:50%; transform:translateX(-50%); border-width:6px; border-style:solid; border-color:rgba(15,20,25,0.98) transparent transparent transparent;"></div>
+                            <div style="position:absolute; bottom:100%; left:50%; transform:translateX(-50%); border-width:6px; border-style:solid; border-color:transparent transparent rgba(15,20,25,0.98) transparent;"></div>
                         </div>
                     </div>
                 `;
