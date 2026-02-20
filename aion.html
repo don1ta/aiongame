@@ -26,7 +26,7 @@
             <h2 style="color:var(--gold); margin-top:0; text-align: center;">💎 Aion2 角色數據查詢系統</h2>
 
             <div class="import-section">
-                <div style="font-size: 14px; color: var(--gold); font-weight: bold;">🔍 方法 A：快速角色查詢</div>
+                <div style="font-size: 14px; color: var(--gold); font-weight: bold;">🔍 角色查詢</div>
                 <div class="api-input-group">
                     <input type="text" id="charNameInput" placeholder="輸入角色名稱 (例如: 我愛小紅線)..." oninput="fetchFromApi()"
                         onkeydown="if(event.key === 'Enter') fetchFromApi()" autocomplete="off">
@@ -200,22 +200,35 @@
 
                     <!-- 戰鬥數據分析區塊 (移至下方與全寬) -->
                     <div class="card" style="padding:0; overflow:visible;">
-                        <div class="card-sticky-header">
-                            <div
-                                style="display:flex; justify-content:space-between; align-items:center; padding-right:25px; padding-top:2px; padding-bottom:2px; border-bottom:1px solid rgba(255,255,255,0.05);">
-                                <h3 style="margin:0; padding:12px 25px; border:none;">⚔️ 基礎數據分析</h3>
-                                <div id="combat-analysis-global-controls"
-                                    style="display:flex; gap:10px; align-items:center;">
-                                </div>
+                        <div class="card-sticky-header mobile-flex-header">
+                            <div class="mobile-vertical-title">
+                                <span class="m-icon">⚔️</span>
+                                <span>基</span>
+                                <span>礎</span>
+                                <span>數</span>
+                                <span>據</span>
+                                <span>分</span>
+                                <span>析</span>
                             </div>
-                            <!-- 增益效果控制面板 -->
-                            <div id="gain-effect-controls" style="padding:15px 25px; margin:0;">
-                                <div style="font-size:13px; font-weight:bold; color:#bdc3c7; margin-bottom:10px;">⚙️
-                                    增益效果</div>
-                                <div style="display:flex; flex-wrap:wrap; gap:15px;" id="ge-checkbox-container"></div>
-                                <!-- 翅膀選擇獨立行（不影響 checkbox 排版） -->
-                                <div id="wing-selection-row"
-                                    style="display:none; margin-top:10px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.06);">
+                            <div class="mobile-header-content">
+                                <div class="desk-title-row"
+                                    style="display:flex; justify-content:space-between; align-items:center; padding-right:25px; padding-top:4px; padding-bottom:4px; border-bottom:1px solid rgba(255,255,255,0.05);">
+                                    <h3 class="desktop-only-title" style="margin:0; padding:10px 25px; border:none;">⚔️
+                                        基礎數據分析</h3>
+                                    <div id="combat-analysis-global-controls"
+                                        style="display:flex; gap:10px; align-items:center;">
+                                    </div>
+                                </div>
+                                <!-- 增益效果控制面板 -->
+                                <div id="gain-effect-controls" style="padding:15px 25px; margin:0;">
+                                    <div style="font-size:13px; font-weight:bold; color:#bdc3c7; margin-bottom:10px;">⚙️
+                                        增益效果</div>
+                                    <div style="display:flex; flex-wrap:wrap; gap:15px;" id="ge-checkbox-container">
+                                    </div>
+                                    <!-- 翅膀選擇獨立行（不影響 checkbox 排版） -->
+                                    <div id="wing-selection-row"
+                                        style="display:none; margin-top:10px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.06);">
+                                    </div>
                                 </div>
                             </div>
                         </div>

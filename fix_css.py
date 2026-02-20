@@ -45,7 +45,7 @@ if found_idx != -1:
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 12px;
-            padding: 15px;
+           
             margin-bottom: 20px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 15px rgba(0, 212, 255, 0.1);
             transition: all 0.3s ease;

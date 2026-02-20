@@ -585,18 +585,18 @@ async function executeSearch(keyword) {
                     <div style="display: flex; flex-direction: column; flex: 1; justify-content: center; padding-right: 4px;">
                         
                         <!-- 上排：名字 (左) & 等級職業 (右) -->
-                        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                            <div style="color: var(--card-score-color, #ffffff); font-size: 22px; font-weight: bold; letter-spacing: 0.5px; text-shadow: 0 1px 3px rgba(0,0,0,0.8); transition: color 0.3s; line-height: 1;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; width: 100%; gap: 5px;">
+                            <div style="color: var(--card-score-color, #ffffff); font-size: 22px; font-weight: bold; letter-spacing: 0.5px; text-shadow: 0 1px 3px rgba(0,0,0,0.8); transition: color 0.3s; line-height: 1.2;">
                                 ${char.characterName}
                             </div>
-                            <div style="display: flex; align-items: center; gap: 10px; flex-shrink: 0;">
+                            <div style="display: flex; align-items: center; gap: 10px; flex-shrink: 0; margin-top: 2px;">
                                 <span style="color: #adb5bd; font-size: 15px; font-weight: bold;">Lv.${char.characterLevel}</span>
                                 <span style="background: rgba(255,255,255,0.08); padding: 4px 10px; border-radius: 4px; font-size: 13px; font-weight: bold; color: #e9ecef;">${className}</span>
                             </div>
                         </div>
                         
                         <!-- 下排：種族伺服器 (左) & 分數 (右) -->
-                        <div style="display: flex; justify-content: space-between; align-items: flex-end; width: 100%;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-end; width: 100%; margin-top: 5px;">
                             <div style="font-size: 15px; display: flex; align-items: center; gap: 8px; color: #8b949e; padding-bottom: 2px;">
                                 <span style="color:${raceColor}; font-weight: bold;">${raceName || '未知'}</span>
                                 <span style="color:rgba(255,255,255,0.15);">|</span>

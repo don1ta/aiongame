@@ -2599,9 +2599,9 @@
         @media (max-width: 768px) {
             .profile-new-header {
                 flex-direction: column;
-                align-items: stretch;
-                gap: 20px;
-                padding: 20px;
+                align-items: center;
+                gap: 15px;
+                padding: 15px;
             }
 
             .profile-right {
@@ -2609,26 +2609,140 @@
                 width: 100%;
             }
 
+            .score-card-group {
+                display: flex !important;
+                flex-direction: row !important;
+                flex-wrap: nowrap !important;
+                gap: 5px !important;
+                width: 100% !important;
+                justify-content: space-between !important;
+            }
+
             .item-score-card {
-                width: 100%;
+                flex: 1;
+                min-width: 0 !important;
                 align-items: center;
-                padding: 15px;
+                padding: 10px 5px !important;
                 box-sizing: border-box;
+                text-align: center;
+                border-left-width: 2px !important;
+            }
+
+            .score-value {
+                font-size: 22px !important;
+                margin-top: 5px;
+            }
+
+            .score-header {
+                font-size: 11px !important;
+                justify-content: center;
+                text-align: center;
+                white-space: nowrap;
             }
 
             .profile-info {
-                align-items: center;
-                text-align: center;
+                align-items: flex-start;
+                text-align: left;
+                width: 100%;
             }
 
             .profile-left {
-                flex-direction: column;
+                flex-direction: row;
                 align-items: center;
+                width: 100%;
+                gap: 15px;
+            }
+
+            .profile-avatar-wrapper {
+                margin: 0;
+                width: 80px;
+                height: 80px;
+                flex-shrink: 0;
+            }
+
+            .profile-img-lg {
+                width: 80px;
+                height: 80px;
+            }
+
+            .profile-lv-badge {
+                bottom: -2px;
+                right: -2px;
+                font-size: 10px;
+                padding: 2px 6px;
             }
 
             .profile-meta-grid {
-                justify-content: center;
+                justify-content: flex-start;
             }
+
+            .p-name-lg {
+                font-size: 24px;
+            }
+
+            .card-sticky-header.mobile-flex-header {
+                display: flex;
+                flex-direction: row;
+                align-items: stretch;
+                /* Make the left bar stretch to full height of header */
+            }
+
+            .mobile-vertical-title {
+                display: flex !important;
+                flex-direction: column;
+                align-items: center;
+                justify-content: flex-start;
+                width: 36px;
+                flex-shrink: 0;
+                padding-top: 15px;
+                padding-bottom: 15px;
+                color: var(--gold);
+                font-weight: bold;
+                font-size: 16px;
+                line-height: 1.4;
+                letter-spacing: 0px;
+                background: rgba(0, 0, 0, 0.2);
+                border-right: 1px solid rgba(255, 255, 255, 0.05);
+                box-sizing: border-box;
+            }
+
+            .mobile-vertical-title span:not(.m-icon) {
+                margin-top: 2px;
+            }
+
+            .m-icon {
+                font-size: 18px;
+                margin-bottom: 10px;
+            }
+
+            .desktop-only-title {
+                display: none !important;
+            }
+
+            .mobile-header-content {
+                flex: 1;
+                min-width: 0;
+                display: flex;
+                flex-direction: column;
+            }
+
+            .desk-title-row {
+                justify-content: flex-start !important;
+                padding: 10px 15px 10px 15px !important;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+            }
+
+
+
+            #combat-analysis-global-controls {
+                flex-wrap: wrap;
+                justify-content: flex-start;
+                gap: 8px !important;
+            }
+        }
+
+        .mobile-vertical-title {
+            display: none;
         }
 
         /* 強化卡片容器，確保置頂效果不被截斷 */
