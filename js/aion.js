@@ -2884,9 +2884,12 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
         setData.bonuses.forEach(b => {
             if (b.degree <= actualCount) {
                 b.descriptions.forEach(desc => {
-                    // 解析格式: "攻擊力 +10" 或 "PVP攻擊力 +0.8%"
-                    // Regex 兼容 "名詞 +數值" "名詞+數值"
-                    const match = desc.match(/^(.+?)(?:\s*\+|\s)([\d\.]+)(%?)$/);
+                    // 🆕 強化版解析：支援 "生命力高於70%時，PVE攻擊力增加60" 這種格式
+                    // 先嘗試移除條件前綴 (如 "XXX時，")
+                    const cleanDesc = desc.replace(/^.+?[時時時時][，,]/, '').trim();
+                    // 匹配格式: "屬性名" + (增加|提升|+/空格) + "數值" + (%?)
+                    // 這裡不使用 ^$，因為描述結尾可能有 [冷卻時間] 等括號
+                    const match = cleanDesc.match(/^(.+?)\s*(?:增加|提升|\s*\+|\s)\s*([\d\.]+)\s*(%?)/);
                     if (match) {
                         const rawName = match[1].trim();
                         const val = parseFloat(match[2]);
@@ -3642,9 +3645,10 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
 
                         const boardVal = (e.nezakan || 0) + (e.zikel || 0) + (e.baizel || 0) + (e.triniel || 0) + (e.ariel || 0) + (e.asphel || 0);
                         const wingVal = (e.subtotals?.wing || 0) + (e.subtotals?.wingHold || 0);
-                        const equipVal = (e.equipMain || 0) + wingVal;
+                        const setVal = (e.subtotals?.set || 0);
+                        const equipVal = (e.equipMain || 0) + wingVal + setVal;
                         const stoneVal = (e.equipSub || 0);
-                        const otherVal = (e.other || 0) - wingVal;
+                        const otherVal = (e.other || 0) - wingVal - setVal;
                         const val = boardVal + equipVal + stoneVal + otherVal;
 
                         if (Math.abs(val) > 0.001) {
