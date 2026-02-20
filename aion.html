@@ -22,7 +22,7 @@
     <div id="loading" class="loading-overlay">⌛ 正在從伺服器獲取數據，請稍候...</div>
 
     <div class="container">
-        <div class="input-area">
+        <div class="input-area" id="nav-target-role" style="scroll-margin-top: 15px;">
             <h2 style="color:var(--gold); margin-top:0; text-align: center;">💎 Aion2 角色數據查詢系統</h2>
 
             <div class="import-section">
@@ -49,7 +49,7 @@
                 <div id="p-percentile-new" class="percentile-grid-new"></div>
             </div>
 
-            <div class="card" style="padding: 15px 25px;">
+            <div class="card" id="nav-target-equip" style="padding: 15px 25px; scroll-margin-top: 20px;">
                 <div id="equipment-header" class="collapsible-header collapsed" onclick="toggleEquipmentList()"
                     style="margin-top: 0; background: transparent; border: none; padding: 0;">
                     <div style="display: flex; align-items: center; gap: 10px;">
@@ -93,7 +93,7 @@
 
                     <div class="stats-source-wrapper"
                         style="display:flex; gap:15px; align-items:stretch; flex-direction:column;">
-                        <div class="card" style="flex:1;">
+                        <div class="card" id="nav-target-index" style="flex:1;">
 
                             <div id="equip-source-grid"></div>
                             「職業不同、實戰價值」會影響評分公正性是合理的。
@@ -192,7 +192,7 @@
                         <div id="health-check-card" class="card" style="display:none; flex:1; margin-top:0;"></div>
 
                         <!-- 主要能力值概覽 (已移動至此) -->
-                        <div class="card" style="flex:1; margin-top:0;">
+                        <div class="card" id="nav-target-stats" style="flex:1; margin-top:0;">
                             <div class="stat-card-header"
                                 style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:10px;">
                                 <div style="display:flex; flex-direction:column;">
@@ -214,7 +214,7 @@
                     </div>
 
                     <!-- 戰鬥數據分析區塊 (移至下方與全寬) -->
-                    <div class="card" style="padding:0; overflow:visible;">
+                    <div class="card" id="nav-target-analysis" style="padding:0; overflow:visible;">
                         <div class="card-sticky-header mobile-flex-header">
                             <div class="mobile-vertical-title">
                                 <span class="m-icon">⚔️</span>
@@ -253,7 +253,7 @@
 
 
 
-                    <div class="card">
+                    <div class="card" id="nav-target-skill">
                         <h3>⚔️ 技能等級分解</h3>
                         <div class="sk-label">▶ 主動技能</div>
                         <div id="sk-act" class="skill-list"></div>
@@ -273,6 +273,36 @@
                     </div>
                 </div>
             </div>
+
+            <!-- 手機版快速導覽列 (因 CSS 已包含 #mobile-quick-nav 設定，所以會自動在手機版顯示並置底) -->
+            <div id="mobile-quick-nav">
+                <a href="#nav-target-role" class="nav-btn">
+                    <span style="font-size:16px; margin-bottom:2px;">👤</span>
+                    <span>角色</span>
+                </a>
+                <a href="#nav-target-equip" class="nav-btn"
+                    onclick="if(document.getElementById('equipment-wrapper').classList.contains('collapsed')) toggleEquipmentList();">
+                    <span style="font-size:16px; margin-bottom:2px;">⚔️</span>
+                    <span>裝備</span>
+                </a>
+                <a href="#nav-target-index" class="nav-btn">
+                    <span style="font-size:16px; margin-bottom:2px;">📊</span>
+                    <span>指標</span>
+                </a>
+                <a href="#nav-target-stats" class="nav-btn">
+                    <span style="font-size:16px; margin-bottom:2px;">💎</span>
+                    <span>屬性</span>
+                </a>
+                <a href="#nav-target-analysis" class="nav-btn">
+                    <span style="font-size:16px; margin-bottom:2px;">🛡️</span>
+                    <span>分析</span>
+                </a>
+                <a href="#nav-target-skill" class="nav-btn">
+                    <span style="font-size:16px; margin-bottom:2px;">🪄</span>
+                    <span>技能</span>
+                </a>
+            </div>
+
         </div>
 
     </div>
