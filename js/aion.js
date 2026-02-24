@@ -3076,6 +3076,12 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
     document.getElementById('equip-armor-list-simple').innerHTML = armorSimpleHtml || "<div>無資料</div>";
     document.getElementById('equip-accessory-list-simple').innerHTML = accessorySimpleHtml || "<div>無資料</div>";
 
+    // ✅ NEW: Render the visual layout tab
+    if (typeof window.renderLayoutTab === 'function') {
+        window.renderLayoutTab(json);
+    }
+
+
     // 生成來源分析 HTML (改為橫向堆疊長條圖)
     // 生成來源分析 HTML (改為橫向堆疊長條圖)
     const generateSourceCard = (title, count, stats, color) => {
@@ -5960,23 +5966,345 @@ window.switchMainChartTab = function (tabName) {
         }
     }
 };
+
+/**
+ * NEW: Render the visual equipment layout (Basic Tab)
+ */
+window.renderLayoutTab = function (json) {
+    if (!json) return;
+    const data = json.queryResult ? json.queryResult.data : (json.data ? json.data : json);
+    const container = document.getElementById('equip-tab-layout');
+    if (!container || !data) return;
+
+    // Map equipment by slot
+    const equipMap = {};
+    (data.itemDetails || []).forEach(item => {
+        equipMap[item.slotPos] = item;
+    });
+
+    // Also look in data.equipment.equipmentList if available
+    if (data.equipment && data.equipment.equipmentList) {
+        data.equipment.equipmentList.forEach(item => {
+            if (!equipMap[item.slotPos]) {
+                equipMap[item.slotPos] = item;
+            }
+        });
+    }
+
+    // Special: Add wing from data.petwing if not in equipmentList
+    if (data.petwing && data.petwing.wing && !equipMap[21]) {
+        equipMap[21] = {
+            detail: data.petwing.wing,
+            enchantLevel: data.petwing.wing.enchantLevel || 0,
+            icon: data.petwing.wing.icon,
+            grade: data.petwing.wing.grade
+        };
+    }
+
+    const p = data.profile || {};
+    const pImg = getCorrectIcon(p.profileImage || "");
+    const itemLvObj = data.stat.statList.find(s => s.type === "ItemLevel");
+    const itemLv = itemLvObj ? itemLvObj.value : "--";
+
+    // Define Slot Layout (Optimized Aion 2 Layout based on user feedback and JSON data)
+    // Left: Weapons(1,2), Armor(3,4), Chest(5), Belt(17), Pants(6), Gloves(7), Wings(21), Boots(8)
+    const leftSlots = [
+        [1, 2],    // Weapons (主副手)
+        [3, 4],    // Head, Shoulder (頭部, 肩膀)
+        [5, 17],   // Torso, Belt (衣服, 腰帶 - API Slot 17)
+        [6, 7],    // Bottom, Gloves (下衣, 手套)
+        [21, 8]    // Wings, Boots (翅膀, 鞋子)
+    ];
+
+    // Right: Necklace(9-10?), Ears(11,12), Rings(13,14), Bracelets(15,16), Stones(23,24), Amulet(22)
+    const rightSlots = [
+        [10, 15],  // Necklace, Bracelet 1 (項鍊, 手鐲1)
+        [11, 12],  // Earring 1, Earring 2 (耳環1, 耳環2)
+        [13, 14],  // Ring 1, Ring 2 (戒指1, 戒指2)
+        [16, 23],  // Bracelet 2, Stone 1 (手鐲2, 古文石1)
+        [24, 22]   // Stone 2, Amulet (古文石2, 護身符)
+    ];
+
+    window.__EQUIP_MAP__ = equipMap; // 供彈窗使用
+
+    const renderSlots = (slots) => {
+        return slots.map(row => row.map(slotId => generateSlotHtml(equipMap[slotId], slotId)).join('')).join('');
+    };
+
+    function generateSlotHtml(item, slotId) {
+        if (!item) return `<div class="slot-item empty" title="槽位 ${slotId}"></div>`;
+        const d = item.detail || item;
+        let name = d.name || '未知裝備';
+        let icon = getCorrectIcon(item.icon || d.icon);
+        const enchant = (item.enchantLevel > 0) ? `<div class="slot-enchant">+${item.enchantLevel}</div>` : "";
+        const exceed = (item.exceedLevel > 0) ? `<div class="slot-exceed">${item.exceedLevel}</div>` : "";
+
+        const rawGrade = (d.grade || item.grade || 'common').toLowerCase();
+        let rarityClass = 'common';
+        if (rawGrade.includes('myth') || rawGrade.includes('神話') || rawGrade.includes('ancient') || rawGrade.includes('古代')) rarityClass = 'myth';
+        else if (rawGrade.includes('unique') || rawGrade.includes('唯一') || rawGrade.includes('獨特')) rarityClass = 'unique';
+        else if (rawGrade.includes('special') || rawGrade.includes('特殊')) rarityClass = 'special';
+        else if (rawGrade.includes('legend') || rawGrade.includes('傳說') || rawGrade.includes('epic') || rawGrade.includes('史詩')) rarityClass = 'legend';
+        else if (rawGrade.includes('rare') || rawGrade.includes('稀有')) rarityClass = 'rare';
+
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
+
+        return `
+            <div class="slot-item slot-rarity-${rarityClass}" 
+                 style="cursor: pointer !important;" 
+                 title="${name}" 
+                 onclick="window.handleSlotClick(event, ${slotId})"
+                 onmouseenter="window.handleSlotHover(event, ${slotId})"
+                 onmouseleave="window.handleSlotLeave()">
+                <div class="slot-corner"></div>
+                <img src="${icon}" style="pointer-events: none;" onerror="this.src='https://questlog.gg/assets/Game/UI/Resource/Texture/Common/Icon/Icon_Default.png'">
+                ${enchant}
+                ${exceed}
+            </div>
+        `;
+    }
+
+    container.innerHTML = `
+        <div class="equip-layout-wrapper">
+            <div class="equip-side-column left-side">
+                <div class="column-header-icon">⚔️</div>
+                ${renderSlots(leftSlots)}
+            </div>
+            <div class="equip-layout-center">
+                <div class="character-avatar-frame">
+                    <div class="frame-border"></div>
+                    <img class="avatar-img" src="${pImg}" onerror="this.src='https://cms-static.plaync.com/img/common/avatar_default.png'">
+                    <div class="lv-badge">Lv.${p.characterLevel || "--"}</div>
+                </div>
+                <div class="character-basic-info">
+                    <div class="score">🏆 ${(typeof itemLv === 'number') ? itemLv.toLocaleString() : itemLv}</div>
+                    <div class="name">${p.characterName || "未知"}</div>
+                    <div class="title">${p.titleName || "無稱號資訊"}</div>
+                </div>
+            </div>
+            <div class="equip-side-column right-side">
+                <div class="column-header-icon">📿</div>
+                ${renderSlots(rightSlots)}
+            </div>
+        </div>
+    `;
+};
+
+// --- Tooltip Functions ---
+window.handleSlotClick = function (e, slotId) {
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 1024;
+    if (isMobile) {
+        window.showEquipTooltip(slotId, 'modal');
+    }
+};
+
+window.handleSlotHover = function (e, slotId) {
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 1024;
+    if (!isMobile) {
+        window.showEquipTooltip(slotId, 'hover', e);
+    }
+};
+
+window.handleSlotLeave = function () {
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 1024;
+    if (!isMobile) {
+        const overlay = document.getElementById('equip-tooltip-overlay');
+        const content = document.getElementById('equip-tooltip-content');
+        if (content && content.classList.contains('is-hover')) {
+            overlay.style.display = 'none';
+        }
+    }
+};
+
+window.showEquipTooltip = function (slotId, mode = 'modal', event = null) {
+    console.log("[Tooltip] SlotId clicked:", slotId);
+    const item = (window.__EQUIP_MAP__ || {})[slotId];
+    if (!item) {
+        console.warn("[Tooltip] No item found for slot:", slotId);
+        return;
+    }
+
+    const overlay = document.getElementById('equip-tooltip-overlay');
+    const content = document.getElementById('equip-tooltip-content');
+    if (!overlay || !content) {
+        console.error("[Tooltip] Modal elements not found!");
+        return;
+    }
+
+    const d = item.detail || item;
+    const name = d.name || '未知裝備';
+    const icon = getCorrectIcon(item.icon || d.icon);
+
+    console.log("[Tooltip] Showing item:", name);
+
+    // 判斷品階
+    const rawGrade = (d.grade || item.grade || 'common').toLowerCase();
+    let rarityClass = 'common';
+    let gradeName = '一般';
+    if (rawGrade.includes('myth') || rawGrade.includes('神話') || rawGrade.includes('ancient') || rawGrade.includes('古代')) { rarityClass = 'myth'; gradeName = '神話'; }
+    else if (rawGrade.includes('unique') || rawGrade.includes('唯一') || rawGrade.includes('獨特')) { rarityClass = 'unique'; gradeName = '獨特'; }
+    else if (rawGrade.includes('special') || rawGrade.includes('特殊')) { rarityClass = 'special'; gradeName = '特殊'; }
+    else if (rawGrade.includes('legend') || rawGrade.includes('傳說') || rawGrade.includes('epic') || rawGrade.includes('史詩')) { rarityClass = 'legend'; gradeName = '傳說'; }
+    else if (rawGrade.includes('rare') || rawGrade.includes('稀有')) { rarityClass = 'rare'; gradeName = '稀有'; }
+
+    // 主能力值
+    let mainStatsHtml = '';
+    if (d.mainStats && d.mainStats.length > 0) {
+        mainStatsHtml = `
+            <div class="tooltip-section">
+                <div class="tooltip-section-title">主要能力值</div>
+                ${d.mainStats.map(s => `
+                    <div class="stat-row">
+                        <span class="stat-label">${s.name}</span>
+                        <span class="stat-value">${s.value}${s.extra && s.extra !== '0' ? ` <span class="bonus">(+${s.extra})</span>` : ''}</span>
+                    </div>
+                `).join('')}
+            </div>`;
+    }
+
+    // 副能力值
+    let subStatsHtml = '';
+    if (d.subStats && d.subStats.length > 0) {
+        subStatsHtml = `
+            <div class="tooltip-section">
+                <div class="tooltip-section-title">隨機能力值</div>
+                ${d.subStats.map(s => `
+                    <div class="stat-row">
+                        <span class="stat-label">${s.name}</span>
+                        <span class="stat-value bonus">${s.value}</span>
+                    </div>
+                `).join('')}
+            </div>`;
+    }
+
+    // 魔石相嵌
+    let stonesHtml = '';
+    if (d.magicStoneStat && d.magicStoneStat.length > 0) {
+        stonesHtml = `
+            <div class="tooltip-section">
+                <div class="tooltip-section-title">魔石槽位</div>
+                <div class="magic-stone-list">
+                    ${d.magicStoneStat.map(s => `
+                        <div class="stone-item">
+                            <img class="stone-icon" src="${s.icon}">
+                            <div class="stone-text">${s.name} ${s.value}</div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>`;
+    }
+
+    // 物品來源
+    const sourceHtml = d.sources ? `<div class="tooltip-footer">來源: ${d.sources.join(', ')}</div>` : '';
+
+    content.className = `equip-tooltip tooltip-rarity-${rarityClass}`;
+    if (mode === 'hover') {
+        content.classList.add('is-hover');
+        overlay.style.background = 'transparent';
+        overlay.style.backdropFilter = 'none';
+        overlay.style.pointerEvents = 'none';
+        overlay.style.display = 'block';
+    } else {
+        overlay.style.background = 'rgba(0, 0, 0, 0.75)';
+        overlay.style.backdropFilter = 'blur(8px)';
+        overlay.style.pointerEvents = 'auto';
+        overlay.style.display = 'flex';
+    }
+
+    content.innerHTML = `
+        ${mode === 'modal' ? `<div class="close-tooltip" onclick="window.closeEquipTooltip(event)">×</div>` : ''}
+        <div class="tooltip-header">
+            <div class="tooltip-icon-frame"><img src="${icon}"></div>
+            <div class="tooltip-title-area">
+                <div class="tooltip-name">${item.enchantLevel > 0 ? `+${item.enchantLevel} ` : ''}${name}</div>
+                <div class="tooltip-sub-info">
+                    <span class="tooltip-grade-label">${gradeName}</span>
+                    ${d.categoryName ? `<span>${d.categoryName}</span>` : ''}
+                    ${d.equipLevel ? `<span>Lv.${d.equipLevel}</span>` : ''}
+                </div>
+            </div>
+        </div>
+        <div class="tooltip-body">
+            ${mainStatsHtml}
+            ${subStatsHtml}
+            ${stonesHtml}
+        </div>
+        ${sourceHtml}
+    `;
+
+    if (mode === 'hover' && event) {
+        let x = event.clientX + 40;
+        let y = event.clientY - 20;
+
+        if (x + 440 > window.innerWidth) {
+            x = event.clientX - 450;
+        }
+
+        content.style.position = 'fixed';
+        content.style.left = x + 'px';
+        content.style.top = y + 'px';
+
+        setTimeout(() => {
+            const rect = content.getBoundingClientRect();
+            if (rect.bottom > window.innerHeight) {
+                content.style.top = (window.innerHeight - rect.height - 30) + 'px';
+            }
+            if (rect.top < 0) {
+                content.style.top = '10px';
+            }
+        }, 0);
+    } else {
+        content.style.position = 'relative';
+        content.style.left = 'auto';
+        content.style.top = 'auto';
+    }
+};
+
+window.closeEquipTooltip = function (e) {
+    if (e && typeof e.stopPropagation === 'function') {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    const overlay = document.getElementById('equip-tooltip-overlay');
+    if (overlay) {
+        overlay.style.display = 'none';
+        overlay.style.pointerEvents = 'none';
+    }
+    console.log("[Tooltip] Closed");
+};
+
 window.switchEquipTab = function (tab) {
+
     const detailTab = document.getElementById('equip-tab-detail');
     const simpleTab = document.getElementById('equip-tab-simple');
+    const layoutTab = document.getElementById('equip-tab-layout');
     const btnDetail = document.getElementById('tab-btn-equip-detail');
     const btnSimple = document.getElementById('tab-btn-equip-simple');
+    const btnLayout = document.getElementById('tab-btn-equip-layout');
 
-    if (!detailTab || !simpleTab) return;
+    if (!detailTab || !simpleTab || !layoutTab) return;
+
+    // Hide all
+    detailTab.style.display = 'none';
+    simpleTab.style.display = 'none';
+    layoutTab.style.display = 'none';
+    if (btnDetail) btnDetail.classList.remove('active');
+    if (btnSimple) btnSimple.classList.remove('active');
+    if (btnLayout) btnLayout.classList.remove('active');
 
     if (tab === 'detail') {
         detailTab.style.display = 'block';
-        simpleTab.style.display = 'none';
         if (btnDetail) btnDetail.classList.add('active');
-        if (btnSimple) btnSimple.classList.remove('active');
+    } else if (tab === 'layout') {
+        layoutTab.style.display = 'block';
+        if (btnLayout) btnLayout.classList.add('active');
+        // Render layout if not already rendered or always for fresh data
+        if (window.__LAST_DATA_JSON__ && typeof window.renderLayoutTab === 'function') {
+            window.renderLayoutTab(window.__LAST_DATA_JSON__);
+        }
     } else {
-        detailTab.style.display = 'none';
         simpleTab.style.display = 'block';
-        if (btnDetail) btnDetail.classList.remove('active');
         if (btnSimple) btnSimple.classList.add('active');
     }
 };
+

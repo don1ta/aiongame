@@ -72,14 +72,21 @@
 
                 <div id="equipment-wrapper" class="collapsible-content collapsed" style="margin-top: 20px;">
                     <div class="stat-tabs-header" style="margin-bottom: 20px;">
-                        <div id="tab-btn-equip-simple" class="stat-tab-btn active" onclick="switchEquipTab('simple')">
+                        <div id="tab-btn-equip-layout" class="stat-tab-btn active" onclick="switchEquipTab('layout')">
+                            基本
+                        </div>
+                        <div id="tab-btn-equip-simple" class="stat-tab-btn" onclick="switchEquipTab('simple')">
                             簡易
                         </div>
+
                         <div id="tab-btn-equip-detail" class="stat-tab-btn" onclick="switchEquipTab('detail')">
                             完整</div>
+
                     </div>
 
-                    <div id="equip-tab-simple">
+                    <div id="equip-tab-layout" style="display:block;"></div>
+
+                    <div id="equip-tab-simple" style="display:none;">
                         <div class="section-header" id="armor-header-simple">武器與防具</div>
                         <div id="equip-armor-list-simple" class="grid-box-container"
                             style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));"></div>
@@ -321,9 +328,15 @@
     <script src="js/equipment-score.js?v=UI_FIX_FINAL"></script>
     <script src="js/health_check.js"></script>
     <script src="js/peek_score.js?v=score_colors_v5"></script>
-    <script src="js/aion.js?v=score_colors_v5"></script>
+    <script src="js/aion.js?v=v_tooltip_hover_v3"></script>
     <script src="js/class_distribution.js"></script>
     <script src="js/server_stats.js"></script>
+    <!-- 裝備詳情彈窗 -->
+    <div id="equip-tooltip-overlay" class="tooltip-overlay" onclick="closeEquipTooltip(event)">
+        <div class="equip-tooltip" id="equip-tooltip-content" onclick="event.stopPropagation()">
+            <!-- 動態生成內容 -->
+        </div>
+    </div>
 </body>
 
 </html>
