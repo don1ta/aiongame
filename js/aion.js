@@ -2065,21 +2065,15 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
 
             ptContainer.innerHTML = items.map(i => {
                 const v = parseFloat(i.val);
-                // 這裡以前 X% 為顯示值。Bar 長度設為 (100-v) 以符合「數值越高(排名越前)條越長」的直覺，
-                // 或反之? 這裡 v 是百分比(前1% = 1)，所以 v 越小越強。
-                // 為了視覺效果，我們用 (100 - v) 作為長度。前 1% -> length 99%. 前 90% -> length 10%.
-                const barLen = Math.max(5, 100 - v);
-
+                // 顏色：前10%金色，前30%藍色，其他灰藍
+                const color = v <= 10 ? 'var(--gold)' : v <= 30 ? 'var(--primary)' : '#94a3b8';
                 return `
-                            <div class="percentile-box">
-                                <div class="pt-header">
-                                    <span class="pt-label">${i.label}</span>
-                                    <span class="pt-rank">${i.desc || ''}</span>
-                                </div>
-                                <div class="pt-val-lg">Top ${i.val}%</div>
-                                <div class="pt-bar"><div class="pt-fill" style="width: ${barLen}%"></div></div>
-                            </div>
-                        `;
+                    <div class="rank-card-new" style="cursor:default;">
+                        <div class="rc-label">${i.label}</div>
+                        <div class="rc-val" style="font-size:18px; margin-top:2px; color:${color};">前 ${i.val}%</div>
+                        <div style="font-size:11px; color:rgba(255,255,255,0.45); margin-top:2px;">${i.desc || ''}</div>
+                    </div>
+                `;
             }).join('');
         } else if (ptContainer) {
             ptContainer.innerHTML = '';
@@ -2702,7 +2696,7 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
         const slot = i.slotPos;
         const isArmor = (slot >= 1 && slot <= 8) || slot === 21;
         const isAccessory = (slot >= 9 && slot <= 20) || (slot >= 22 && slot <= 40);
-        const isArcana = (slot >= 41 && slot <= 45);
+        const isArcana = (slot >= 41 && slot <= 46);
         const originalItem = equipMap[slot] || i;
         const finalIcon = getCorrectIcon(originalItem.icon);
 
@@ -6017,6 +6011,39 @@ window.renderLayoutTab = function (json) {
     const pveScore = (ratingsData && ratingsData.PVE) ? ratingsData.PVE.score : 0;
     const pvpScore = (ratingsData && ratingsData.PVP) ? ratingsData.PVP.score : 0;
 
+    // --- Percentile Data ---
+    const percentile = rating ? rating.percentile : null;
+    let percentileHtml = '';
+    if (percentile) {
+        const ptItems = [
+            { label: '伺服器', val: percentile.serverPercentile, desc: p.serverName },
+            { label: '職業', val: percentile.classPercentile, desc: p.className },
+            { label: '全體', val: percentile.allDataPercentile, desc: '全體玩家' },
+        ].filter(i => i.val != null && !isNaN(parseFloat(i.val)));
+
+        if (ptItems.length > 0) {
+            percentileHtml = `
+                <div style="border-top: 1px solid rgba(255,255,255,0.06); padding: 10px 12px;">
+                    <div style="font-size: 11px; color: #ecde15ff; margin-bottom: 8px; font-weight: 600; letter-spacing: 1px;">百分位</div>
+                    ${ptItems.map(i => {
+                const v = parseFloat(i.val);
+                const barLen = Math.max(5, 100 - v);
+                const color = v <= 5 ? '#ff6c6c' : v <= 20 ? '#ffd93d' : '#74b9ff';
+                return `<div style="margin-bottom: 8px;">
+                            <div style="display:flex; justify-content:space-between; margin-bottom:3px;">
+                                <span style="font-size:12px; color:#8b949e;">${i.label}</span>
+                                <span style="font-size:12px; color:${color}; font-weight:800;">前 ${v}%</span>
+                            </div>
+                            <div style="height: 4px; background: rgba(255,255,255,0.08); border-radius: 2px; overflow:hidden;">
+                                <div style="width:${barLen}%; height:100%; background:${color}; border-radius:2px;"></div>
+                            </div>
+                        </div>`;
+            }).join('')}
+                </div>
+            `;
+        }
+    }
+
     let abyssRankName = "--";
     let abyssGradeId = 0;
     let abyssGradeIcon = "";
@@ -6210,7 +6237,7 @@ window.renderLayoutTab = function (json) {
                     </div>
                 </div>
 
-                <div class="guardian-force-column" style="flex: 1; min-width: 320px; background: rgba(20, 20, 30, 0.4); border-radius: 12px; padding: 12px; border: 1px solid rgba(255,255,255,0.05);">
+                <div class="guardian-force-column" style="flex: 1.2; min-width: 320px; background: rgba(20, 20, 30, 0.4); border-radius: 12px; padding: 12px; border: 1px solid rgba(255,255,255,0.05);">
                     <div style="text-align: center; margin-bottom: 12px; font-weight: 800; color: #ffd93d; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 15px;">
                          守護力
                     </div>
@@ -6219,14 +6246,15 @@ window.renderLayoutTab = function (json) {
                     </div>
                 </div>
 
-                <div class="ranking-data-column" style="width: 200px; background: rgba(20, 20, 30, 0.4); border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); display: flex; flex-direction: column;">
+                <div class="ranking-data-column" style="flex: 1; min-width: 220px; background: rgba(20, 20, 30, 0.4); border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); display: flex; flex-direction: column;">
                     <div style="text-align: center; padding: 10px; font-weight: 800; color: #ffd93d; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 15px;">
                         排名
                     </div>
                     ${rankingRowsHtml}
+                    ${percentileHtml}
                 </div>
             </div>
-            <div style="position: absolute; bottom: -5px; right: 0; font-size: 10px; color: rgba(139, 148, 158, 0.5); letter-spacing: 0.5px;">
+            <div style="position: absolute; bottom: -5px; right: 0; font-size: 14px; color: rgba(139, 148, 158, 0.5); letter-spacing: 0.5px;">
                 數據同步：${new Date(window.__LAST_UPDATE_TIME__ || Date.now()).toLocaleTimeString()}
             </div>
         </div>

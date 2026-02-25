@@ -1880,7 +1880,7 @@
 
         /* RWD 調整 */
         /* RWD 調整 */
-        @media (min-width: 0px) {
+        @media (min-width: 1200px) {
             .main-layout-wrapper {
                 display: grid;
                 grid-template-columns: 1fr 2fr;
@@ -1891,6 +1891,42 @@
             .left-column,
             .right-column {
                 min-width: 0;
+            }
+        }
+
+        @media (max-width: 1199px) {
+            .main-layout-wrapper {
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 20px !important;
+                width: 100% !important;
+            }
+
+            .left-column {
+                display: block !important;
+                /* 垂直堆疊，向下捲動查看評分卡 */
+                width: 100% !important;
+                min-width: 0 !important;
+                overflow: hidden !important;
+            }
+
+            .right-column {
+                width: 100% !important;
+                min-width: 0 !important;
+            }
+        }
+
+        /* 評分卡窄視窗溢出保護 */
+        @media (max-width: 1199px) {
+            .left-column .info-box {
+                overflow: hidden !important;
+                max-width: 100% !important;
+                box-sizing: border-box !important;
+            }
+
+            .left-column canvas {
+                max-width: 100% !important;
+                height: auto !important;
             }
         }
 
@@ -2015,7 +2051,10 @@
             }
 
             .left-column {
-                display: none !important;
+                display: block !important;
+                /* 垂直堆疊，大小與 right-column 相同 */
+                width: 100% !important;
+                overflow: hidden !important;
             }
 
             .right-column {
@@ -2750,32 +2789,82 @@
 
             .split-integrated-layout {
                 flex-direction: column !important;
-                min-height: auto !important;
+                height: auto !important;
+                /* 依內容自由延伸 */
+            }
+
+            .integrated-equip-header {
+                flex-wrap: wrap !important;
+                gap: 10px !important;
+                margin-bottom: 15px !important;
+            }
+
+            .integrated-equip-header .header-title h3 {
+                font-size: 16px !important;
+            }
+
+            .integrated-equip-header .stat-tabs-header {
+                width: 100% !important;
+                justify-content: center !important;
             }
 
             .equip-sidebar-profile {
+                flex: 0 0 auto !important;
                 width: 100% !important;
-                border-right: none !important;
-                border-bottom: 1px solid var(--border) !important;
+                overflow: visible !important;
+                /* 完整顯示所有內容 */
+                border: none !important;
+                /* 移除分界線 */
                 padding: 20px !important;
-                flex-direction: row !important;
-                flex-wrap: wrap !important;
-                justify-content: center !important;
-                gap: 20px !important;
+                flex-direction: column !important;
+                /* 頁面奖透即可知道了 */
+                align-items: center !important;
+                gap: 12px !important;
+                box-sizing: border-box !important;
             }
 
             .equip-main-content {
-                padding: 15px !important;
                 width: 100% !important;
+                padding: 15px !important;
+                box-sizing: border-box !important;
+                height: 480px !important;
+                /* 固定高度，觸發分頁內容捲軸 */
+                display: flex !important;
+                flex-direction: column !important;
+                min-height: 0 !important;
+                overflow: visible !important;
+                /* 不裁切子元素的捲軸条 */
+            }
+
+            #integrated-tab-content-area {
+                overflow-y: auto !important;
+                /* 分頁內容區捲軸 */
+                overflow-x: hidden !important;
+                flex: 1 !important;
+                min-height: 0 !important;
+            }
+
+            /* 手機版三個欄位垒直堆疊，全在捲軸區內 */
+            .visual-layout-pure-grid {
+                flex-direction: column !important;
+                align-items: stretch !important;
+            }
+
+            .guardian-force-column,
+            .ranking-data-column {
+                width: 100% !important;
+                min-width: 0 !important;
+                flex: none !important;
                 box-sizing: border-box !important;
             }
 
             .equip-grid-column>div {
-                flex-direction: column !important;
-                align-items: center !important;
-                gap: 20px !important;
+                flex-direction: row !important;
+                /* 保持左右並排 */
+                justify-content: center !important;
+                gap: 10px !important;
+                flex-wrap: nowrap !important;
             }
-
 
             #combat-analysis-global-controls {
                 flex-wrap: wrap;
@@ -2784,13 +2873,23 @@
             }
         }
 
+        /* 大螢幕固定高度，手機由 media query 覆蓋 */
+        .layout-fixed-height {
+            height: 600px;
+        }
+
         .mobile-vertical-title {
             display: none;
         }
 
-        /* 強化卡片容器，確保置頂效果不被截斷 */
-        .card {
+        /* 只讓需要 sticky header 的卡片設 overflow: visible，避免全局污染 */
+        #nav-target-analysis {
             overflow: visible !important;
+        }
+
+        /* 確保裝備卡片不橫向/縱向溢出，防止裝備圖片蓋到其他卡片 */
+        #nav-target-equip {
+            overflow: hidden !important;
         }
 
         /* 🛡️ 區塊內置頂標頭 - 精準對齊版 */
@@ -4041,29 +4140,67 @@
             }
 
             .equip-grid-column>div {
-                flex-direction: column !important;
-                align-items: center !important;
-                gap: 20px !important;
-                justify-content: center;
+                flex-direction: row !important;
+                /* 保持左右並排 */
+                justify-content: center !important;
+                gap: 10px !important;
+                flex-wrap: nowrap !important;
             }
 
             /* 修正頂層整合佈局 */
             .split-integrated-layout {
                 flex-direction: column !important;
+                height: auto !important;
+                /* 依內容自由延伸 */
             }
 
             .equip-sidebar-profile {
+                flex: 0 0 auto !important;
                 width: 100% !important;
-                border-right: none !important;
-                border-bottom: 1px solid var(--border) !important;
+                overflow: visible !important;
+                border: none !important;
+                /* 移除分界線 */
                 padding: 20px !important;
-                flex-direction: row !important;
-                flex-wrap: wrap !important;
-                justify-content: center !important;
+                flex-direction: column !important;
+                align-items: center !important;
+                gap: 12px !important;
+                box-sizing: border-box !important;
             }
 
             .equip-main-content {
                 width: 100% !important;
                 padding: 15px !important;
+                box-sizing: border-box !important;
+                height: 480px !important;
+                /* 固定高度，確保分頁內容有邊界可觸發捲軸 */
+                display: flex !important;
+                flex-direction: column !important;
+                min-height: 0 !important;
             }
+
+            #integrated-tab-content-area {
+                flex: 1 !important;
+                min-height: 0 !important;
+                overflow-y: auto !important;
+                overflow-x: hidden !important;
+            }
+        }
+
+        /* 美化分頁容器捲軸 */
+        #integrated-tab-content-area::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #integrated-tab-content-area::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+        }
+
+        #integrated-tab-content-area::-webkit-scrollbar-thumb {
+            background: rgba(255, 217, 61, 0.2);
+            border-radius: 10px;
+        }
+
+        #integrated-tab-content-area::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 217, 61, 0.5);
         }

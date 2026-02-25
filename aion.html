@@ -58,7 +58,7 @@
             <!-- 裝備分析系統：整合式左資訊/右分頁佈局 -->
             <div class="card" id="nav-target-equip"
                 style="scroll-margin-top: 20px; margin-bottom: 30px; padding: 0; overflow: hidden;">
-                <div class="split-integrated-layout" style="display: flex; align-items: stretch; min-height: 650px;">
+                <div class="split-integrated-layout layout-fixed-height" style="display: flex; align-items: stretch;">
                     <!-- 左側固定欄：個人資訊 -->
                     <div class="equip-sidebar-profile" id="equip-sidebar-profile"
                         style="width: 280px; background: rgba(0,0,0,0.2); border-right: 1px solid var(--border); padding: 30px 20px; display: flex; flex-direction: column; align-items: center; gap: 20px;">
@@ -86,7 +86,8 @@
                             </div>
                         </div>
 
-                        <div id="integrated-tab-content-area" style="flex: 1; position: relative;">
+                        <div id="integrated-tab-content-area"
+                            style="flex: 1; position: relative; overflow-y: auto; overflow-x: hidden; padding-right: 5px;">
                             <!-- 基本佈覽 -->
                             <div id="equip-tab-layout" style="display:block;"></div>
 
