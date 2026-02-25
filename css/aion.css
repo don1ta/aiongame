@@ -4353,6 +4353,22 @@
                 overflow-y: visible !important;
                 overflow-x: hidden !important;
             }
+
+            /* 手機版彈窗：限制寬度避免撐出版面 */
+            .tooltip-overlay {
+                padding: 12px !important;
+                align-items: flex-start !important;
+                padding-top: 20px !important;
+                overflow-y: auto !important;
+            }
+
+            .equip-tooltip {
+                max-width: calc(100vw - 24px) !important;
+                width: 100% !important;
+                max-height: 85vh !important;
+                overflow-y: auto !important;
+                box-sizing: border-box !important;
+            }
         }
 
         /* 美化分頁容器捲軸 */
