@@ -896,12 +896,32 @@
                 0 0 30px var(--primary-glow),
                 inset 0 1px 0 rgba(255, 255, 255, 0.1);
             color: #e8f0ff !important;
-            pointer-events: none;
+            pointer-events: auto;
             white-space: normal;
             font-size: 13px;
             line-height: 1.6;
-            max-height: 400px;
+            max-height: 80vh;
+            /* 增加最大高度以顯示更多內容 */
             overflow-y: auto;
+        }
+
+        /* 💡 增加透明偽元素作為橋樑，防止滑鼠移入 Tooltip 時因 margin 間隙導致消失 */
+        .tooltip::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 20px;
+            bottom: -15px;
+            /* 橋接 bottom: 100% 的 margin-bottom 間隙 */
+            background: transparent;
+            pointer-events: auto;
+        }
+
+        /* 如果 Tooltip 是向下顯示的 (top: 100%)，則偽元素在上方 */
+        .tooltip[style*="top:"]::before {
+            bottom: auto;
+            top: -15px;
         }
 
         /* Tooltip 內部的標題樣式優化 */
@@ -3833,8 +3853,8 @@
         .equip-tooltip.is-hover {
             position: fixed;
             z-index: 100001;
-            pointer-events: none;
-            /* 懸停時不阻礙滑鼠 */
+            /* 懸停時允許滑鼠操作，以便捲動長資訊 */
+            pointer-events: auto;
             box-shadow: 0 15px 40px rgba(0, 0, 0, 0.8);
             transform: scale(0.95);
             transform-origin: top left;
@@ -3853,8 +3873,8 @@
             user-select: none;
             display: flex;
             flex-direction: column;
-            max-height: 85vh;
-            /* 限制高度，避免手機版 X 消失 */
+            max-height: 90vh;
+            /* 限制高度，避免超出視窗 */
         }
 
         .tooltip-header {
@@ -4069,6 +4089,155 @@
             color: #4b6584;
             flex-shrink: 0;
             border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        /* 🆕 簡易小卡重新設計 - V2 樣式 (參考使用者圖片) */
+        .equip-item-card-simple-v2 {
+            position: relative;
+            background: linear-gradient(145deg, rgba(30, 40, 60, 0.95), rgba(15, 20, 30, 0.98));
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            transition: transform 0.2s, border-color 0.2s;
+            margin-bottom: 5px;
+            border-left: 4px solid var(--grade-color, #8b949e);
+            height: 100%;
+            /* 讓 grid 中所有卡片高度一致 */
+            min-height: 140px;
+        }
+
+        .equip-item-card-simple-v2:hover {
+            transform: translateY(-3px);
+            border-color: rgba(255, 255, 255, 0.2);
+            z-index: 10;
+        }
+
+        .simple-card-header {
+            padding: 12px 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .simple-card-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+            flex-wrap: wrap;
+        }
+
+        .simple-card-name {
+            font-size: 17px;
+            font-weight: 800;
+            color: var(--grade-color, #fff);
+            text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .simple-card-enchant {
+            font-size: 15px;
+            color: #fff;
+            opacity: 0.9;
+            font-weight: bold;
+        }
+
+        .simple-card-breakthrough {
+            background: rgba(231, 76, 60, 0.15);
+            border: 1px solid rgba(231, 76, 60, 0.4);
+            color: #ff7b7b;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+
+        .simple-card-body {
+            padding: 12px 15px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            /* 強制分為左右兩欄 */
+            gap: 0 20px;
+            position: relative;
+            z-index: 2;
+            flex: 1;
+        }
+
+        .simple-card-col {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .simple-card-col-left {
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+            padding-right: 10px;
+        }
+
+        .simple-card-col-right {
+            padding-left: 5px;
+        }
+
+        .simple-stat-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+            line-height: 1.4;
+            min-height: 20px;
+        }
+
+        .simple-skill-row {
+            font-size: 12px;
+            color: #fff;
+            opacity: 0.8;
+            padding: 2px 0;
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
+            margin-bottom: 2px;
+        }
+
+        .simple-stat-label {
+            color: #8b949e;
+            font-weight: 500;
+        }
+
+        .simple-stat-value {
+            color: #fff;
+            font-weight: 600;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        /* 強化屬性顏色 (橘色) */
+        .simple-stat-row.enchant .simple-stat-label,
+        .simple-stat-row.enchant .simple-stat-value {
+            color: #e67e22;
+        }
+
+        /* 隨機屬性顏色 (改為白色) */
+        .simple-stat-row.random .simple-stat-label,
+        .simple-stat-row.random .simple-stat-value {
+            color: #fff;
+            opacity: 0.9;
+        }
+
+        .simple-card-artwork {
+            position: absolute;
+            right: -15px;
+            bottom: -15px;
+            width: 140px;
+            height: 140px;
+            opacity: 0.25;
+            pointer-events: none;
+            z-index: 1;
+            filter: drop-shadow(0 0 15px black);
+            -webkit-mask-image: radial-gradient(circle at center, black 40%, transparent 100%);
+            mask-image: radial-gradient(circle at center, black 40%, transparent 100%);
         }
 
         @keyframes fadeIn {

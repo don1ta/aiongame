@@ -1424,7 +1424,13 @@ window.clearAllWings = function () {
 // --- 核心解析邏輯 (保持不變) ---
 function getCorrectIcon(path) {
     if (!path) return "";
-    if (path.startsWith('http')) return path;
+    // 如果已經是完整的 http 開頭，需確保經過代理以利截圖 (html2canvas CORS 要求)
+    if (path.startsWith('http')) {
+        // 若已經代理過則直接返回，避免重複代理
+        if (path.includes('proxy.kk69347321.workers.dev')) return path;
+        return getProxyUrl(path);
+    }
+    // 補齊本地資源路徑並代理
     let cleanPath = path.replace(/^\//, '');
     if (!cleanPath.includes('.')) cleanPath += '.png';
     return getProxyUrl(cleanPath);
@@ -2802,40 +2808,55 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
             let exceedLv = originalItem.exceedLevel || d.exceedLevel || 0;
             let exceedHtml = exceedLv > 0 ? ` <span style="display:inline-block; background: rgba(231, 76, 60, 0.15); border: 1px solid rgba(231, 76, 60, 0.4); padding: 1px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; color: #ff7b7b; vertical-align: middle; line-height: 1.2; margin-left: 4px; white-space: nowrap; text-shadow: none; letter-spacing: 0.5px;">突破+${exceedLv}</span>` : "";
 
-            let cardSimpleHtml = `
-            <div class="equip-item-card-simple" style="
-                position: relative;
-                border-radius: 8px;
-                overflow: hidden;
-                background: linear-gradient(90deg, ${gradeColor}33 0%, rgba(20,20,30,0.95) 50%, rgba(10,10,15,0.95) 100%);
-                border-left: 4px solid ${gradeColor};
-                padding: 10px 15px;
-                display: flex;
-                height: 85px;
-                box-shadow: 0 4px 10px rgba(0,0,0,0.4);
-                border: 1px solid rgba(255,255,255,0.05);
-                border-right: none;
-                border-top: none;
-                border-bottom: none;
-            ">
-                <div style="flex: 1; z-index: 2; display: flex; flex-direction: column;">
-                    <div style="font-size: 16px; font-weight: bold; color: ${gradeColor}; text-shadow: 0 0 5px ${gradeColor}44; white-space: normal; line-height: 1.2; padding-right: 40px;">${d.name} <span style="font-size:14px; color:#fff; white-space: nowrap; text-shadow: none;">(+${elv})</span>${exceedHtml}</div>
-                    <div style="font-size: 13px; color: ${gradeColor}; opacity: 0.9; margin-top: auto;">${locGrade} ${cat}</div>
-                </div>
+            // --- 為簡易小卡建構左右兩欄內容 (V2) ---
+            let statsLeftHtml = "";
+            let statsRightHtml = "";
 
-                <div style="
-                    position: absolute;
-                    right: -10px;
-                    top: -10px;
-                    width: 105px;
-                    height: 105px;
-                    z-index: 1;
-                    -webkit-mask-image: linear-gradient(to right, transparent 5%, black 50%);
-                    mask-image: linear-gradient(to right, transparent 5%, black 50%);
-                    opacity: 0.95;
-                ">
-                    <img src="${finalIcon}" style="width: 100%; height: 100%; object-fit: contain; transform: scale(1.3); filter: drop-shadow(0 0 10px ${gradeColor}88);">
+            // 1. 左邊：隨機屬性 (白色) + 技能 (白色)
+            (d.subStats || []).forEach(s => {
+                statsLeftHtml += `
+                    <div class="simple-stat-row random">
+                        <span class="simple-stat-label">${s.name}</span>
+                        <span class="simple-stat-value">+${s.value}</span>
+                    </div>`;
+            });
+            // 加上裝備內建技能
+            (d.subSkills || []).forEach(sk => {
+                statsLeftHtml += `
+                    <div class="simple-stat-row random">
+                        <span class="simple-stat-label">${sk.name}</span>
+                        <span class="simple-stat-value">Lv.${sk.level}</span>
+                    </div>`;
+            });
+
+            // 2. 右邊：磨石屬性 (依品階顯色)
+            (d.magicStoneStat || []).forEach(ms => {
+                const stoneColor = getGradeColor(ms.grade || 'common');
+                statsRightHtml += `
+                    <div class="simple-stat-row" style="color: ${stoneColor}">
+                        <span class="simple-stat-label" style="color: ${stoneColor}">[磨] ${ms.name}</span>
+                        <span class="simple-stat-value" style="color: ${stoneColor}">${ms.value}</span>
+                    </div>`;
+            });
+
+            let cardSimpleHtml = `
+            <div class="equip-item-card-simple-v2" style="--grade-color: ${gradeColor};" onclick="window.handleSlotClick(event, ${slot})">
+                <div class="simple-card-header">
+                    <div class="simple-card-title">
+                        <span class="simple-card-name">${d.name}</span>
+                        <span class="simple-card-enchant"> (+${elv})</span>
+                        ${exceedLv > 0 ? `<span class="simple-card-breakthrough">突破+${exceedLv}</span>` : ""}
+                    </div>
                 </div>
+                <div class="simple-card-body">
+                    <div class="simple-card-col simple-card-col-left">
+                        ${statsLeftHtml || '<div style="color:#555; font-size:12px;">無隨機/技能</div>'}
+                    </div>
+                    <div class="simple-card-col simple-card-col-right">
+                        ${statsRightHtml || '<div style="color:#555; font-size:12px;">無磨石</div>'}
+                    </div>
+                </div>
+                <img class="simple-card-artwork" src="${finalIcon}">
             </div>`;
 
             if (isArmor) {
@@ -6268,17 +6289,186 @@ window.renderLayoutTab = function (json) {
 
 
 
+// --- 📸 截圖保存功能 ---
+window.downloadEquipScreenshot = function () {
+    const tabArea = document.getElementById('integrated-tab-content-area');
+    if (!tabArea || !window.html2canvas) return;
+
+    const btn = document.getElementById('btn-equip-screenshot');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = "⏳ 正在製作截圖...";
+    btn.style.pointerEvents = "none";
+
+    const charName = document.getElementById('stat-header-char-id')?.innerText || 'AionPlayer';
+    const activeTab = document.querySelector('.integrated-tabs .stat-tab-btn.active')?.innerText || '裝備資料';
+
+    // 延遲 500ms 給予資源一些加載時間
+    setTimeout(() => {
+        window.html2canvas(tabArea, {
+            backgroundColor: '#0f172a',
+            scale: 2,
+            logging: false,
+            useCORS: true,
+            allowTaint: false,
+            scrollX: 0,
+            scrollY: 0,
+            x: 0,
+            y: 0,
+            imageTimeout: 15000, // 增加超時時間確保圖片穩定
+            onclone: (clonedDoc) => {
+                const clonedArea = clonedDoc.getElementById('integrated-tab-content-area');
+                if (clonedArea) {
+                    clonedArea.style.height = 'auto';
+                    clonedArea.style.maxHeight = 'none';
+                    clonedArea.style.overflow = 'visible';
+                    clonedArea.style.width = '1100px';
+                    clonedArea.style.padding = '30px';
+                    clonedArea.style.background = '#0f172a';
+                    clonedArea.style.display = 'block';
+
+                    // 隱藏複製文件中的按鈕
+                    const screenshotBtn = clonedDoc.getElementById('btn-equip-screenshot');
+                    if (screenshotBtn) screenshotBtn.style.display = 'none';
+
+                    // 確保簡易分頁及其內容是顯示的
+                    const simpleTab = clonedDoc.getElementById('equip-tab-simple');
+                    if (simpleTab) simpleTab.style.display = 'block';
+
+                    // 🛡️ 數據獲取：優先使用最後緩存的成功數據，確保 Lv 不會抓錯
+                    const banner = clonedDoc.createElement('div');
+                    const json = window.__LAST_DATA_JSON__ || {};
+                    const dataObj = json.queryResult ? json.queryResult.data : (json.data ? json.data : json);
+                    const profile = dataObj.profile || {};
+
+                    const cName = profile.characterName || document.getElementById('stat-header-char-id')?.innerText || 'AionPlayer';
+                    const cScore = document.getElementById('stat-header-score')?.innerText || '--';
+
+                    // 獲取等級與頭像
+                    let rawLevel = profile.characterLevel || document.querySelector('.profile-lv-badge')?.innerText?.replace('Lv.', '') || '--';
+                    const cLv = `Lv.${rawLevel}`;
+
+                    let rawImg = profile.profileImage || document.querySelector('.profile-img-lg')?.src || '';
+                    // 確保頭像經過代理
+                    const cImg = getCorrectIcon(rawImg);
+
+                    const cServer = profile.serverName || document.querySelector('.profile-server')?.innerText || '';
+                    const cClass = profile.className || document.querySelector('.profile-job-name')?.innerText || '';
+
+                    banner.style.cssText = `
+                        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+                        padding: 30px;
+                        border-radius: 12px;
+                        margin-bottom: 30px;
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        border: 1px solid rgba(255,215,0,0.3);
+                        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+                        width: 100%;
+                        box-sizing: border-box;
+                        color: white;
+                    `;
+
+                    banner.innerHTML = `
+                        <div style="display: flex; align-items: center; gap: 25px;">
+                            <div class="character-avatar-frame" style="position: relative; width: 95px; height: 95px; flex-shrink: 0;">
+                                <img class="avatar-img" src="${cImg}" style="width: 100%; height: 100%; border-radius: 50%; border: 4px solid #ffd700; object-fit: cover; background: #000; box-shadow: 0 0 20px rgba(255,215,0,0.3);">
+                                <div class="lv-badge" style="position: absolute; bottom: -5px; left: 50%; transform: translateX(-50%); background: #ffd700; color: #000; padding: 2px 14px; border-radius: 20px; font-size: 15px; font-weight: 900; border: 2px solid #fff; white-space: nowrap; box-shadow: 0 4px 10px rgba(0,0,0,0.5);">${cLv}</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 42px; font-weight: 900; color: #fff; line-height: 1.1; text-shadow: 0 2px 10px rgba(0,0,0,0.8);">${cName}</div>
+                                <div style="font-size: 18px; color: rgba(255,255,255,0.7); margin-top: 8px; font-weight: 500; letter-spacing: 0.5px;">
+                                    ${cServer} | ${cClass} 裝備數據分析報告
+                                </div>
+                            </div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-size: 14px; color: #ffd700; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 5px; opacity: 0.8;">裝備評分</div>
+                            <div style="font-size: 48px; font-weight: 950; color: #fff; text-shadow: 0 0 20px rgba(255,215,0,0.6); line-height: 1;">${cScore}</div>
+                        </div>
+                    `;
+                    clonedArea.prepend(banner);
+
+                    // 強制 3 欄
+                    const grids = clonedDoc.querySelectorAll('.grid-box-container');
+                    grids.forEach(g => {
+                        g.style.display = 'grid';
+                        g.style.gridTemplateColumns = 'repeat(3, 1fr)';
+                        g.style.gap = '15px';
+                        g.style.width = '1000px';
+                        g.style.margin = '0 auto';
+                    });
+                }
+            }
+        }).then(canvas => {
+            const link = document.createElement('a');
+            link.download = `Aion2_${charName}_${activeTab}_${new Date().toLocaleDateString()}.jpg`;
+            link.href = canvas.toDataURL('image/jpeg', 0.95);
+            link.click();
+            btn.innerHTML = originalText;
+            btn.style.pointerEvents = "auto";
+        }).catch(err => {
+            console.error("Screenshot failed:", err);
+            btn.innerHTML = "❌ 截圖失敗";
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.style.pointerEvents = "auto";
+            }, 2000);
+        });
+    }, 500);
+};
+
+
+// --- 📸 針對特定區域截圖保存功能 ---
+window.downloadSpecificScreenshot = function (elementId, typeName) {
+    const target = document.getElementById(elementId);
+    if (!target || !window.html2canvas) return;
+
+    // 獲取角色名稱作為檔名
+    const charName = document.getElementById('stat-header-char-id')?.innerText || 'AionPlayer';
+
+    // 執行截圖
+    window.html2canvas(target, {
+        backgroundColor: '#0f172a', // 使用專案背景底色
+        scale: 2, // 提高解析度
+        logging: false,
+        useCORS: true,
+        scrollX: 0,
+        scrollY: -window.scrollY,
+        onclone: (clonedDoc) => {
+            const clonedTarget = clonedDoc.getElementById(elementId);
+            if (clonedTarget) {
+                // 強制調整寬度，避免在桌面版截圖過寬，讓卡片排版漂亮
+                clonedTarget.style.width = '1200px';
+                clonedTarget.style.display = 'grid';
+                clonedTarget.style.gridTemplateColumns = 'repeat(3, 1fr)'; // 限制為三欄顯示，最適合分享
+                clonedTarget.style.padding = '20px';
+                clonedTarget.style.gap = '15px';
+            }
+        }
+    }).then(canvas => {
+        const link = document.createElement('a');
+        link.download = `Aion2_${charName}_${typeName}_${new Date().toLocaleDateString()}.jpg`;
+        link.href = canvas.toDataURL('image/jpeg', 0.9);
+        link.click();
+    });
+};
+
 // --- Tooltip Functions ---
+let tooltipHideTimer = null;
+
 window.handleSlotClick = function (e, slotId) {
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 1024;
-    if (isMobile) {
-        window.showEquipTooltip(slotId, 'modal');
-    }
+    //不分手機或網頁，點擊都顯示固定式彈窗（Modal）以便閱讀長資訊
+    window.showEquipTooltip(slotId, 'modal');
 };
 
 window.handleSlotHover = function (e, slotId) {
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 1024;
     if (!isMobile) {
+        if (tooltipHideTimer) {
+            clearTimeout(tooltipHideTimer);
+            tooltipHideTimer = null;
+        }
         window.showEquipTooltip(slotId, 'hover', e);
     }
 };
@@ -6286,16 +6476,26 @@ window.handleSlotHover = function (e, slotId) {
 window.handleSlotLeave = function () {
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 1024;
     if (!isMobile) {
-        const overlay = document.getElementById('equip-tooltip-overlay');
-        const content = document.getElementById('equip-tooltip-content');
-        if (content && content.classList.contains('is-hover')) {
-            overlay.style.display = 'none';
-        }
+        // 增加 200ms 延遲，讓滑鼠有機會移入 Tooltip 內而不消失
+        tooltipHideTimer = setTimeout(() => {
+            const overlay = document.getElementById('equip-tooltip-overlay');
+            const content = document.getElementById('equip-tooltip-content');
+            if (content && content.classList.contains('is-hover')) {
+                overlay.style.display = 'none';
+            }
+        }, 200);
     }
 };
 
 window.showEquipTooltip = function (slotId, mode = 'modal', event = null) {
-    console.log("[Tooltip] SlotId clicked:", slotId);
+    console.log("[Tooltip] SlotId:", slotId, "Mode:", mode);
+
+    // 切換模式或顯示時，先清除定時器
+    if (tooltipHideTimer) {
+        clearTimeout(tooltipHideTimer);
+        tooltipHideTimer = null;
+    }
+
     const item = (window.__EQUIP_MAP__ || {})[slotId];
     if (!item) {
         console.warn("[Tooltip] No item found for slot:", slotId);
@@ -6304,16 +6504,28 @@ window.showEquipTooltip = function (slotId, mode = 'modal', event = null) {
 
     const overlay = document.getElementById('equip-tooltip-overlay');
     const content = document.getElementById('equip-tooltip-content');
-    if (!overlay || !content) {
-        console.error("[Tooltip] Modal elements not found!");
-        return;
+    if (!overlay || !content) return;
+
+    // 清除舊的事件監聽，避免重複
+    content.onmouseenter = null;
+    content.onmouseleave = null;
+
+    // 如果懸停模式，監聽 Tooltip 進入/離開
+    if (mode === 'hover') {
+        content.onmouseenter = () => {
+            if (tooltipHideTimer) {
+                clearTimeout(tooltipHideTimer);
+                tooltipHideTimer = null;
+            }
+        };
+        content.onmouseleave = () => {
+            window.handleSlotLeave();
+        };
     }
 
     const d = item.detail || item;
     const name = d.name || '未知裝備';
     const icon = getCorrectIcon(item.icon || d.icon);
-
-    console.log("[Tooltip] Showing item:", name);
 
     // 判斷品階
     const rawGrade = (d.grade || item.grade || 'common').toLowerCase();
@@ -6329,8 +6541,8 @@ window.showEquipTooltip = function (slotId, mode = 'modal', event = null) {
     let mainStatsHtml = '';
     if (d.mainStats && d.mainStats.length > 0) {
         mainStatsHtml = `
-        <div class="tooltip-section">
-            <div class="tooltip-section-title">主要能力值</div>
+        < div class= "tooltip-section" >
+        <div class="tooltip-section-title">主要能力值</div>
                 ${d.mainStats.map(s => `
                     <div class="stat-row">
                         <span class="stat-label">${s.name}</span>
@@ -6341,14 +6553,14 @@ window.showEquipTooltip = function (slotId, mode = 'modal', event = null) {
                     </div>
                 `).join('')
             }
-            </div> `;
+            </div > `;
     }
 
     // 副能力值
     let subStatsHtml = '';
     if (d.subStats && d.subStats.length > 0) {
         subStatsHtml = `
-        <div class="tooltip-section">
+            < div class= "tooltip-section" >
             <div class="tooltip-section-title">隨機能力值</div>
                 ${d.subStats.map(s => `
                     <div class="stat-row">
@@ -6357,14 +6569,14 @@ window.showEquipTooltip = function (slotId, mode = 'modal', event = null) {
                     </div>
                 `).join('')
             }
-            </div> `;
+            </div > `;
     }
 
     // 魔石相嵌
     let stonesHtml = '';
     if (d.magicStoneStat && d.magicStoneStat.length > 0) {
         stonesHtml = `
-        <div class="tooltip-section">
+            < div class= "tooltip-section" >
                 <div class="tooltip-section-title">魔石槽位</div>
                 <div class="magic-stone-list">
                     ${d.magicStoneStat.map(s => {
@@ -6377,57 +6589,50 @@ window.showEquipTooltip = function (slotId, mode = 'modal', event = null) {
                         `;
         }).join('')}
                 </div>
-            </div> `;
+            </div > `;
     }
 
     // 神石資訊
     let godStoneHtml = '';
     if (d.godStoneStat && d.godStoneStat.length > 0) {
         godStoneHtml = `
-        <div class="tooltip-section">
+            < div class= "tooltip-section" >
             <div class="tooltip-section-title">神石</div>
                 ${d.godStoneStat.map(gs => {
             const gsColor = getGradeColor(gs.grade || 'unique');
             return `
-                        <div style="
-                            margin-top: 4px; 
-                            border: 1px dashed ${gsColor}; 
-                            padding: 8px; 
-                            font-size: 12px; 
-                            border-radius: 6px; 
-                            background: rgba(0,0,0,0.2);
-                        ">
+                        <div style="border: 1px dashed ${gsColor}; padding: 8px; font-size: 12px; border-radius: 6px; background: rgba(0,0,0,0.2); margin-top: 5px;">
                             <b style="color:${gsColor}">${gs.name}</b>
                             <div style="color: #adb5bd; margin-top: 4px; line-height: 1.4;">${gs.desc}</div>
                         </div>
                     `;
         }).join('')
             }
-            </div> `;
+            </div > `;
     }
 
     // 物品來源
-    const sourceHtml = d.sources ? `<div class="tooltip-footer">來源: ${d.sources.join(', ')}</div>` : '';
+    const sourceHtml = d.sources ? `< div class= "tooltip-footer" > 來源: ${d.sources.join(', ')}</div > ` : '';
 
-    content.className = `equip-tooltip tooltip-rarity-${rarityClass}`;
+    content.className = `equip - tooltip tooltip - rarity - ${rarityClass}`;
     if (mode === 'hover') {
         content.classList.add('is-hover');
         overlay.style.background = 'transparent';
         overlay.style.backdropFilter = 'none';
-        overlay.style.pointerEvents = 'none';
+        overlay.style.pointerEvents = 'none'; // Overlay 不阻礙點擊，但子元素（Tooltip）會在 CSS 設回 auto
         overlay.style.display = 'block';
     } else {
         overlay.style.background = 'rgba(0, 0, 0, 0.75)';
         overlay.style.backdropFilter = 'blur(8px)';
-        overlay.style.pointerEvents = 'auto';
+        overlay.style.pointerEvents = 'auto'; // Modal 模式阻礙點擊背景
         overlay.style.display = 'flex';
     }
 
     const exceedLv = item.exceedLevel || d.exceedLevel || 0;
-    const exceedHtml = exceedLv > 0 ? `<span class="val-exceed" style="font-size: 12px; margin-left: 5px;">突破 +${exceedLv}</span>` : "";
+    const exceedHtml = exceedLv > 0 ? `< span class= "val-exceed" style = "font-size: 12px; margin-left: 5px;" > 突破 + ${exceedLv}</span > ` : "";
 
     content.innerHTML = `
-        <div class="close-tooltip" onclick="window.closeEquipTooltip(event)">×</div>
+        < div class= "close-tooltip" onclick = "window.closeEquipTooltip(event)" >×</div >
         <div class="tooltip-header">
             <div class="tooltip-icon-frame"><img src="${icon}"></div>
             <div class="tooltip-title-area">
@@ -6446,24 +6651,26 @@ window.showEquipTooltip = function (slotId, mode = 'modal', event = null) {
             ${stonesHtml}
         </div>
         ${sourceHtml}
-    `;
+            `;
 
     if (mode === 'hover' && event) {
-        let x = event.clientX + 40;
-        let y = event.clientY - 20;
+        let x = event.clientX + 30;
+        let y = event.clientY - 50;
 
-        if (x + 440 > window.innerWidth) {
-            x = event.clientX - 450;
+        // 防止超出右邊
+        if (x + 350 > window.innerWidth) {
+            x = event.clientX - 360;
         }
 
         content.style.position = 'fixed';
         content.style.left = x + 'px';
         content.style.top = y + 'px';
 
+        // 視窗邊緣校正
         setTimeout(() => {
             const rect = content.getBoundingClientRect();
             if (rect.bottom > window.innerHeight) {
-                content.style.top = (window.innerHeight - rect.height - 30) + 'px';
+                content.style.top = (window.innerHeight - rect.height - 20) + 'px';
             }
             if (rect.top < 0) {
                 content.style.top = '10px';
@@ -6486,7 +6693,10 @@ window.closeEquipTooltip = function (e) {
         overlay.style.display = 'none';
         overlay.style.pointerEvents = 'none';
     }
-    console.log("[Tooltip] Closed");
+    if (tooltipHideTimer) {
+        clearTimeout(tooltipHideTimer);
+        tooltipHideTimer = null;
+    }
 };
 
 window.switchEquipTab = function (tab) {

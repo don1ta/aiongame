@@ -85,6 +85,7 @@
                                     完整</div>
                             </div>
                         </div>
+                        <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 
                         <div id="integrated-tab-content-area"
                             style="flex: 1; position: relative; overflow-y: auto; overflow-x: hidden; padding-right: 5px;">
@@ -93,19 +94,26 @@
 
                             <!-- 簡易清單 -->
                             <div id="equip-tab-simple" style="display:none;">
-                                <div class="mini-section-header">⚔️ 武器與防具</div>
+                                <div class="mini-section-header"
+                                    style="display:flex; justify-content:space-between; align-items:center; padding:10px ;">
+                                    <span>⚔️ 武器與防具</span>
+                                    <!-- 📸 全能量門截圖按鈕 - 放在此處擷取整個簡易分頁 -->
+                                    <div id="btn-equip-screenshot" class="stat-tab-btn"
+                                        style="background: rgba(46, 204, 113, 0.2); color: #2ecc71; margin: 0; padding: 4px 15px; font-size: 12px; border: 1px solid rgba(46, 204, 113, 0.3);"
+                                        onclick="window.downloadEquipScreenshot()">📸 一鍵截圖 </div>
+                                </div>
                                 <div id="equip-armor-list-simple" class="grid-box-container"
                                     style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));"></div>
-                                <div class="mini-section-header">📿 飾品與配件</div>
+                                <div class="mini-section-header" style="padding:10px ;">📿 飾品與配件</div>
                                 <div id="equip-accessory-list-simple" class="grid-box-container"
                                     style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));"></div>
                             </div>
 
                             <!-- 完整細項 -->
                             <div id="equip-tab-detail" style="display:none;">
-                                <div class="mini-section-header">⚔️ 武器與防具</div>
+                                <div class="mini-section-header" style="padding:10px">⚔️ 武器與防具</div>
                                 <div id="equip-armor-list"></div>
-                                <div class="mini-section-header">📿 飾品與配件</div>
+                                <div class="mini-section-header" style="padding:10px">📿 飾品與配件</div>
                                 <div id="equip-accessory-list"></div>
                             </div>
                         </div>
