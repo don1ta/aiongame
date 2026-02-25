@@ -6551,7 +6551,7 @@ window.showEquipTooltip = function (slotId, mode = 'modal', event = null) {
     let mainStatsHtml = '';
     if (d.mainStats && d.mainStats.length > 0) {
         mainStatsHtml = `
-        < div class= "tooltip-section" >
+        <div class="tooltip-section">
         <div class="tooltip-section-title">主要能力值</div>
                 ${d.mainStats.map(s => `
                     <div class="stat-row">
@@ -6563,14 +6563,14 @@ window.showEquipTooltip = function (slotId, mode = 'modal', event = null) {
                     </div>
                 `).join('')
             }
-            </div > `;
+            </div>`;
     }
 
     // 副能力值
     let subStatsHtml = '';
     if (d.subStats && d.subStats.length > 0) {
         subStatsHtml = `
-            < div class= "tooltip-section" >
+            <div class="tooltip-section">
             <div class="tooltip-section-title">隨機能力值</div>
                 ${d.subStats.map(s => `
                     <div class="stat-row">
@@ -6579,14 +6579,14 @@ window.showEquipTooltip = function (slotId, mode = 'modal', event = null) {
                     </div>
                 `).join('')
             }
-            </div > `;
+            </div>`;
     }
 
     // 魔石相嵌
     let stonesHtml = '';
     if (d.magicStoneStat && d.magicStoneStat.length > 0) {
         stonesHtml = `
-            < div class= "tooltip-section" >
+            <div class="tooltip-section">
                 <div class="tooltip-section-title">魔石槽位</div>
                 <div class="magic-stone-list">
                     ${d.magicStoneStat.map(s => {
@@ -6599,14 +6599,14 @@ window.showEquipTooltip = function (slotId, mode = 'modal', event = null) {
                         `;
         }).join('')}
                 </div>
-            </div > `;
+            </div>`;
     }
 
     // 神石資訊
     let godStoneHtml = '';
     if (d.godStoneStat && d.godStoneStat.length > 0) {
         godStoneHtml = `
-            < div class= "tooltip-section" >
+            <div class="tooltip-section">
             <div class="tooltip-section-title">神石</div>
                 ${d.godStoneStat.map(gs => {
             const gsColor = getGradeColor(gs.grade || 'unique');
@@ -6618,13 +6618,13 @@ window.showEquipTooltip = function (slotId, mode = 'modal', event = null) {
                     `;
         }).join('')
             }
-            </div > `;
+            </div>`;
     }
 
     // 物品來源
-    const sourceHtml = d.sources ? `< div class= "tooltip-footer" > 來源: ${d.sources.join(', ')}</div > ` : '';
+    const sourceHtml = d.sources ? `<div class="tooltip-footer">來源: ${d.sources.join(', ')}</div>` : '';
 
-    content.className = `equip - tooltip tooltip - rarity - ${rarityClass}`;
+    content.className = `equip-tooltip tooltip-rarity-${rarityClass}`;
     if (mode === 'hover') {
         content.classList.add('is-hover');
         overlay.style.background = 'transparent';
@@ -6639,10 +6639,10 @@ window.showEquipTooltip = function (slotId, mode = 'modal', event = null) {
     }
 
     const exceedLv = item.exceedLevel || d.exceedLevel || 0;
-    const exceedHtml = exceedLv > 0 ? `< span class= "val-exceed" style = "font-size: 12px; margin-left: 5px;" > 突破 + ${exceedLv}</span > ` : "";
+    const exceedHtml = exceedLv > 0 ? `<span class="val-exceed" style="font-size: 12px; margin-left: 5px;">突破 +${exceedLv}</span>` : "";
 
     content.innerHTML = `
-        < div class= "close-tooltip" onclick = "window.closeEquipTooltip(event)" >×</div >
+        <div class="close-tooltip" onclick="window.closeEquipTooltip(event)">×</div>
         <div class="tooltip-header">
             <div class="tooltip-icon-frame"><img src="${icon}"></div>
             <div class="tooltip-title-area">
