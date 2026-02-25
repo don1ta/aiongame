@@ -2874,13 +2874,15 @@
             display: flex;
             justify-content: center;
             align-items: flex-start;
-            gap: 20px;
-            padding: 30px 15px;
+            gap: 10px;
+            /* 從 20px 縮小 */
+            padding: 20px 10px;
+            /* 從 30px 縮小 */
             background: radial-gradient(circle at center, rgba(30, 40, 60, 0.4), rgba(10, 14, 23, 0.9));
             border-radius: 16px;
             position: relative;
             overflow: visible;
-            min-height: 520px;
+            min-height: 480px;
             box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.5);
             border: 1px solid rgba(255, 255, 255, 0.03);
             margin: 10px 0;
@@ -2891,7 +2893,8 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            width: 220px;
+            width: 170px;
+            /* 從 220px 縮小，緊湊佈局 */
             order: 2;
             z-index: 10;
         }
@@ -2994,8 +2997,9 @@
         .equip-side-column {
             display: grid;
             grid-template-columns: repeat(2, 68px);
-            grid-gap: 12px;
-            padding: 10px;
+            grid-gap: 8px;
+            /* 從 12px 縮小 */
+            padding: 5px;
             z-index: 5;
         }
 
@@ -3126,8 +3130,9 @@
                 flex-wrap: wrap;
                 /* 允許換行 */
                 justify-content: center;
-                gap: 15px;
-                padding: 10px;
+                gap: 8px;
+                /* 從 15px 縮小 */
+                padding: 10px 5px;
             }
 
             .equip-layout-center {
@@ -3189,7 +3194,8 @@
 
         .equip-tooltip {
             width: 100%;
-            max-width: 420px;
+            max-width: 310px;
+            /* 大幅縮小寬度，讓數值靠近標籤 */
             background: #0d1117;
             border: 1px solid rgba(255, 217, 61, 0.2);
             border-radius: 12px;
@@ -3197,14 +3203,20 @@
             box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9);
             position: relative;
             user-select: none;
+            display: flex;
+            flex-direction: column;
+            max-height: 85vh;
+            /* 限制高度，避免手機版 X 消失 */
         }
 
         .tooltip-header {
-            padding: 20px;
+            padding: 12px 15px;
             display: flex;
-            gap: 15px;
+            gap: 12px;
             position: relative;
             background: linear-gradient(to bottom, rgba(255, 255, 255, 0.05), transparent);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            flex-shrink: 0;
         }
 
         .tooltip-header::before {
@@ -3294,18 +3306,30 @@
         }
 
         .tooltip-body {
-            padding: 0 20px 20px;
+            padding: 10px 15px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        /* 自定義捲軸樣式，更美觀 */
+        .tooltip-body::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .tooltip-body::-webkit-scrollbar-thumb {
+            background: rgba(255, 217, 61, 0.2);
+            border-radius: 10px;
         }
 
         .tooltip-section {
             border-top: 1px solid rgba(255, 255, 255, 0.05);
-            padding: 15px 0;
+            padding: 8px 0;
         }
 
         .tooltip-section-title {
-            font-size: 12px;
+            font-size: 11px;
             color: #535c68;
-            margin-bottom: 10px;
+            margin-bottom: 4px;
             font-weight: bold;
             text-transform: uppercase;
             letter-spacing: 1px;
@@ -3313,18 +3337,31 @@
 
         .stat-row {
             display: flex;
-            justify-content: space-between;
-            margin-bottom: 6px;
-            font-size: 14px;
+            align-items: baseline;
+            margin-bottom: 2px;
+            font-size: 13px;
         }
 
         .stat-label {
             color: #adb5bd;
+            flex-shrink: 0;
+        }
+
+        /* 加入虛線橋接，消除中間留白感 */
+        .stat-row::after {
+            content: "";
+            flex: 1;
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.08);
+            margin: 0 8px;
+            height: 0;
+            order: 1;
         }
 
         .stat-value {
             color: #fff;
             font-weight: 600;
+            flex-shrink: 0;
+            order: 2;
         }
 
         .stat-value.bonus {
@@ -3332,37 +3369,58 @@
         }
 
         .magic-stone-list {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
         }
 
         .stone-item {
             display: flex;
             align-items: center;
-            gap: 10px;
-            background: rgba(0, 0, 0, 0.2);
-            padding: 8px;
-            border-radius: 6px;
+            gap: 6px;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 4px 6px;
+            border-radius: 4px;
             border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         .stone-icon {
-            width: 24px;
-            height: 24px;
+            width: 20px;
+            height: 20px;
             flex-shrink: 0;
         }
 
         .stone-text {
-            font-size: 13px;
-            color: #e9ecef;
+            font-size: 11px;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
+        /* 數值顏色分層 */
+        .val-base {
+            color: #ffffff;
+        }
+
+        .val-enchant {
+            color: #3498db;
+        }
+
+        /* 強化顏色 - 藍 */
+        .val-exceed {
+            color: #e67e22;
+        }
+
+        /* 突破顏色 - 橘 */
+
         .tooltip-footer {
-            padding: 15px 20px;
+            padding: 8px 15px;
             background: rgba(0, 0, 0, 0.2);
-            font-size: 12px;
+            font-size: 11px;
             color: #4b6584;
+            flex-shrink: 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         @keyframes fadeIn {
@@ -3379,23 +3437,22 @@
 
         .close-tooltip {
             position: absolute;
-            top: 10px;
-            right: 10px;
-            width: 44px;
-            /* 加大觸控面積 */
-            height: 44px;
-            background: rgba(0, 0, 0, 0.7);
-            border: 2px solid rgba(255, 255, 255, 0.4);
+            top: 8px;
+            right: 8px;
+            width: 32px;
+            /* 稍微縮小一點但保持好按 */
+            height: 32px;
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.4);
             border-radius: 50%;
             color: #fff;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 26px;
+            font-size: 20px;
             font-weight: bold;
             cursor: pointer;
-            z-index: 99999 !important;
-            /* 超高層級 */
+            z-index: 100003 !important;
             transition: all 0.2s ease;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
             pointer-events: auto !important;

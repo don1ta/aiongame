@@ -6156,7 +6156,10 @@ window.showEquipTooltip = function (slotId, mode = 'modal', event = null) {
                 ${d.mainStats.map(s => `
                     <div class="stat-row">
                         <span class="stat-label">${s.name}</span>
-                        <span class="stat-value">${s.value}${s.extra && s.extra !== '0' ? ` <span class="bonus">(+${s.extra})</span>` : ''}</span>
+                        <span class="stat-value">
+                            <span class="val-base">${s.value}</span>
+                            ${s.extra && s.extra !== '0' ? `<span class="val-enchant"> (+${s.extra})</span>` : ''}
+                        </span>
                     </div>
                 `).join('')}
             </div>`;
@@ -6184,13 +6187,41 @@ window.showEquipTooltip = function (slotId, mode = 'modal', event = null) {
             <div class="tooltip-section">
                 <div class="tooltip-section-title">魔石槽位</div>
                 <div class="magic-stone-list">
-                    ${d.magicStoneStat.map(s => `
-                        <div class="stone-item">
-                            <img class="stone-icon" src="${s.icon}">
-                            <div class="stone-text">${s.name} ${s.value}</div>
-                        </div>
-                    `).join('')}
+                    ${d.magicStoneStat.map(s => {
+            const sColor = getGradeColor(s.grade || 'common');
+            return `
+                            <div class="stone-item">
+                                <img class="stone-icon" src="${s.icon}">
+                                <div class="stone-text" style="color: ${sColor}">${s.name} ${s.value}</div>
+                            </div>
+                        `;
+        }).join('')}
                 </div>
+            </div>`;
+    }
+
+    // 神石資訊
+    let godStoneHtml = '';
+    if (d.godStoneStat && d.godStoneStat.length > 0) {
+        godStoneHtml = `
+            <div class="tooltip-section">
+                <div class="tooltip-section-title">神石</div>
+                ${d.godStoneStat.map(gs => {
+            const gsColor = getGradeColor(gs.grade || 'unique');
+            return `
+                        <div style="
+                            margin-top: 4px; 
+                            border: 1px dashed ${gsColor}; 
+                            padding: 8px; 
+                            font-size: 12px; 
+                            border-radius: 6px; 
+                            background: rgba(0,0,0,0.2);
+                        ">
+                            <b style="color:${gsColor}">${gs.name}</b>
+                            <div style="color: #adb5bd; margin-top: 4px; line-height: 1.4;">${gs.desc}</div>
+                        </div>
+                    `;
+        }).join('')}
             </div>`;
     }
 
@@ -6211,12 +6242,15 @@ window.showEquipTooltip = function (slotId, mode = 'modal', event = null) {
         overlay.style.display = 'flex';
     }
 
+    const exceedLv = item.exceedLevel || d.exceedLevel || 0;
+    const exceedHtml = exceedLv > 0 ? `<span class="val-exceed" style="font-size: 12px; margin-left: 5px;">突破+${exceedLv}</span>` : "";
+
     content.innerHTML = `
-        ${mode === 'modal' ? `<div class="close-tooltip" onclick="window.closeEquipTooltip(event)">×</div>` : ''}
+        <div class="close-tooltip" onclick="window.closeEquipTooltip(event)">×</div>
         <div class="tooltip-header">
             <div class="tooltip-icon-frame"><img src="${icon}"></div>
             <div class="tooltip-title-area">
-                <div class="tooltip-name">${item.enchantLevel > 0 ? `+${item.enchantLevel} ` : ''}${name}</div>
+                <div class="tooltip-name">${item.enchantLevel > 0 ? `+${item.enchantLevel} ` : ''}${name}${exceedHtml}</div>
                 <div class="tooltip-sub-info">
                     <span class="tooltip-grade-label">${gradeName}</span>
                     ${d.categoryName ? `<span>${d.categoryName}</span>` : ''}
@@ -6227,6 +6261,7 @@ window.showEquipTooltip = function (slotId, mode = 'modal', event = null) {
         <div class="tooltip-body">
             ${mainStatsHtml}
             ${subStatsHtml}
+            ${godStoneHtml}
             ${stonesHtml}
         </div>
         ${sourceHtml}
