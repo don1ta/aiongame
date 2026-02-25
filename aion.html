@@ -61,7 +61,10 @@
                     <!-- 左側固定欄：個人資訊 -->
                     <div class="equip-sidebar-profile" id="equip-sidebar-profile"
                         style="width: 280px; background: rgba(0,0,0,0.2); border-right: 1px solid var(--border); padding: 30px 20px; display: flex; flex-direction: column; align-items: center; gap: 20px;">
-                        <!-- 數據將由 JS 動態填充 -->
+                        <!-- 角色資訊由 JS processData 動態填充至 new-profile-header -->
+                        <div id="new-profile-header"
+                            style="display:none; width:100%; flex-direction:column; align-items:center; gap:15px;">
+                        </div>
                     </div>
 
                     <!-- 右側動態欄：分頁切換內容 -->

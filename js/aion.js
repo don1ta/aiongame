@@ -1868,7 +1868,7 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                                     </div>
                                     ${(pTitle && pTitle !== "無稱號") ? `
                                     <div class="meta-item">
-                                        <span class="meta-icon">${abyssGradeIcon ? `<img src="${getCorrectIcon(abyssGradeIcon)}" style="width:16px; height:16px;">` : '🎖️'}</span>
+                                        <span class="meta-icon">🎖️</span>
                                         <span class="meta-text">${pTitle}</span>
                                     </div>` : ''}
                                     <div id="abyss-badge-new" class="meta-item abyss-rank" style="display:none;">
@@ -1885,16 +1885,26 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                                     <div class="score-header"><span class="score-icon">📏</span>遊戲裝分</div>
                                     <div class="score-value-container"><div class="score-value" style="font-size: 26px;">${pItemLv}</div></div>
                                 </div>
-                                ${(ratingsData && ratingsData.PVE) ? `
-                                <div class="item-score-card" style="background:linear-gradient(135deg, rgba(243,156,18,0.1), rgba(0,0,0,0)); border-color:rgba(243,156,18,0.3); border-left-color:#f39c12;">
+                                ${(ratingsData && ratingsData.PVE) ? (() => {
+                    const pveVal = Math.floor(ratingsData.PVE.score);
+                    // 顏色判斷：50000+ 紫，40000+ 紅，30000+ 金，其餘白
+                    const pveColor = pveVal >= 50000 ? '#a855f7' : pveVal >= 40000 ? '#ef4444' : pveVal >= 30000 ? '#ffd700' : '#ffffff';
+                    const pveBorderColor = pveVal >= 50000 ? '#a855f7' : pveVal >= 40000 ? '#ef4444' : pveVal >= 30000 ? '#f39c12' : '#555';
+                    return `
+                                <div class="item-score-card" style="background:linear-gradient(135deg, rgba(243,156,18,0.08), rgba(0,0,0,0)); border-color:${pveBorderColor}44; border-left-color:${pveBorderColor};">
                                     <div class="score-header"><span class="score-icon">🐲</span> PVE 裝分</div>
-                                    <div class="score-value-container"><div class="score-value pve-score">${ratingsData.PVE.score.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</div></div>
-                                </div>` : ''}
-                                ${(ratingsData && ratingsData.PVP) ? `
-                                <div class="item-score-card" style="background:linear-gradient(135deg, rgba(155,89,182,0.1), rgba(0,0,0,0)); border-color:rgba(155,89,182,0.3); border-left-color:#9b59b6;">
+                                    <div class="score-value-container"><div class="score-value pve-score" style="color:${pveColor}; text-shadow:0 0 10px ${pveColor}66;">${pveVal.toLocaleString()}</div></div>
+                                </div>`;
+                })() : ''}
+                                ${(ratingsData && ratingsData.PVP) ? (() => {
+                    const pvpVal = Math.floor(ratingsData.PVP.score);
+                    const pvpIsEmpty = pvpVal <= 0;
+                    return `
+                                <div class="item-score-card" style="background:linear-gradient(135deg, rgba(168,85,247,0.08), rgba(0,0,0,0)); border-color:${pvpIsEmpty ? 'rgba(255,255,255,0.08)' : 'rgba(168,85,247,0.4)'}; border-left-color:${pvpIsEmpty ? '#444' : '#a855f7'};">
                                     <div class="score-header"><span class="score-icon">⚔️</span> PVP 裝分</div>
-                                    <div class="score-value-container"><div class="score-value pvp-score">${Math.floor(ratingsData.PVP.score).toLocaleString()}</div></div>
-                                </div>` : ''}
+                                    <div class="score-value-container"><div class="score-value pvp-score" style="color:${pvpIsEmpty ? '#555' : '#a855f7'}; text-shadow:${pvpIsEmpty ? 'none' : '0 0 10px #a855f766'}; font-size:${pvpIsEmpty ? '14px' : 'inherit'}; font-style:${pvpIsEmpty ? 'italic' : 'normal'}">${pvpIsEmpty ? '尚未有紀錄資料' : pvpVal.toLocaleString()}</div></div>
+                                </div>`;
+                })() : ''}
                             </div>
                             <div class="update-time-pill" title="官方數據更新時間">
                                 <span class="update-icon">API更新時間</span> ${updateTimeStr}
@@ -6132,11 +6142,11 @@ window.renderLayoutTab = function (json) {
             <div class="ranking-summary-box" style="width: 100%; margin-top: auto; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05);">
                 <div class="ranking-item" style="border:none; padding: 5px 0;">
                     <span class="label">PVE</span>
-                    <span class="value" style="font-family: monospace; font-size: 16px;">${pveScore.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    <span class="value" style="font-family: monospace; font-size: 16px; color: ${pveScore >= 50000 ? '#a855f7' : pveScore >= 40000 ? '#ef4444' : pveScore >= 30000 ? '#ffd700' : '#f8f9fa'}; text-shadow: 0 0 8px ${pveScore >= 50000 ? '#a855f755' : pveScore >= 40000 ? '#ef444455' : pveScore >= 30000 ? '#ffd70055' : 'none'}; font-weight: ${pveScore >= 30000 ? '900' : '400'};">${Math.floor(pveScore).toLocaleString()}</span>
                 </div>
                 <div class="ranking-item" style="border:none; padding: 5px 0;">
                     <span class="label">PVP</span>
-                    <span class="value" style="font-family: monospace; font-size: 16px;">${pvpScore.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    <span class="value" style="font-family: monospace; font-size: ${pvpScore > 0 ? '16px' : '12px'}; color: ${pvpScore > 0 ? '#a855f7' : '#555'}; text-shadow: ${pvpScore > 0 ? '0 0 8px #a855f755' : 'none'}; font-weight: ${pvpScore > 0 ? '900' : '400'}; font-style: ${pvpScore > 0 ? 'normal' : 'italic'}">${pvpScore > 0 ? Math.floor(pvpScore).toLocaleString() : '尚未有紀錄資料'}</span>
                 </div>
             </div>
         `;
