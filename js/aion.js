@@ -1430,6 +1430,26 @@ function getCorrectIcon(path) {
     return getProxyUrl(cleanPath);
 }
 
+/**
+ * 取得本地職業圖示路徑
+ */
+function getLocalClassIcon(className) {
+    if (!className) return "";
+    const mapping = {
+        "劍星": "gladiator.png",
+        "守護星": "templar.png",
+        "殺星": "assassin.png",
+        "弓星": "ranger.png",
+        "魔道星": "sorcerer.png",
+        "精靈星": "elementalist.png",
+        "治癒星": "cleric.png",
+        "護法星": "chanter.png"
+    };
+    const fileName = mapping[className];
+    if (fileName) return `./icon/${fileName}`;
+    return "";
+}
+
 // 獨立渲染健檢分析 UI 函數
 function renderHealthCheckUI(analysis) {
     const container = document.getElementById('health-check-container');
@@ -1742,6 +1762,7 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
 
     // 從 API 回傳的結果中抓取時間
     const apiUpdateTime = json.queryTimestamp || (json.queryResult ? json.queryResult.queryTimestamp : null);
+    window.__LAST_UPDATE_TIME__ = apiUpdateTime; // 持久化供佈覽使用
 
     // 兼容不同的數據結構層次
     const data = json.queryResult ? json.queryResult.data : (json.data ? json.data : json);
@@ -1750,10 +1771,12 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
     const rating = json.rating || (json.queryResult ? json.queryResult.rating : null);
 
     // 🛡️ Robust Ratings Extraction
-    // Check multiple paths: data.ratings, rating.ratings, json.ratings
-    const ratingsData = (data && data.ratings) ? data.ratings :
-        (rating && rating.ratings) ? rating.ratings :
-            (json.ratings ? json.ratings : null);
+    // Check multiple paths: queryResult.ratings (New API), data.ratings, rating.ratings, json.ratings
+    const ratingsData = (json.queryResult && json.queryResult.ratings) ? json.queryResult.ratings :
+        (json.ratings ? json.ratings :
+            ((data && data.ratings) ? data.ratings :
+                ((rating && rating.ratings) ? rating.ratings : null)));
+
 
     console.log("[RatingDebug] Extracted ratings:", ratingsData);
 
@@ -1805,6 +1828,7 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
             const pServer = data.profile.serverName;
             const pLv = data.profile.characterLevel;
             const pClass = data.profile.className;
+            const pClassIcon = getLocalClassIcon(pClass) || getCorrectIcon(data.profile.classIcon || "");
             const pLegion = data.profile.legionName; // 軍團
 
             // 找出道具等級
@@ -1827,21 +1851,19 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                             <div class="profile-info">
                                 <div class="profile-name-row">
                                     <span class="p-name-lg">${pName}</span>
-                                    <span class="p-title-sm">${pTitle}</span>
                                 </div>
                                 <div class="profile-meta-grid">
                                     <div class="meta-item">
-                                        <span class="meta-icon">🌏</span>
-                                        <span class="meta-text">${pServer}</span>
+                                        <span class="meta-text">${pServer} | ${pLegion || "無公會"}</span>
                                     </div>
                                     <div class="meta-item">
-                                        <span class="meta-icon">⚔️</span>
+                                        <span class="meta-icon">${pClassIcon ? `<img src="${pClassIcon}" style="width:16px; height:16px; position: relative; top: 1px;">` : '⚔️'}</span>
                                         <span class="meta-text">${pClass}</span>
                                     </div>
-                                    ${pLegion ? `
+                                    ${(pTitle && pTitle !== "無稱號") ? `
                                     <div class="meta-item">
-                                        <span class="meta-icon">🛡️</span>
-                                        <span class="meta-text">${pLegion}</span>
+                                        <span class="meta-icon">${abyssGradeIcon ? `<img src="${getCorrectIcon(abyssGradeIcon)}" style="width:16px; height:16px;">` : '🎖️'}</span>
+                                        <span class="meta-text">${pTitle}</span>
                                     </div>` : ''}
                                     <div id="abyss-badge-new" class="meta-item abyss-rank" style="display:none;">
                                         <span class="meta-icon">🏆</span>
@@ -1855,7 +1877,7 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                             <div class="score-card-group" style="display:flex; gap:10px;">
                                 <div class="item-score-card">
                                     <div class="score-header"><span class="score-icon">📏</span>遊戲裝分</div>
-                                    <div class="score-value-container"><div class="score-value">${pItemLv}</div></div>
+                                    <div class="score-value-container"><div class="score-value" style="font-size: 26px;">${pItemLv}</div></div>
                                 </div>
                                 ${(ratingsData && ratingsData.PVE) ? `
                                 <div class="item-score-card" style="background:linear-gradient(135deg, rgba(243,156,18,0.1), rgba(0,0,0,0)); border-color:rgba(243,156,18,0.3); border-left-color:#f39c12;">
@@ -3896,8 +3918,8 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                                         </div>
                                     </div>`;
         }).join('')}
-                        </div >
-                    </div >
+                        </div>
+                    </div>
 
                     <div id="stat-tab-core" class="stat-tab-content">
                         <div class="stat-general-grid">
@@ -5970,125 +5992,253 @@ window.switchMainChartTab = function (tabName) {
 /**
  * NEW: Render the visual equipment layout (Basic Tab)
  */
+/**
+ * NEW: Render the visual equipment layout (Basic Tab) - Final Triple Column UI
+ */
 window.renderLayoutTab = function (json) {
     if (!json) return;
     const data = json.queryResult ? json.queryResult.data : (json.data ? json.data : json);
+    const sidebar = document.getElementById('equip-sidebar-profile');
     const container = document.getElementById('equip-tab-layout');
-    if (!container || !data) return;
+    if (!data) return;
 
-    // Map equipment by slot
-    const equipMap = {};
-    (data.itemDetails || []).forEach(item => {
-        equipMap[item.slotPos] = item;
-    });
-
-    // Also look in data.equipment.equipmentList if available
-    if (data.equipment && data.equipment.equipmentList) {
-        data.equipment.equipmentList.forEach(item => {
-            if (!equipMap[item.slotPos]) {
-                equipMap[item.slotPos] = item;
-            }
-        });
-    }
-
-    // Special: Add wing from data.petwing if not in equipmentList
-    if (data.petwing && data.petwing.wing && !equipMap[21]) {
-        equipMap[21] = {
-            detail: data.petwing.wing,
-            enchantLevel: data.petwing.wing.enchantLevel || 0,
-            icon: data.petwing.wing.icon,
-            grade: data.petwing.wing.grade
-        };
-    }
-
+    // --- 1. Basic Info & Ratings ---
     const p = data.profile || {};
     const pImg = getCorrectIcon(p.profileImage || "");
     const itemLvObj = data.stat.statList.find(s => s.type === "ItemLevel");
-    const itemLv = itemLvObj ? itemLvObj.value : "--";
+    const itemLv = itemLvObj ? itemLvObj.value : 0;
 
-    // Define Slot Layout (Optimized Aion 2 Layout based on user feedback and JSON data)
-    // Left: Weapons(1,2), Armor(3,4), Chest(5), Belt(17), Pants(6), Gloves(7), Wings(21), Boots(8)
-    const leftSlots = [
-        [1, 2],    // Weapons (主副手)
-        [3, 4],    // Head, Shoulder (頭部, 肩膀)
-        [5, 17],   // Torso, Belt (衣服, 腰帶 - API Slot 17)
-        [6, 7],    // Bottom, Gloves (下衣, 手套)
-        [21, 8]    // Wings, Boots (翅膀, 鞋子)
-    ];
+    const rating = json.rating || (json.queryResult ? json.queryResult.rating : null);
+    const ratingsData = (json.queryResult && json.queryResult.ratings) ? json.queryResult.ratings :
+        (json.ratings ? json.ratings :
+            ((data && data.ratings) ? data.ratings :
+                ((rating && rating.ratings) ? rating.ratings : null)));
 
-    // Right: Necklace(9-10?), Ears(11,12), Rings(13,14), Bracelets(15,16), Stones(23,24), Amulet(22)
-    const rightSlots = [
-        [10, 15],  // Necklace, Bracelet 1 (項鍊, 手鐲1)
-        [11, 12],  // Earring 1, Earring 2 (耳環1, 耳環2)
-        [13, 14],  // Ring 1, Ring 2 (戒指1, 戒指2)
-        [16, 23],  // Bracelet 2, Stone 1 (手鐲2, 古文石1)
-        [24, 22]   // Stone 2, Amulet (古文石2, 護身符)
-    ];
+    const pveScore = (ratingsData && ratingsData.PVE) ? ratingsData.PVE.score : 0;
+    const pvpScore = (ratingsData && ratingsData.PVP) ? ratingsData.PVP.score : 0;
 
-    window.__EQUIP_MAP__ = equipMap; // 供彈窗使用
+    let abyssRankName = "--";
+    let abyssGradeId = 0;
+    let abyssGradeIcon = "";
+    const abyssRanking = (data.ranking && data.ranking.rankingList) ? data.ranking.rankingList.find(r => {
+        const rType = r.rankingType || r.rankingContentsName || "";
+        return r.rankingContentsType === 1 || String(rType).includes('Abyss') || String(rType).includes('總體') || String(rType).includes('深淵');
+    }) : null;
 
-    const renderSlots = (slots) => {
-        return slots.map(row => row.map(slotId => generateSlotHtml(equipMap[slotId], slotId)).join('')).join('');
-    };
+    if (abyssRanking) {
+        if (abyssRanking.gradeName) abyssRankName = abyssRanking.gradeName;
+        abyssGradeId = abyssRanking.gradeId || 0;
+        abyssGradeIcon = abyssRanking.gradeIcon || "";
+    }
 
-    function generateSlotHtml(item, slotId) {
-        if (!item) return `<div class="slot-item empty" title="槽位 ${slotId}"></div>`;
-        const d = item.detail || item;
-        let name = d.name || '未知裝備';
-        let icon = getCorrectIcon(item.icon || d.icon);
-        const enchant = (item.enchantLevel > 0) ? `<div class="slot-enchant">+${item.enchantLevel}</div>` : "";
-        const exceed = (item.exceedLevel > 0) ? `<div class="slot-exceed">${item.exceedLevel}</div>` : "";
+    const guildName = (data.ranking && data.ranking.rankingList) ? (data.ranking.rankingList.find(r => r.guildName)?.guildName || "無公會") : "無公會";
 
-        const rawGrade = (d.grade || item.grade || 'common').toLowerCase();
-        let rarityClass = 'common';
-        if (rawGrade.includes('myth') || rawGrade.includes('神話') || rawGrade.includes('ancient') || rawGrade.includes('古代')) rarityClass = 'myth';
-        else if (rawGrade.includes('unique') || rawGrade.includes('唯一') || rawGrade.includes('獨特')) rarityClass = 'unique';
-        else if (rawGrade.includes('special') || rawGrade.includes('特殊')) rarityClass = 'special';
-        else if (rawGrade.includes('legend') || rawGrade.includes('傳說') || rawGrade.includes('epic') || rawGrade.includes('史詩')) rarityClass = 'legend';
-        else if (rawGrade.includes('rare') || rawGrade.includes('稀有')) rarityClass = 'rare';
+    let rankColor = "#fff";
+    if (abyssGradeId >= 1 && abyssGradeId <= 10) rankColor = "#ff4d4d";
+    else if (abyssGradeId >= 11 && abyssGradeId <= 13) rankColor = "#f1c40f";
+    else if (abyssGradeId >= 14 && abyssGradeId <= 18) rankColor = "#ffffff";
+    // Fallback if gradeId not found but name matches (legacy support)
+    else if (abyssRankName.includes("軍官")) rankColor = "#f1c40f";
+    else if (abyssRankName.includes("將軍") || abyssRankName.includes("司令官") || abyssRankName.includes("軍長") || abyssRankName.includes("大將")) rankColor = "#ff4d4d";
 
-        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
+    const equipMap = {};
+    (data.itemDetails || []).forEach(item => { equipMap[item.slotPos] = item; });
+    if (data.equipment && data.equipment.equipmentList) {
+        data.equipment.equipmentList.forEach(item => { if (!equipMap[item.slotPos]) equipMap[item.slotPos] = item; });
+    }
+    if (data.petwing && data.petwing.wing && !equipMap[21]) {
+        equipMap[21] = { detail: data.petwing.wing, enchantLevel: data.petwing.wing.enchantLevel || 0, icon: data.petwing.wing.icon, grade: data.petwing.wing.grade };
+    }
+    window.__EQUIP_MAP__ = equipMap;
 
-        return `
-            <div class="slot-item slot-rarity-${rarityClass}" 
-                 style="cursor: pointer !important;" 
-                 title="${name}" 
-                 onclick="window.handleSlotClick(event, ${slotId})"
-                 onmouseenter="window.handleSlotHover(event, ${slotId})"
-                 onmouseleave="window.handleSlotLeave()">
-                <div class="slot-corner"></div>
-                <img src="${icon}" style="pointer-events: none;" onerror="this.src='https://questlog.gg/assets/Game/UI/Resource/Texture/Common/Icon/Icon_Default.png'">
-                ${enchant}
-                ${exceed}
+    // --- 2. Build Sidebar ---
+    let itemScoreColor = '#f8f9fa';
+    if (itemLv >= 3500) itemScoreColor = '#ff4d4d';
+    else if (itemLv >= 3000) itemScoreColor = '#f1c40f';
+    else if (itemLv >= 2500) itemScoreColor = '#00d4ff';
+    else if (itemLv >= 2000) itemScoreColor = '#2ecc71';
+
+    if (sidebar) {
+        sidebar.innerHTML = `
+            <div class="character-avatar-frame">
+                <img class="avatar-img" src="${pImg}">
+                <div class="lv-badge">Lv.${p.characterLevel || "--"}</div>
+            </div>
+            
+            <div class="score-luxury-card gold" style="width: 100%; text-align: center; border-left: none; border-bottom: 4px solid #f1c40f; background: rgba(0,0,0,0.4); margin-top: 10px;">
+                <div class="card-bg-glow"></div>
+                <div class="card-header" style="justify-content: center; font-size: 18px; color: ${itemScoreColor}; font-weight: 900; letter-spacing: 1px;">
+                    <span class="icon">🏆</span> ${itemLv.toLocaleString()}
+                </div>
+                <div class="card-value" style="font-size: 22px; margin: 10px 0; font-weight: 800; color: ${rankColor}; text-shadow: 0 0 10px ${rankColor}33; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                    ${abyssGradeIcon ? `<img src="${getCorrectIcon(abyssGradeIcon)}" style="width:24px; height:24px;"><span>${abyssRankName}</span>` : '<span>--</span>'}
+                </div>
+            </div>
+
+            <div class="layout-meta-tags" style="width: 100%; margin-top: 5px;">
+                <div class="meta-tag-btn">${p.serverName} | ${guildName}</div>
+                <div class="meta-tag-btn"><span class="icon">${(getLocalClassIcon(p.className) || p.classIcon) ? `<img src="${getLocalClassIcon(p.className) || getCorrectIcon(p.classIcon)}" style="width:16px; height:16px; vertical-align: middle; margin-right: 2px;">` : '⚔️'}</span> ${p.className}</div>
+                ${p.titleName ? `<div class="meta-tag-btn" style="color:#ffd93d;"><span class="icon">✨</span> ${p.titleName}</div>` : ''}
+            </div>
+
+            <div class="ranking-summary-box" style="width: 100%; margin-top: auto; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05);">
+                <div class="ranking-item" style="border:none; padding: 5px 0;">
+                    <span class="label">PVE</span>
+                    <span class="value" style="font-family: monospace; font-size: 16px;">${pveScore.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                </div>
+                <div class="ranking-item" style="border:none; padding: 5px 0;">
+                    <span class="label">PVP</span>
+                    <span class="value" style="font-family: monospace; font-size: 16px;">${pvpScore.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                </div>
             </div>
         `;
     }
 
-    container.innerHTML = `
-        <div class="equip-layout-wrapper">
-            <div class="equip-side-column left-side">
-                <div class="column-header-icon">⚔️</div>
-                ${renderSlots(leftSlots)}
-            </div>
-            <div class="equip-layout-center">
-                <div class="character-avatar-frame">
-                    <div class="frame-border"></div>
-                    <img class="avatar-img" src="${pImg}" onerror="this.src='https://cms-static.plaync.com/img/common/avatar_default.png'">
-                    <div class="lv-badge">Lv.${p.characterLevel || "--"}</div>
+    // --- Header Update ---
+    const headerTitle = document.getElementById('integrated-header-title');
+    if (headerTitle) {
+        headerTitle.textContent = `${p.characterName || ""} 基本資料`;
+    }
+
+    // --- 3. Build Guardian Force (Middle Column) ---
+    const boardNames = { nezakan: '奈薩肯', zikel: '吉凱爾', baizel: '白傑爾', triniel: '崔妮爾', ariel: '艾瑞爾', asphel: '阿斯佩爾', marchutan: '瑪爾庫坦' };
+    const boardList = data.daevanionBoardList || (data.daevanionBoard && data.daevanionBoard.daevanionBoardList) || [];
+    const guardianListHtml = Object.keys(boardNames).map(key => {
+        const board = boardList.find(b => String(b.name).toLowerCase().includes(key) || boardNames[key] === b.name);
+
+        let count = 0, total = 0;
+        if (board) {
+            count = board.openNodeCount || 0;
+            total = board.totalNodeCount || 0;
+            if (total === 0 && board.detail) {
+                count = board.detail.openStatEffectList?.length || 0;
+                total = board.detail.totalStatEffectCount || 0;
+            }
+        }
+        if (total === 0) total = 152;
+
+        const percent = total > 0 ? (count / total * 100) : 0;
+        const isCompleted = count >= total && total > 0;
+
+        return `
+            <div style="background: rgba(10, 10, 15, 0.3); padding: 10px 14px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.03); margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; backdrop-filter: blur(4px);">
+                <div style="width: 80px; font-size: 13px; font-weight: bold; color: rgba(255, 255, 255, 0.85); letter-spacing: 0.5px;">
+                    ${boardNames[key]}
                 </div>
-                <div class="character-basic-info">
-                    <div class="score">🏆 ${(typeof itemLv === 'number') ? itemLv.toLocaleString() : itemLv}</div>
-                    <div class="name">${p.characterName || "未知"}</div>
-                    <div class="title">${p.titleName || "無稱號資訊"}</div>
+                <div style="flex: 1; margin: 0 15px; position: relative;">
+                    <div style="width: 100%; height: 14px; background: rgba(0,0,0,0.5); border-radius: 4px; border: 1px solid rgba(255,255,255,0.08); overflow: hidden; display: flex; position: relative;">
+                        <div style="position: absolute; left: 0; width: 2px; background: rgba(255,255,255,0.3); top:0; bottom:0; z-index: 1;"></div>
+                        <div style="position: absolute; left: 50%; width: 1px; background: rgba(255,255,255,0.15); top:4px; bottom:4px; z-index: 1;"></div>
+                        <div style="position: absolute; right: 0; width: 2px; background: rgba(255,255,255,0.3); top:0; bottom:0; z-index: 1;"></div>
+                        <div style="width: ${percent}%; height: 100%; background: linear-gradient(90deg, rgba(241,196,15,0.1) 0%, rgba(241,196,15,0.4) 100%); border-right: 2px solid #f1c40f; position: relative; z-index: 2;"></div>
+                    </div>
+                </div>
+                <div style="text-align: right; min-width: 85px; display: flex; justify-content: flex-end;">
+                    ${isCompleted ?
+                `<span style="background: rgba(58, 28, 29, 0.9); border: 1px solid #ff5c5c; color: #ff7b7b; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; text-shadow: 0 0 2px rgba(255,123,123,0.5);">完成度 100%</span>` :
+                `<span style="font-size: 14px; font-weight: 800; color: #fff;">${count}</span><span style="font-size: 11px; color: rgba(255,255,255,0.3); margin-left:2px;">/${total}</span>`
+            }
                 </div>
             </div>
-            <div class="equip-side-column right-side">
-                <div class="column-header-icon">📿</div>
-                ${renderSlots(rightSlots)}
+        `;
+    }).join('');
+
+    // --- 4. Build Activity Rankings (Right Column) ---
+    const rankingTypeMapping = { 1: '深淵', 3: '惡夢', 4: '超越', 5: '孤獨競技場', 6: '協力競技場', 20: '討伐戰', 21: '覺醒戰' };
+    const rList = data.ranking?.rankingList || [];
+    const rankingRowsHtml = Object.keys(rankingTypeMapping).map(typeId => {
+        const r = rList.find(item => item.rankingContentsType == typeId);
+        const rankVal = (r && r.rank != null) ? r.rank : '-';
+
+        let change = r ? (r.rankChange || 0) : 0;
+        if (change === 0 && r && r.rank != null && r.prevRank != null) {
+            change = r.prevRank - r.rank;
+        }
+
+        let changeIcon = '<span class="change-icon change-none" style="opacity:0.2;">◈</span>';
+        if (change > 0) changeIcon = '<span class="change-icon change-up" style="color:#ff4d4d; text-shadow: 0 0 5px rgba(255,77,77,0.3);">▲</span>';
+        else if (change < 0) changeIcon = '<span class="change-icon change-down" style="color:#3498db; text-shadow: 0 0 5px rgba(52,152,219,0.3);">▼</span>';
+
+        return `
+            <div class="rank-row" style="background: rgba(40, 45, 60, 0.1); border-bottom: 1px solid rgba(255,255,255,0.03); padding: 6px 10px;">
+                <span class="label" style="color: #8b949e; font-size: 13px;">${rankingTypeMapping[typeId]}</span>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span class="value" style="color: #fff; font-weight: 900; font-size: 15px;">
+                        <span style="color: #f1c40f; opacity: 0.5; margin-right: 2px;">#</span>
+                        <span style="color: #fff;">${rankVal}</span>
+                    </span>
+                    ${changeIcon}
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    // --- 5. Final Render ---
+    if (container) {
+        const leftSlots = [[1, 2], [3, 4], [5, 17], [6, 7], [21, 8]];
+        const rightSlots = [[10, 15], [11, 12], [13, 14], [16, 23], [24, 22]];
+        const generateSlotBtn = (item, slotId) => {
+            if (!item) return `<div class="slot-item empty"></div>`;
+            const d = item.detail || item;
+            let icon = getCorrectIcon(item.icon || d.icon);
+            const enchant = (item.enchantLevel > 0) ? `<div class="slot-enchant">+${item.enchantLevel}</div>` : "";
+            const rawG = (d.grade || item.grade || 'common').toLowerCase();
+            let rc = 'common';
+            if (rawG.includes('myth') || rawG.includes('神話') || rawG.includes('ancient') || rawG.includes('古代')) rc = 'myth';
+            else if (rawG.includes('unique') || rawG.includes('唯一') || rawG.includes('獨特')) rc = 'unique';
+            else if (rawG.includes('special') || rawG.includes('特殊')) rc = 'special';
+            else if (rawG.includes('legend') || rawG.includes('傳說') || rawG.includes('epic') || rc.includes('史詩')) rc = 'legend';
+            else if (rawG.includes('rare') || rawG.includes('稀有')) rc = 'rare';
+
+            return `<div class="slot-item slot-rarity-${rc}" onclick="window.handleSlotClick(event, ${slotId})" onmouseenter="window.handleSlotHover(event, ${slotId})" onmouseleave="window.handleSlotLeave()">
+                <div class="slot-corner"></div><img src="${icon}" onerror="this.src='https://questlog.gg/assets/Game/UI/Resource/Texture/Common/Icon/Icon_Default.png'">${enchant}</div>`;
+        };
+
+        container.innerHTML = `
+        <div style="position: relative; padding-bottom: 20px;">
+            <div class="visual-layout-pure-grid" style="padding-top: 10px;">
+                <div class="equip-grid-column">
+                    <div style="display: flex; gap: 15px;">
+                        <div style="display: grid; grid-template-columns: repeat(2, 68px); grid-gap: 12px;">
+                            <div style="grid-column: span 2; text-align: center; opacity:0.3; font-size:18px;">⚔️</div>
+                            ${leftSlots.flat().map(id => generateSlotBtn(equipMap[id], id)).join('')}
+                        </div>
+                        <div style="display: grid; grid-template-columns: repeat(2, 68px); grid-gap: 12px;">
+                            <div style="grid-column: span 2; text-align: center; opacity:0.3; font-size:18px;">📿</div>
+                            ${rightSlots.flat().map(id => generateSlotBtn(equipMap[id], id)).join('')}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="guardian-force-column" style="flex: 1; min-width: 320px; background: rgba(20, 20, 30, 0.4); border-radius: 12px; padding: 12px; border: 1px solid rgba(255,255,255,0.05);">
+                    <div style="text-align: center; margin-bottom: 12px; font-weight: 800; color: #ffd93d; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 15px;">
+                         守護力
+                    </div>
+                    <div class="guardian-list-container">
+                        ${guardianListHtml}
+                    </div>
+                </div>
+
+                <div class="ranking-data-column" style="width: 200px; background: rgba(20, 20, 30, 0.4); border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); display: flex; flex-direction: column;">
+                    <div style="text-align: center; padding: 10px; font-weight: 800; color: #ffd93d; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 15px;">
+                        排名
+                    </div>
+                    ${rankingRowsHtml}
+                </div>
+            </div>
+            <div style="position: absolute; bottom: -5px; right: 0; font-size: 10px; color: rgba(139, 148, 158, 0.5); letter-spacing: 0.5px;">
+                數據同步：${new Date(window.__LAST_UPDATE_TIME__ || Date.now()).toLocaleTimeString()}
             </div>
         </div>
-    `;
+        `;
+    }
+
 };
+
+
+
+
+
 
 // --- Tooltip Functions ---
 window.handleSlotClick = function (e, slotId) {
@@ -6151,8 +6301,8 @@ window.showEquipTooltip = function (slotId, mode = 'modal', event = null) {
     let mainStatsHtml = '';
     if (d.mainStats && d.mainStats.length > 0) {
         mainStatsHtml = `
-            <div class="tooltip-section">
-                <div class="tooltip-section-title">主要能力值</div>
+        <div class="tooltip-section">
+            <div class="tooltip-section-title">主要能力值</div>
                 ${d.mainStats.map(s => `
                     <div class="stat-row">
                         <span class="stat-label">${s.name}</span>
@@ -6161,30 +6311,32 @@ window.showEquipTooltip = function (slotId, mode = 'modal', event = null) {
                             ${s.extra && s.extra !== '0' ? `<span class="val-enchant"> (+${s.extra})</span>` : ''}
                         </span>
                     </div>
-                `).join('')}
-            </div>`;
+                `).join('')
+            }
+            </div> `;
     }
 
     // 副能力值
     let subStatsHtml = '';
     if (d.subStats && d.subStats.length > 0) {
         subStatsHtml = `
-            <div class="tooltip-section">
-                <div class="tooltip-section-title">隨機能力值</div>
+        <div class="tooltip-section">
+            <div class="tooltip-section-title">隨機能力值</div>
                 ${d.subStats.map(s => `
                     <div class="stat-row">
                         <span class="stat-label">${s.name}</span>
                         <span class="stat-value bonus">${s.value}</span>
                     </div>
-                `).join('')}
-            </div>`;
+                `).join('')
+            }
+            </div> `;
     }
 
     // 魔石相嵌
     let stonesHtml = '';
     if (d.magicStoneStat && d.magicStoneStat.length > 0) {
         stonesHtml = `
-            <div class="tooltip-section">
+        <div class="tooltip-section">
                 <div class="tooltip-section-title">魔石槽位</div>
                 <div class="magic-stone-list">
                     ${d.magicStoneStat.map(s => {
@@ -6197,15 +6349,15 @@ window.showEquipTooltip = function (slotId, mode = 'modal', event = null) {
                         `;
         }).join('')}
                 </div>
-            </div>`;
+            </div> `;
     }
 
     // 神石資訊
     let godStoneHtml = '';
     if (d.godStoneStat && d.godStoneStat.length > 0) {
         godStoneHtml = `
-            <div class="tooltip-section">
-                <div class="tooltip-section-title">神石</div>
+        <div class="tooltip-section">
+            <div class="tooltip-section-title">神石</div>
                 ${d.godStoneStat.map(gs => {
             const gsColor = getGradeColor(gs.grade || 'unique');
             return `
@@ -6221,8 +6373,9 @@ window.showEquipTooltip = function (slotId, mode = 'modal', event = null) {
                             <div style="color: #adb5bd; margin-top: 4px; line-height: 1.4;">${gs.desc}</div>
                         </div>
                     `;
-        }).join('')}
-            </div>`;
+        }).join('')
+            }
+            </div> `;
     }
 
     // 物品來源
@@ -6243,7 +6396,7 @@ window.showEquipTooltip = function (slotId, mode = 'modal', event = null) {
     }
 
     const exceedLv = item.exceedLevel || d.exceedLevel || 0;
-    const exceedHtml = exceedLv > 0 ? `<span class="val-exceed" style="font-size: 12px; margin-left: 5px;">突破+${exceedLv}</span>` : "";
+    const exceedHtml = exceedLv > 0 ? `<span class="val-exceed" style="font-size: 12px; margin-left: 5px;">突破 +${exceedLv}</span>` : "";
 
     content.innerHTML = `
         <div class="close-tooltip" onclick="window.closeEquipTooltip(event)">×</div>
@@ -6309,23 +6462,24 @@ window.closeEquipTooltip = function (e) {
 };
 
 window.switchEquipTab = function (tab) {
-
+    const layoutTab = document.getElementById('equip-tab-layout');
     const detailTab = document.getElementById('equip-tab-detail');
     const simpleTab = document.getElementById('equip-tab-simple');
-    const layoutTab = document.getElementById('equip-tab-layout');
+
+    const btnLayout = document.getElementById('tab-btn-equip-layout');
     const btnDetail = document.getElementById('tab-btn-equip-detail');
     const btnSimple = document.getElementById('tab-btn-equip-simple');
-    const btnLayout = document.getElementById('tab-btn-equip-layout');
 
-    if (!detailTab || !simpleTab || !layoutTab) return;
+    if (!layoutTab || !detailTab || !simpleTab) return;
 
-    // Hide all
+    // Hide all tab contents
+    layoutTab.style.display = 'none';
     detailTab.style.display = 'none';
     simpleTab.style.display = 'none';
-    layoutTab.style.display = 'none';
+
+    if (btnLayout) btnLayout.classList.remove('active');
     if (btnDetail) btnDetail.classList.remove('active');
     if (btnSimple) btnSimple.classList.remove('active');
-    if (btnLayout) btnLayout.classList.remove('active');
 
     if (tab === 'detail') {
         detailTab.style.display = 'block';

@@ -53,53 +53,61 @@
         <div id="search-results" class="search-results-grid" style="display:none;"></div>
 
         <div id="main-content" class="dashboard">
-            <div class="header-combine-card">
-                <div id="new-profile-header" class="profile-new-header" style="display:none;"></div>
-                <div id="p-percentile-new" class="percentile-grid-new"></div>
-            </div>
 
-            <div class="card" id="nav-target-equip" style="padding: 15px 25px; scroll-margin-top: 20px;">
-                <div id="equipment-header" class="collapsible-header collapsed" onclick="toggleEquipmentList()"
-                    style="margin-top: 0; background: transparent; border: none; padding: 0;">
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <h3 style="margin: 0; border: none; padding: 0;">武器清單</h3>
+            <!-- 裝備分析系統：整合式大型區塊 -->
+            <!-- 裝備分析系統：整合式左資訊/右分頁佈局 -->
+            <div class="card" id="nav-target-equip"
+                style="scroll-margin-top: 20px; margin-bottom: 30px; padding: 0; overflow: hidden;">
+                <div class="split-integrated-layout" style="display: flex; align-items: stretch; min-height: 650px;">
+                    <!-- 左側固定欄：個人資訊 -->
+                    <div class="equip-sidebar-profile" id="equip-sidebar-profile"
+                        style="width: 280px; background: rgba(0,0,0,0.2); border-right: 1px solid var(--border); padding: 30px 20px; display: flex; flex-direction: column; align-items: center; gap: 20px;">
+                        <!-- 數據將由 JS 動態填充 -->
                     </div>
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <span style="font-size: 12px; color: #8b949e;">(點擊展開/收合)</span>
-                        <span id="equipment-toggle-icon" class="toggle-icon" style="transform: rotate(-90deg);">▼</span>
-                    </div>
-                </div>
 
-                <div id="equipment-wrapper" class="collapsible-content collapsed" style="margin-top: 20px;">
-                    <div class="stat-tabs-header" style="margin-bottom: 20px;">
-                        <div id="tab-btn-equip-layout" class="stat-tab-btn active" onclick="switchEquipTab('layout')">
-                            基本
+                    <!-- 右側動態欄：分頁切換內容 -->
+                    <div class="equip-main-content"
+                        style="flex: 1; display: flex; flex-direction: column; padding: 25px;">
+                        <div class="integrated-equip-header"
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                            <div class="header-title" style="display: flex; align-items: center; gap: 10px;">
+                                <span class="icon" style="font-size: 25px;">💫</span>
+                                <h3 id="integrated-header-title"
+                                    style="margin: 0; border: none; padding: 0; color: var(--gold-bright); font-size: 20px;">
+                                    基本資料</h3>
+                            </div>
+                            <div class="stat-tabs-header integrated-tabs" style="margin-bottom: 0;">
+                                <div id="tab-btn-equip-layout" class="stat-tab-btn active"
+                                    onclick="switchEquipTab('layout')">基本佈覽</div>
+                                <div id="tab-btn-equip-simple" class="stat-tab-btn" onclick="switchEquipTab('simple')">
+                                    簡易</div>
+                                <div id="tab-btn-equip-detail" class="stat-tab-btn" onclick="switchEquipTab('detail')">
+                                    完整</div>
+                            </div>
                         </div>
-                        <div id="tab-btn-equip-simple" class="stat-tab-btn" onclick="switchEquipTab('simple')">
-                            簡易
+
+                        <div id="integrated-tab-content-area" style="flex: 1; position: relative;">
+                            <!-- 基本佈覽 -->
+                            <div id="equip-tab-layout" style="display:block;"></div>
+
+                            <!-- 簡易清單 -->
+                            <div id="equip-tab-simple" style="display:none;">
+                                <div class="mini-section-header">⚔️ 武器與防具</div>
+                                <div id="equip-armor-list-simple" class="grid-box-container"
+                                    style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));"></div>
+                                <div class="mini-section-header">📿 飾品與配件</div>
+                                <div id="equip-accessory-list-simple" class="grid-box-container"
+                                    style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));"></div>
+                            </div>
+
+                            <!-- 完整細項 -->
+                            <div id="equip-tab-detail" style="display:none;">
+                                <div class="mini-section-header">⚔️ 武器與防具</div>
+                                <div id="equip-armor-list"></div>
+                                <div class="mini-section-header">📿 飾品與配件</div>
+                                <div id="equip-accessory-list"></div>
+                            </div>
                         </div>
-
-                        <div id="tab-btn-equip-detail" class="stat-tab-btn" onclick="switchEquipTab('detail')">
-                            完整</div>
-
-                    </div>
-
-                    <div id="equip-tab-layout" style="display:block;"></div>
-
-                    <div id="equip-tab-simple" style="display:none;">
-                        <div class="section-header" id="armor-header-simple">武器與防具</div>
-                        <div id="equip-armor-list-simple" class="grid-box-container"
-                            style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));"></div>
-                        <div class="section-header" id="accessory-header-simple">飾品與配件</div>
-                        <div id="equip-accessory-list-simple" class="grid-box-container"
-                            style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));"></div>
-                    </div>
-
-                    <div id="equip-tab-detail" style="display:none;">
-                        <div class="section-header" id="armor-header">武器與防具</div>
-                        <div id="equip-armor-list"></div>
-                        <div class="section-header" id="accessory-header">飾品與配件</div>
-                        <div id="equip-accessory-list"></div>
                     </div>
                 </div>
             </div>
@@ -296,8 +304,7 @@
                     <span style="font-size:16px; margin-bottom:2px;">👤</span>
                     <span>角色</span>
                 </a>
-                <a href="#nav-target-equip" class="nav-btn"
-                    onclick="if(document.getElementById('equipment-wrapper').classList.contains('collapsed')) toggleEquipmentList();">
+                <a href="#nav-target-equip" class="nav-btn">
                     <span style="font-size:16px; margin-bottom:2px;">⚔️</span>
                     <span>裝備</span>
                 </a>

@@ -63,7 +63,7 @@ async function fetchAndRenderScore(container, serverId, characterId) {
 
             // 決定分數專屬顏色
             let scoreColor = '#f8f9fa'; // 預設白
-            if (gameScore >= 4000) scoreColor = '#ff4d4d'; // 神話紅
+            if (gameScore >= 3500) scoreColor = '#ff4d4d'; // 神話紅
             else if (gameScore >= 3000) scoreColor = '#f1c40f'; // 英雄金
             else if (gameScore >= 2500) scoreColor = '#00d4ff'; // 稀有藍
             else if (gameScore >= 2000) scoreColor = '#2ecc71'; // 傳承綠
