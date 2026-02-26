@@ -308,13 +308,13 @@ const WING_DATABASE = {
         hold: { '飛行力': 200, '額外命中': 20, '額外防禦力': 100 }
     },
     '無我翅膀': {
-        grade: 'epic',
+        grade: 'unique',
         icon: 'https://questlog.gg/assets/Game/UI/Resource/Texture/Item/Wing/Icon_WingA_008.Icon_WingA_008.png',
         equip: { '貫穿': 500, '強擊': 0.03, '再生': 0.03, '鐵壁': 0.03 },
         hold: { '飛行力': 200, '額外防禦力': 100, '格檔': 10 }
     },
     '德拉瑪塔巢穴翅膀': {
-        grade: 'epic',
+        grade: 'unique',
         icon: 'https://questlog.gg/assets/Game/UI/Resource/Texture/Item/Wing/Icon_WingB_007A.Icon_WingB_007A.png',
         equip: { 'PVE攻擊力': 95, 'PVE防禦力': 500, 'PVE命中': 45, 'PVE傷害增幅': 0.035 },
         hold: { '飛行力': 200, '額外攻擊力': 10, '額外命中': 20 }
@@ -980,19 +980,18 @@ function updatePassiveSkills(data) {
 
 // Helper to get wing grade color (Corrected for Aion Standards)
 function getWingGradeColor(grade) {
-    const colors = {
-        'myth': '#e056fd',   // 神話 (紫) - Mythic
-        'epic': '#e67e22',   // 史詩/永恆 (橘) - Eternal
-        'unique': '#f1c40f', // 獨特/唯一 (金) - Unique
-        'legend': '#3498db', // 傳說 (藍) - Legend
-        'rare': '#2ecc71',   // 稀有 (綠) - Rare
-        'common': '#bdc3c7', // 普通 (白) - Common
-
-        // Fallbacks / Aliases
-        'ancient': '#e67e22', // 古代 usually matches Eternal/Epic orange
-        'heroic': '#3498db'   // Heroic usually matches Legend blue
-    };
-    return colors[grade] || '#bdc3c7';
+    if (!grade) return '#ffffff';
+    const g = String(grade).toLowerCase();
+    switch (g) {
+        case 'myth': case '神話': case 'ancient': case '古代': return '#e67e22'; // 神話/古代 (橙)
+        case 'unique': case '唯一': case '獨特': return '#f1c40f';              // 唯一/獨特 (金)
+        case 'special': return '#00ffcc';                                        // 特殊 (青)
+        case 'legend': case '傳說': case '傳承': case 'epic': case '史詩': return '#3498db'; // 傳說/史詩 (藍)
+        case 'heroic': return '#3498db';                                         // 英雄 (藍)
+        case 'rare': case '稀有': return '#2ecc71';                              // 稀有 (綠)
+        case 'common': case '一般': case 'normal': case '普通': return '#ffffff'; // 普通 (白)
+        default: return '#ffffff';
+    }
 }
 
 // --- 增益效果控制邏輯 ---
@@ -1108,7 +1107,7 @@ function initGainControls() {
                 statsInfo = "<div>請先勾選並選擇翅膀</div>";
             } else {
                 const count = item.selectedWings.length;
-                statsInfo = `<div style="margin-bottom:4px; color:var(--primary);">已選擇 ${count} 個翅膀</div>`;
+                statsInfo = `<div style="margin-bottom:4px; color:var(--primary);">裝備稱號已預設 ${count} 個翅膀</div>`;
 
                 // List selected wings with colors, ensuring all are shown or scrollable
                 const wingsListHtml = item.selectedWings.map(wName => {
@@ -1171,7 +1170,7 @@ function initGainControls() {
         if (wingItem && wingItem.active) {
             const allWings = Object.keys(WING_DATABASE).filter(k => WING_DATABASE[k].hold);
             allWings.sort((a, b) => {
-                const gradeVal = { 'myth': 5, 'epic': 4, 'unique': 3, 'legend': 2, 'rare': 1, 'common': 0 };
+                const gradeVal = { 'myth': 6, 'ancient': 5, 'unique': 4, 'special': 3, 'legend': 2, 'epic': 2, 'heroic': 2, 'rare': 1, 'common': 0 };
                 const valA = gradeVal[WING_DATABASE[a].grade] || 0;
                 const valB = gradeVal[WING_DATABASE[b].grade] || 0;
                 return valB - valA;
@@ -1217,7 +1216,7 @@ function initGainControls() {
                                     ${optionsHtml}
                                 </div>
                             </div>
-                            <span style="font-size:11px; color:#58a6ff;">${wingItem.selectedWings.length > 0 ? wingItem.selectedWings.join('、') : '尚未選擇'}</span>
+                            <span style="font-size:11px; color:#58a6ff;">${wingItem.selectedWings.length > 0 ? wingItem.selectedWings.map(wName => { const w = WING_DATABASE[wName]; const c = w ? getWingGradeColor(w.grade) : '#ccc'; return `<span style="color:${c}">${wName}</span>`; }).join('<span style="color:#8b949e;">、</span>') : '尚未選擇'}</span>
                         </div>
                     `;
         } else {
@@ -1359,7 +1358,7 @@ window.toggleWingItem = function (wingName, isAdded) {
                         statsInfo = "<div>請先勾選並選擇翅膀</div>";
                     } else {
                         const count = item.selectedWings.length;
-                        statsInfo = `<div style="margin-bottom:4px; color:var(--primary);">已選擇 ${count} 個翅膀</div>`;
+                        statsInfo = `<div style="margin-bottom:4px; color:var(--primary);">您的裝備稱號已預設 ${count} 個翅膀</div>`;
 
                         // Add colored wing names
                         const wingsListHtml = item.selectedWings.map(wName => {
@@ -1393,7 +1392,15 @@ window.toggleWingItem = function (wingName, isAdded) {
             const spans = wingRow.querySelectorAll('span');
             const lastSpan = spans[spans.length - 1];
             if (lastSpan) {
-                lastSpan.textContent = item.selectedWings.length > 0 ? item.selectedWings.join('、') : '尚未選擇';
+                if (item.selectedWings.length > 0) {
+                    lastSpan.innerHTML = item.selectedWings.map(wName => {
+                        const w = WING_DATABASE[wName];
+                        const c = w ? getWingGradeColor(w.grade) : '#ccc';
+                        return `<span style="color:${c}">${wName}</span>`;
+                    }).join('<span style="color:#8b949e;">、</span>');
+                } else {
+                    lastSpan.textContent = '尚未選擇';
+                }
             }
         }
     }
@@ -2543,6 +2550,33 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                             </div>
                         </div>
                     </div>`;
+
+            // 🪽 自動將裝備中的翅膀加入「翅膀收藏」已勾選清單
+            const wingCollect = GAIN_EFFECT_DATABASE['翅膀收藏'];
+            if (wingCollect) {
+                // 在 WING_DATABASE 中找匹配的 key（翅膀名稱可能包含資料庫 key）
+                let matchedWingKey = null;
+                for (let dbKey in WING_DATABASE) {
+                    if (wingName === dbKey || wingName.includes(dbKey) || dbKey.includes(wingName)) {
+                        matchedWingKey = dbKey;
+                        break;
+                    }
+                }
+                if (matchedWingKey && !wingCollect.selectedWings.includes(matchedWingKey)) {
+                    wingCollect.selectedWings.push(matchedWingKey);
+                    // 同步儲存到 localStorage
+                    localStorage.setItem('ownedWings', JSON.stringify(wingCollect.selectedWings));
+                    // 自動啟用翅膀收藏效果（若尚未啟用）
+                    if (!wingCollect.active) {
+                        wingCollect.active = true;
+                        const states = {};
+                        Object.keys(GAIN_EFFECT_DATABASE).forEach(k => {
+                            states[k] = GAIN_EFFECT_DATABASE[k].active;
+                        });
+                        localStorage.setItem('gainEffectStates_v1', JSON.stringify(states));
+                    }
+                }
+            }
         }
     }
     document.getElementById('petwing-grid').innerHTML = petwingHtml || "<div style='color:#8b949e; padding:10px;'>無寵物或翅膀資料</div>";
@@ -3699,15 +3733,25 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                 name: "攻擊力增加", icon: "📈",
                 bases: [], extras: [], percs: ["攻擊力增加"], fixeds: []
             },
-
-            {
-                name: "生命力", icon: "❤️",
-                bases: ["生命力"], extras: [], percs: ["生命力增加"], fixeds: []
-            },
             {
                 name: "防禦力", icon: "🛡️",
                 bases: ["防禦力"], extras: ["額外防禦力"], percs: ["防禦力增加"], fixeds: ["PVE防禦力", "PVE傷害耐性", "首領防禦力", "首領傷害耐性"]
             },
+
+            {
+                name: "防禦力增加", icon: "🛡️",
+                bases: [], extras: [], percs: ["防禦力增加"], fixeds: []
+            },
+            {
+                name: "生命力", icon: "❤️",
+                bases: ["生命力"], extras: [], percs: ["生命力增加"], fixeds: []
+            },
+
+            {
+                name: "精神力", icon: "💧",
+                bases: ["精神力"], extras: ["額外精神力"], percs: ["精神力增加"], fixeds: []
+            },
+
 
             {
                 name: "暴擊", icon: "💥",
@@ -4036,8 +4080,8 @@ function renderTrendChart(json, type = 'itemLevel') {
             return;
         }
 
-        // 只取最近 5 次記錄
-        const recentHistory = itemLevelHistory.slice(-5);
+        // 只取最近 10 次記錄
+        const recentHistory = itemLevelHistory.slice(-10);
         const labels = [];
         const itemLevels = [];
         const pointColors = [];
@@ -4063,7 +4107,7 @@ function renderTrendChart(json, type = 'itemLevel') {
                             <div><span style="color: var(--gold);">裝分:</span> <b style="color: var(--gold-bright); font-size: 16px;">${currentLevel}</b></div>
                             <div><span style="color: var(--green);">近期成長:</span> <b style="color: var(--green-bright);">${totalGrowth >= 0 ? '+' : ''}${totalGrowth} (${growthRate}%)</b></div>
                             <div><span style="color: var(--blue);">最高紀錄:</span> <b style="color: var(--blue-bright);">${maxLevel}</b></div>
-                            <div><span style="color: #8b949e;">近期5筆:</span> <b style="color: #fff;">${recentHistory.length} 次</b></div>
+                            <div><span style="color: #8b949e;">近期10筆:</span> <b style="color: #fff;">${recentHistory.length} 次</b></div>
                         </div>
                     `;
         }
@@ -6411,8 +6455,8 @@ window.showScreenshotResult = function (canvas, fileName) {
                     <img id="screenshot-result-img" class="screenshot-result-img">
                 </div>
                 <div class="screenshot-result-footer">
-                    <div class="screenshot-instruction">手機用戶請「長按圖片」選擇儲存或分享</div>
-                    <button class="screenshot-download-btn" id="screenshot-download-btn">下載圖片</button>
+                    <div class="screenshot-instruction">手機用戶請「長按圖片」選擇儲存</div>
+                   
                 </div>
             </div>
         `;
