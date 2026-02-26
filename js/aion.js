@@ -6302,7 +6302,10 @@ window.renderLayoutTab = function (json) {
 // --- 📸 截圖保存功能 ---
 window.downloadEquipScreenshot = function () {
     const tabArea = document.getElementById('integrated-tab-content-area');
-    if (!tabArea || !window.html2canvas) return;
+    if (!tabArea || !window.html2canvas) {
+        alert("截圖組件尚未載入，請稍候再試。");
+        return;
+    }
 
     const btn = document.getElementById('btn-equip-screenshot');
     const originalText = btn.innerHTML;
@@ -6324,7 +6327,7 @@ window.downloadEquipScreenshot = function () {
             scrollY: 0,
             x: 0,
             y: 0,
-            imageTimeout: 15000, // 增加超時時間確保圖片穩定
+            imageTimeout: 15000,
             onclone: (clonedDoc) => {
                 const clonedArea = clonedDoc.getElementById('integrated-tab-content-area');
                 if (clonedArea) {
@@ -6336,15 +6339,12 @@ window.downloadEquipScreenshot = function () {
                     clonedArea.style.background = '#0f172a';
                     clonedArea.style.display = 'block';
 
-                    // 隱藏複製文件中的按鈕
                     const screenshotBtn = clonedDoc.getElementById('btn-equip-screenshot');
                     if (screenshotBtn) screenshotBtn.style.display = 'none';
 
-                    // 確保簡易分頁及其內容是顯示的
                     const simpleTab = clonedDoc.getElementById('equip-tab-simple');
                     if (simpleTab) simpleTab.style.display = 'block';
 
-                    // 🛡️ 數據獲取：優先使用最後緩存的成功數據，確保 Lv 不會抓錯
                     const banner = clonedDoc.createElement('div');
                     const json = window.__LAST_DATA_JSON__ || {};
                     const dataObj = json.queryResult ? json.queryResult.data : (json.data ? json.data : json);
@@ -6352,15 +6352,10 @@ window.downloadEquipScreenshot = function () {
 
                     const cName = profile.characterName || document.getElementById('stat-header-char-id')?.innerText || 'AionPlayer';
                     const cScore = document.getElementById('stat-header-score')?.innerText || '--';
-
-                    // 獲取等級與頭像
                     let rawLevel = profile.characterLevel || document.querySelector('.profile-lv-badge')?.innerText?.replace('Lv.', '') || '--';
                     const cLv = `Lv.${rawLevel}`;
-
                     let rawImg = profile.profileImage || document.querySelector('.profile-img-lg')?.src || '';
-                    // 確保頭像經過代理
                     const cImg = getCorrectIcon(rawImg);
-
                     const cServer = profile.serverName || document.querySelector('.profile-server')?.innerText || '';
                     const cClass = profile.className || document.querySelector('.profile-job-name')?.innerText || '';
 
@@ -6399,7 +6394,6 @@ window.downloadEquipScreenshot = function () {
                     `;
                     clonedArea.prepend(banner);
 
-                    // 強制 3 欄
                     const grids = clonedDoc.querySelectorAll('.grid-box-container');
                     grids.forEach(g => {
                         g.style.display = 'grid';
@@ -6411,10 +6405,8 @@ window.downloadEquipScreenshot = function () {
                 }
             }
         }).then(canvas => {
-            const link = document.createElement('a');
-            link.download = `Aion2_${charName}_${activeTab}_${new Date().toLocaleDateString()}.jpg`;
-            link.href = canvas.toDataURL('image/jpeg', 0.95);
-            link.click();
+            const fileName = `Aion2_${charName}_${activeTab}_${new Date().toLocaleDateString()}.jpg`;
+            window.showScreenshotResult(canvas, fileName);
             btn.innerHTML = originalText;
             btn.style.pointerEvents = "auto";
         }).catch(err => {
@@ -6424,23 +6416,21 @@ window.downloadEquipScreenshot = function () {
                 btn.innerHTML = originalText;
                 btn.style.pointerEvents = "auto";
             }, 2000);
+            alert("截圖失敗，可能是頁面過大或圖片載入問題。");
         });
     }, 500);
 };
-
 
 // --- 📸 針對特定區域截圖保存功能 ---
 window.downloadSpecificScreenshot = function (elementId, typeName) {
     const target = document.getElementById(elementId);
     if (!target || !window.html2canvas) return;
 
-    // 獲取角色名稱作為檔名
     const charName = document.getElementById('stat-header-char-id')?.innerText || 'AionPlayer';
 
-    // 執行截圖
     window.html2canvas(target, {
-        backgroundColor: '#0f172a', // 使用專案背景底色
-        scale: 2, // 提高解析度
+        backgroundColor: '#0f172a',
+        scale: 2,
         logging: false,
         useCORS: true,
         scrollX: 0,
@@ -6448,21 +6438,75 @@ window.downloadSpecificScreenshot = function (elementId, typeName) {
         onclone: (clonedDoc) => {
             const clonedTarget = clonedDoc.getElementById(elementId);
             if (clonedTarget) {
-                // 強制調整寬度，避免在桌面版截圖過寬，讓卡片排版漂亮
                 clonedTarget.style.width = '1200px';
                 clonedTarget.style.display = 'grid';
-                clonedTarget.style.gridTemplateColumns = 'repeat(3, 1fr)'; // 限制為三欄顯示，最適合分享
+                clonedTarget.style.gridTemplateColumns = 'repeat(3, 1fr)';
                 clonedTarget.style.padding = '20px';
                 clonedTarget.style.gap = '15px';
             }
         }
     }).then(canvas => {
-        const link = document.createElement('a');
-        link.download = `Aion2_${charName}_${typeName}_${new Date().toLocaleDateString()}.jpg`;
-        link.href = canvas.toDataURL('image/jpeg', 0.9);
-        link.click();
+        const fileName = `Aion2_${charName}_${typeName}_${new Date().toLocaleDateString()}.jpg`;
+        window.showScreenshotResult(canvas, fileName);
     });
 };
+
+// --- 📸 顯示截圖結果彈窗 (解決行動裝置下載問題) ---
+window.showScreenshotResult = function (canvas, fileName) {
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 1024;
+
+    // 如果是電腦版，且不是 iOS 設備，可以嘗試直接下載
+    if (!isMobile && !/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+        try {
+            const link = document.createElement('a');
+            link.download = fileName;
+            link.href = canvas.toDataURL('image/jpeg', 0.95);
+            link.click();
+            return;
+        } catch (e) {
+            console.warn("Direct download failed, showing modal instead.");
+        }
+    }
+
+    // 建立或獲取彈窗 HTML
+    let overlay = document.getElementById('screenshot-result-overlay');
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'screenshot-result-overlay';
+        overlay.className = 'screenshot-result-overlay';
+        overlay.innerHTML = `
+            <div class="screenshot-result-container">
+                <div class="screenshot-result-header">
+                    <span class="screenshot-result-title">📸 截圖製作完成</span>
+                    <span class="screenshot-result-close" onclick="document.getElementById('screenshot-result-overlay').style.display='none'">×</span>
+                </div>
+                <div class="screenshot-result-body">
+                    <img id="screenshot-result-img" class="screenshot-result-img">
+                </div>
+                <div class="screenshot-result-footer">
+                    <div class="screenshot-instruction">手機用戶請「長按圖片」選擇儲存或分享</div>
+                    <button class="screenshot-download-btn" id="screenshot-download-btn">下載圖片</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+    }
+
+    const img = document.getElementById('screenshot-result-img');
+    const downloadBtn = document.getElementById('screenshot-download-btn');
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+
+    img.src = dataUrl;
+    overlay.style.display = 'flex';
+
+    downloadBtn.onclick = () => {
+        const link = document.createElement('a');
+        link.download = fileName;
+        link.href = dataUrl;
+        link.click();
+    };
+};
+
 
 // --- Tooltip Functions ---
 let tooltipHideTimer = null;
