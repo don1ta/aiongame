@@ -401,6 +401,53 @@
             </div>
         </div>
     </div>
+
+    <!-- 💡 計算說明彈窗 -->
+    <div id="guide-overlay" class="diary-overlay" onclick="window.closeCalculationGuide()">
+        <div class="diary-modal" onclick="event.stopPropagation()">
+            <div class="diary-header">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <span style="font-size:20px;">💡</span>
+                    <h3 style="margin:0; border:none; padding:0; color:var(--gold-bright);">戰力指標與增益效果計算說明</h3>
+                </div>
+                <div class="diary-close" onclick="window.closeCalculationGuide()">×</div>
+            </div>
+            <div class="diary-body">
+                <div class="diary-item">
+                    <div class="diary-title">1. 增益效果分類</div>
+                    <div class="diary-text">
+                        • <b>數值類</b>：基礎值、持有、石柱。勾選後數值會直接<b>累加</b>進戰力指標。<br>
+                        • <b>排除類</b>：如「排除 PVE」與「排除守護力」。勾選後會從總分中<b>扣除</b>指定來源。
+                    </div>
+                </div>
+                <div class="diary-item">
+                    <div class="diary-title">2. 戰力計算公式</div>
+                    <div class="diary-text">
+                        最終數字 = <b>板塊分</b> + <b>裝備分</b> + <b>強化分</b> + <b>其他分</b>。<br>
+                        <div style="margin-top:10px; color:#fff; font-weight:bold; font-size:13px;">收集來源：系統會把所有來源算出來：
+                        </div>
+                        <div
+                            style="margin-top:5px; padding-left:12px; border-left:2px solid rgba(255,215,0,0.3); font-size:13px; color:#cbd5e1; line-height:1.8;">
+                            • <b>板塊分 (boardVal)</b>：七大守護力板塊的總和。<br>
+                            • <b>裝備分 (equipVal)</b>：裝備/持有本身能力值 + 翅膀 + 套裝效果。<br>
+                            • <b>強化分 (stoneVal)</b>：裝分的磨石與隨機屬性。<br>
+                            • <b>其他分 (otherVal)</b>：稱號 + 被動技能 + 您勾選的「數值類」增益。
+                        </div>
+                    </div>
+                </div>
+                <div class="diary-item">
+                    <div class="diary-title">3. 明細與 UI 連動</div>
+                    <div class="diary-text">
+                        • <b>增益明細</b>： <b>ⓘ</b> 符號可查看各板塊具體增加與扣除數值。<br>
+                        • <b>過濾清單</b>：開啟排除功能後，下方屬性明細清單會自動隱藏相關項目行。
+                    </div>
+                </div>
+            </div>
+            <div class="diary-footer">
+                *資料依官方回傳 API 基礎數據進行即時計算
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>

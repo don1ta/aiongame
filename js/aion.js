@@ -399,14 +399,21 @@ const GAIN_EFFECT_DATABASE = {
     '排除PVE與首領': {
         stats: {},
         default: false,
-        _isFlag: true,   // 特殊標記，不參與數值加成，僅作為開閘旗標
+        _isFlag: true,
         _desc: '勾選後，戰力指標將排除 PVE攻擊力、首領攻擊力、PVE/首領字樣的加成。'
+    },
+    '排除守護力': {
+        stats: {},
+        default: false,
+        _isFlag: true,
+        _desc: '勾選後，戰力指標將排除七大守護力板塊（奈薩肯、吉凱爾、白傑爾、崔妮爾、瑪爾庫坦、艾瑞爾、阿斯佩爾）的所有屬性加成，顯示純裝備數字。'
     }
 };
 
 // PVE 與首領相關的鍵名前缀
 const PVE_BOSS_PREFIXES = ['PVE', '首領'];
 window.isExcludePveBoss = () => !!(GAIN_EFFECT_DATABASE['排除PVE與首領'] && GAIN_EFFECT_DATABASE['排除PVE與首領'].active);
+window.isExcludeBoardStats = () => !!(GAIN_EFFECT_DATABASE['排除守護力'] && GAIN_EFFECT_DATABASE['排除守護力'].active);
 
 // Helper function to fetch all titles with pagination
 async function fetchAllTitles(serverId, characterId, initialTitleList, ownedCount) {
@@ -1066,16 +1073,18 @@ function initGainControls() {
         if (isFlag) {
             statsInfo = `<div style="color:#8b949e; margin-bottom:6px;">${item._desc || '開啟後影響計算行為'}</div>`;
             if (item.active && item._excludedStats && Object.keys(item._excludedStats).length > 0) {
-                statsInfo += `<div style="color:#ff7675; font-weight:bold; margin:4px 0 3px;">🚫 已排除項目：</div>`;
+                statsInfo += `<div style="color:#ff7675; font-weight:bold; margin:12px 0 8px; border-top:1px dashed rgba(255,255,255,0.1); padding-top:8px;">🚫 已排除項目：</div>`;
+                statsInfo += `<div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 4px; width: 100%;">`;
                 for (const label in item._excludedStats) {
                     const val = item._excludedStats[label];
                     if (Math.abs(val) > 0.001) {
-                        statsInfo += `<div style="padding:1px 0; display:flex; justify-content:space-between; gap:8px;">
-                            <span style="color:#8b949e;">${label}</span>
-                            <span style="color:#ff7675; font-weight:bold;">-${Math.round(val * 100) / 100}</span>
+                        statsInfo += `<div style="padding:3px 5px; background:rgba(255,118,117,0.05); border-radius:4px; border:1px solid rgba(255,118,117,0.1); display:flex; flex-direction:column; min-width:0;">
+                            <div style="color:#8b949e; font-size:10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${label}">${label}</div>
+                            <div style="color:#ff7675; font-weight:bold; text-align:right; font-size:11px; margin-top:1px;">-${Math.round(val * 100) / 100}</div>
                         </div>`;
                     }
                 }
+                statsInfo += `</div>`;
             } else if (item.active) {
                 statsInfo += `<div style="color:#8b949e; font-size:11px;">（搜尋角色後顯示明細）</div>`;
             }
@@ -2149,7 +2158,7 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
     const getEntry = (k) => {
         if (!stats[k]) {
             stats[k] = {
-                nezakan: 0, zikel: 0, baizel: 0, triniel: 0, ariel: 0, asphel: 0,
+                nezakan: 0, zikel: 0, baizel: 0, triniel: 0, malkutan: 0, ariel: 0, asphel: 0,
                 equipMain: 0, equipSub: 0, other: 0,
                 isPerc: k.includes('%'),
                 detailGroups: {
@@ -2309,7 +2318,8 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
             '白傑爾': 'baizel',
             '崔妮爾': 'triniel',
             '艾瑞爾': 'ariel',
-            '阿斯佩爾': 'asphel'
+            '阿斯佩爾': 'asphel',
+            '瑪爾庫坦': 'malkutan'
         };
 
         // console.log('板塊列表:', boardList);
@@ -2356,6 +2366,7 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                     else if (board.name.includes("崔妮爾")) e.triniel += v;
                     else if (board.name.includes("艾瑞爾")) e.ariel += v;
                     else if (board.name.includes("阿斯佩爾")) e.asphel += v;
+                    else if (board.name.includes("瑪爾庫坦")) e.malkutan += v;
                     else {
                         e.other += v;
                         e.subtotals.gainEffect += v;
@@ -2428,6 +2439,7 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
             else if (b.boardName.includes("崔妮爾")) e.triniel += v;
             else if (b.boardName.includes("艾瑞爾")) e.ariel += v;
             else if (b.boardName.includes("阿斯佩爾")) e.asphel += v;
+            else if (b.boardName.includes("瑪爾庫坦")) e.malkutan += v;
             else {
                 e.other += v;
                 e.subtotals.gainEffect += v;
@@ -3839,7 +3851,9 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
 
         // 每次渲染前重置排除統計的「已重置」旗標，確保能正確清空
         const _pveBossFlag = GAIN_EFFECT_DATABASE['排除PVE與首領'];
+        const _boardFlag = GAIN_EFFECT_DATABASE['排除守護力'];
         if (_pveBossFlag) _pveBossFlag.__resetDone = false;
+        if (_boardFlag) _boardFlag.__resetDone = false;
 
         // 🔍 狀態保存：記錄目前概覽分頁的展開項目
         const expandedLabels = new Set();
@@ -3852,7 +3866,7 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                     <div class="stat-tabs-header">
                         <div class="stat-tab-btn active" onclick="switchStatTab(this, 'stat-tab-extra')">戰力指標</div>
                         <div class="stat-tab-btn" onclick="switchStatTab(this, 'stat-tab-core')">屬性</div>
-                        
+                        <div class="stat-tab-btn" onclick="switchStatTab(this, 'stat-tab-boards')">守護板塊</div>
                         <div class="stat-tab-btn" onclick="switchStatTab(this, 'stat-tab-passive')">被動技能</div>
                     </div>
 
@@ -3891,7 +3905,34 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                             if (searchType === 'perc' && !isPercKey) return;
                         }
 
-                        const boardVal = (e.nezakan || 0) + (e.zikel || 0) + (e.baizel || 0) + (e.triniel || 0) + (e.ariel || 0) + (e.asphel || 0);
+                        const rawBoardVal = (e.nezakan || 0) + (e.zikel || 0) + (e.baizel || 0) + (e.triniel || 0) + (e.malkutan || 0) + (e.ariel || 0) + (e.asphel || 0);
+
+                        // 紀錄排除明細
+                        if (window.isExcludeBoardStats()) {
+                            const boardFlag = GAIN_EFFECT_DATABASE['排除守護力'];
+                            if (boardFlag) {
+                                if (!boardFlag.__resetDone) {
+                                    boardFlag._excludedStats = {};
+                                    boardFlag.__resetDone = true;
+                                }
+
+                                const boardNamesMap = {
+                                    nezakan: '奈薩肯', zikel: '吉凱爾', baizel: '白傑爾',
+                                    triniel: '崔妮爾', malkutan: '瑪爾庫坦', ariel: '艾瑞爾', asphel: '阿斯佩爾'
+                                };
+
+                                Object.entries(boardNamesMap).forEach(([field, name]) => {
+                                    const v = e[field] || 0;
+                                    if (Math.abs(v) > 0.001) {
+                                        const label = `${statKey.replace('%', '')} [${name}板塊]`;
+                                        boardFlag._excludedStats[label] = (boardFlag._excludedStats[label] || 0) + v;
+                                    }
+                                });
+                            }
+                        }
+
+                        // 🛡️ 排除守護力旗標：排除七大板塊的所有加成
+                        const boardVal = window.isExcludeBoardStats() ? 0 : rawBoardVal;
                         const wingVal = (e.subtotals?.wing || 0) + (e.subtotals?.wingHold || 0);
                         const setVal = (e.subtotals?.set || 0);
                         const equipVal = (e.equipMain || 0) + wingVal + setVal;
@@ -3911,7 +3952,23 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                             if (e.detailGroups) {
                                 ['base', 'skill', 'gainEffect', 'title', 'wing', 'wingHold', 'set', 'arcana', 'stone', 'random', 'mainStat', 'etc'].forEach(g => {
                                     if (e.detailGroups[g] && e.detailGroups[g].length > 0) {
-                                        allDetails.push(...e.detailGroups[g]);
+                                        let filteredDetails = e.detailGroups[g];
+
+                                        // 🛡️ 如果開啟「排除守護力」，過濾掉名稱含「守護力」或「板塊」的明細
+                                        if (window.isExcludeBoardStats()) {
+                                            filteredDetails = filteredDetails.filter(d =>
+                                                !d.includes('守護力') && !d.includes('板塊')
+                                            );
+                                        }
+
+                                        // ⚔️ 如果開啟「排除PVE與首領」，過濾掉名稱含 PVE 或 首領 的明細
+                                        if (window.isExcludePveBoss()) {
+                                            filteredDetails = filteredDetails.filter(d =>
+                                                !PVE_BOSS_PREFIXES.some(p => d.includes(p))
+                                            );
+                                        }
+
+                                        allDetails.push(...filteredDetails);
                                     }
                                 });
                             }
@@ -4060,6 +4117,90 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                             ${window.__PASSIVE_SKILLS_HTML__ || '<div style="color:#8b949e; padding:30px; text-align:center;">⌛ 正在計算職業被動加成...</div>'}
                         </div>
                        
+                    </div>
+                    <div id="stat-tab-boards" class="stat-tab-content">
+                        <div style="padding:8px 0;">
+                        ${(() => {
+                // 定義板塊對應欄位
+                const boardDefs = [
+                    { name: '奈薩肯', key: 'nezakan', color: '#e67e22', icon: '🔶' },
+                    { name: '吉凱爾', key: 'zikel', color: '#e74c3c', icon: '🔴' },
+                    { name: '白傑爾', key: 'baizel', color: '#3498db', icon: '🔵' },
+                    { name: '崔妮爾', key: 'triniel', color: '#9b59b6', icon: '🟣' },
+                    { name: '瑪爾庫坦', key: 'malkutan', color: '#1abc9c', icon: '🟢' },
+                    { name: '艾瑞爾', key: 'ariel', color: '#f1c40f', icon: '🟡' },
+                    { name: '阿斯佩爾', key: 'asphel', color: '#e056fd', icon: '🟠' }
+                ];
+
+                let boardHtml = '';
+                let anyData = false;
+
+                boardDefs.forEach(bd => {
+                    // 從 stats 中收集屬於此板塊的屬性
+                    const entries = [];
+                    Object.keys(stats).forEach(statKey => {
+                        const e = stats[statKey];
+                        const val = e[bd.key] || 0;
+                        if (Math.abs(val) > 0.001) {
+                            const isPerc = statKey.includes('%') || e.isPerc;
+                            let displayVal = val;
+                            let unit = '';
+                            if (isPerc) {
+                                displayVal = Math.abs(val) < 1 ? Number((val * 100).toFixed(2)) : Math.round(val * 100) / 100;
+                                unit = '%';
+                            } else {
+                                displayVal = Math.round(val * 100) / 100;
+                            }
+                            entries.push({ key: statKey, val: displayVal, unit });
+                        }
+                    });
+
+                    if (entries.length === 0) return;
+                    anyData = true;
+
+                    boardHtml += `
+                                <div style="border:1px solid rgba(255,255,255,0.08); border-radius:8px; margin-bottom:10px; overflow:hidden;">
+                                    <div style="background:${bd.color}22; border-left:4px solid ${bd.color}; padding:8px 12px; display:flex; align-items:center; gap:8px;">
+                                        <span style="font-size:14px;">${bd.icon}</span>
+                                        <span style="color:${bd.color}; font-weight:bold; font-size:13px;">${bd.name}</span>
+                                        <span style="color:#8b949e; font-size:11px; margin-left:auto;">${entries.length} 項加成</span>
+                                    </div>
+                                    <div style="padding:8px 12px; display:grid; grid-template-columns:1fr 1fr; gap:3px 12px;">
+                                        ${entries.map(en => `
+                                            <div style="display:flex; justify-content:space-between; align-items:center; padding:2px 0; border-bottom:1px solid rgba(255,255,255,0.04);">
+                                                <span style="color:#8b949e; font-size:11px;">${en.key.replace('%', '')}</span>
+                                                <span style="color:${bd.color}; font-size:12px; font-weight:bold;">+${en.val}${en.unit}</span>
+                                            </div>`).join('')}
+                                    </div>
+                                </div>`;
+                });
+
+                // 也顯示「其他」板塊 (非主神板塊)
+                const otherEntries = [];
+                Object.keys(stats).forEach(statKey => {
+                    const e = stats[statKey];
+                    if (e.detailGroups && e.detailGroups.gainEffect) {
+                        e.detailGroups.gainEffect
+                            .filter(d => d.startsWith('[板塊]'))
+                            .forEach(d => otherEntries.push(d));
+                    }
+                });
+                if (otherEntries.length > 0) {
+                    anyData = true;
+                    boardHtml += `
+                                <div style="border:1px solid rgba(255,255,255,0.08); border-radius:8px; margin-bottom:10px; overflow:hidden;">
+                                    <div style="background:rgba(255,255,255,0.05); border-left:4px solid #8b949e; padding:8px 12px;">
+                                        <span style="color:#8b949e; font-weight:bold; font-size:13px;">⬜ 馬爾庫坦</span>
+                                    </div>
+                                    <div style="padding:8px 12px;">
+                                        ${[...new Set(otherEntries)].map(d => `<div style="color:#8b949e; font-size:11px; padding:2px 0;">${d}</div>`).join('')}
+                                    </div>
+                                </div>`;
+                }
+
+                return anyData ? boardHtml : '<div style="color:#8b949e; padding:30px; text-align:center;">⌛ 尚無板塊資料，請確認角色已解鎖板塊</div>';
+            })()}
+                        </div>
                     </div>
 `;
 
@@ -5269,10 +5410,10 @@ function renderCombatAnalysis(stats, data) {
 
         if (!foundAny) return entry;
 
-        const bSum = entry.nezakan + entry.zikel + entry.baizel + entry.triniel + entry.ariel + entry.asphel;
-        const sSum = entry.subtotals.title + entry.subtotals.wing + entry.subtotals.wingHold + entry.subtotals.arcana + entry.subtotals.skill + entry.subtotals.gainEffect + entry.subtotals.set;
+        const bSum = (entry.nezakan || 0) + (entry.zikel || 0) + (entry.baizel || 0) + (entry.triniel || 0) + (entry.ariel || 0) + (entry.asphel || 0) + (entry.malkutan || 0);
+        const sSum = (entry.subtotals?.title || 0) + (entry.subtotals?.wing || 0) + (entry.subtotals?.wingHold || 0) + (entry.subtotals?.arcana || 0) + (entry.subtotals?.skill || 0) + (entry.subtotals?.gainEffect || 0) + (entry.subtotals?.set || 0);
         // 裝備總分為: 基礎(equipMain) + 隨格(random) + 磨石(stone)
-        const calcTotal = entry.equipMain + entry.subtotals.random + entry.subtotals.stone + bSum + sSum + entry.subtotals.mainStat;
+        const calcTotal = (entry.equipMain || 0) + (entry.subtotals?.random || 0) + (entry.subtotals?.stone || 0) + bSum + sSum + (entry.subtotals?.mainStat || 0);
 
         if (!entry.hasOfficialTotal || (calcTotal > entry.total + 0.1)) {
             entry.total = calcTotal;
@@ -5308,17 +5449,20 @@ function renderCombatAnalysis(stats, data) {
             { k: 'zikel', n: '吉凱爾', c: '#a29bfe' },
             { k: 'baizel', n: '白傑爾', c: '#a29bfe' },
             { k: 'triniel', n: '崔妮爾', c: '#a29bfe' },
+            { k: 'malkutan', n: '瑪爾庫坦', c: '#a29bfe' },
             { k: 'ariel', n: '艾瑞爾', c: '#a29bfe' },
             { k: 'asphel', n: '阿斯佩爾', c: '#a29bfe' }
         ];
 
-        guardians.forEach(g => {
-            const val = entry[g.k] || 0;
-            if (Math.abs(val) > TH) {
-                html += `<div style="display:flex; justify-content:space-between;"><span style="color:${g.c};">⚔️ ${g.n}守護力</span><span style="color:#fff;">${fmtVal(val)}</span></div>`;
-                hasContent = true;
-            }
-        });
+        if (!window.isExcludeBoardStats()) {
+            guardians.forEach(g => {
+                const val = entry[g.k] || 0;
+                if (Math.abs(val) > TH) {
+                    html += `<div style="display:flex; justify-content:space-between;"><span style="color:${g.c};">⚔️ ${g.n}守護力</span><span style="color:#fff;">${fmtVal(val)}</span></div>`;
+                    hasContent = true;
+                }
+            });
+        }
 
         // 3. Render Detail Groups
         const renderGroup = (groupKey, icon, color, label) => {
@@ -5581,6 +5725,12 @@ function renderCombatAnalysis(stats, data) {
         }
 
         activeHeaderControls.innerHTML = `
+            <button onclick="window.openCalculationGuide()" 
+                style="background:rgba(255,215,0,0.1); border:1px solid rgba(255,215,0,0.3); color:#ffd700; cursor:pointer; font-size:11px; padding:4px 10px; border-radius:4px; transition:all 0.2s; white-space:nowrap; margin-right:5px;"
+                onmouseover="this.style.background='rgba(255,215,0,0.2)';"
+                onmouseout="this.style.background='rgba(255,215,0,0.1)';" title="查看戰力指標計算說明">
+                💡 使用說明
+            </button>
             <button onclick="window.toggleStickyHeader()" 
                 style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#8b949e; cursor:pointer; font-size:11px; padding:4px 10px; border-radius:4px; transition:all 0.2s; white-space:nowrap;"
                 onmouseover="this.style.borderColor='var(--gold)'; this.style.color='#fff';"
@@ -6813,6 +6963,21 @@ window.switchEquipTab = function (tab) {
 };
 
 // --- 📓 作者日記功能 ---
+window.openCalculationGuide = function () {
+    const el = document.getElementById('guide-overlay');
+    if (el) {
+        el.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+};
+window.closeCalculationGuide = function () {
+    const el = document.getElementById('guide-overlay');
+    if (el) {
+        el.style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
+};
+
 window.openAuthorDiary = function () {
     const overlay = document.getElementById('diary-overlay');
     if (overlay) {
