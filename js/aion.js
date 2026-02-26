@@ -3772,13 +3772,9 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                         <div class="stat-tab-btn active" onclick="switchStatTab(this, 'stat-tab-extra')">戰力指標</div>
                         <div class="stat-tab-btn" onclick="switchStatTab(this, 'stat-tab-core')">屬性</div>
                         
-                        <div class="stat-tab-btn" onclick="switchStatTab(this, 'stat-tab-guardian')">守護力</div>
                         <div class="stat-tab-btn" onclick="switchStatTab(this, 'stat-tab-passive')">被動技能</div>
                     </div>
 
-                    <div id="stat-tab-guardian" class="stat-tab-content">
-                        <!-- 將由後續邏輯填入守護力板塊進度圖 -->
-                    </div>
 
                     <div id="stat-tab-extra" class="stat-tab-content active">
                         <div class="stat-general-grid">
@@ -3971,75 +3967,6 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                     </div>
 `;
 
-        // --- 補上守護力渲染邏輯 ---
-        let guardianHtml = '<div style="padding: 10px 15px;">';
-
-        // 安全起見，因為目前在這段已經有全域的 lastScoreResult 或 scoreResult，直接使用
-        const currentScoreResult = window.currentEquipmentScore;
-        if (currentScoreResult && currentScoreResult.breakdown && currentScoreResult.breakdown.board && currentScoreResult.breakdown.board.details) {
-            const boardDetails = currentScoreResult.breakdown.board.details;
-
-            let boardDetailsHtml = `
-                <div style="text-align:center; padding: 0 0 10px 0;">
-                    <div style="font-size: 14px; font-weight: 800; background: linear-gradient(90deg, #ffc3a0 0%, #ffafbd 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; display:inline-block; letter-spacing: 1px;">
-                        🛡️ 守護力完成度
-                    </div>
-                </div>`;
-
-            if (boardDetails.length === 0) {
-                boardDetailsHtml += '<div style="text-align:center; color:#8b949e; margin-top:20px; font-size:14px; padding: 20px; background: rgba(0,0,0,0.2); border-radius: 8px;">📭 目前沒有任何守護力板塊解鎖數據</div>';
-            } else {
-                boardDetailsHtml += '<div style="display:flex; flex-direction:column; gap:6px;">';
-                boardDetails.forEach(b => {
-                    const percent = b.max > 0 ? (b.count / b.max * 100) : 0;
-
-                    let theme = { glow: '#ffd93d' }; // 統一使用黃色
-
-                    boardDetailsHtml += `
-                        <div style="background: rgba(10, 10, 15, 0.3); padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.03); position: relative; overflow: hidden; display: flex; align-items: center; justify-content: space-between; backdrop-filter: blur(4px); box-shadow: 0 2px 10px rgba(0,0,0,0.2);">
-                            
-                            <div style="display:flex; align-items:center; gap:8px; width: 90px;">
-                                <div style="font-size: 13px; font-weight: bold; color: rgba(255, 255, 255, 0.85); letter-spacing: 0.5px;">
-                                    ${b.name.replace('守護力', '')}
-                                </div>
-                            </div>
-                            
-                            <div style="flex: 1; margin: 0 12px; position: relative;">
-                                <!-- Simple Transparent Bar with 0/100 markers -->
-                                <div style="width: 100%; height: 14px; background: rgba(0,0,0,0.5); border-radius: 4px; border: 1px solid rgba(255,255,255,0.08); overflow: hidden; display: flex; position: relative;">
-                                    
-                                    <!-- 0% Mark (Left Boundary) -->
-                                    <div style="position: absolute; left: 0; top: 0; bottom: 0; width: 2px; background: rgba(255,255,255,0.3); z-index: 1;"></div>
-                                    <!-- 50% Dot (Center) -->
-                                    <div style="position: absolute; left: 50%; top: 4px; bottom: 4px; width: 1px; background: rgba(255,255,255,0.15); z-index: 1;"></div>
-                                    
-                                    <div style="width: ${percent}%; height: 100%; background: linear-gradient(90deg, ${theme.glow}11 0%, ${theme.glow}66 100%); border-right: 2px solid ${theme.glow}; position: relative; z-index: 2;"></div>
-                                    
-                                    <!-- 100% Mark (Right Boundary) -->
-                                    <div style="position: absolute; right: 0; top: 0; bottom: 0; width: 2px; background: rgba(255,255,255,0.3); z-index: 1;"></div>
-                                </div>
-                            </div>
-
-                            <div style="text-align: right; display: flex; align-items: center; gap: 4px; min-width: 80px; justify-content: flex-end; white-space: nowrap;">
-                                ${(b.count >= b.max && b.max > 0) ?
-                            `<span style="background: rgba(58, 28, 29, 0.9); border: 1px solid #ff5c5c; color: #ff7b7b; padding: 2px 5px; border-radius: 4px; font-size: 11px; font-weight: bold; text-shadow: 0 0 2px rgba(255,123,123,0.5); letter-spacing: 0.5px;">完成度 100%</span>`
-                            :
-                            `<span style="font-size: 13px; font-weight: bold; color: rgba(255,255,255,0.75);">${b.count}</span>
-                                     <span style="font-size: 10px; color: rgba(255,255,255,0.25);">${b.max ? '/' + b.max : ''}</span>`
-                        }
-                            </div>
-                        </div>
-                    `;
-                });
-                boardDetailsHtml += '</div>';
-            }
-            guardianHtml += boardDetailsHtml;
-        } else {
-            guardianHtml += '<div style="text-align:center; color:#8b949e; margin-top:20px; font-size:14px;">無法取得守護力板塊數據</div>';
-        }
-        guardianHtml += '</div>';
-
-        overviewHtml = overviewHtml.replace('<!-- 將由後續邏輯填入守護力板塊進度圖 -->', guardianHtml);
         // ---------------------------
 
         overviewGrid.innerHTML = overviewHtml;
@@ -6788,4 +6715,22 @@ window.switchEquipTab = function (tab) {
         if (btnSimple) btnSimple.classList.add('active');
     }
 };
+
+// --- 📓 作者日記功能 ---
+window.openAuthorDiary = function () {
+    const overlay = document.getElementById('diary-overlay');
+    if (overlay) {
+        overlay.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+};
+
+window.closeAuthorDiary = function () {
+    const overlay = document.getElementById('diary-overlay');
+    if (overlay) {
+        overlay.style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
+};
+
 

@@ -30,6 +30,11 @@
 <body>
     <div id="loading" class="loading-overlay">⌛ 正在從伺服器獲取數據，請稍候...</div>
 
+    <!-- 📓 作者日記入口 -->
+    <div class="diary-float-btn" onclick="window.openAuthorDiary()" title="作者日記">
+        <span>📓</span>
+    </div>
+
     <div class="container">
         <div class="input-area" id="nav-target-role" style="scroll-margin-top: 15px;">
             <h2 style="color:var(--gold); margin-top:0; text-align: center;">💎 Aion2 角色數據查詢系統</h2>
@@ -353,6 +358,47 @@
     <div id="equip-tooltip-overlay" class="tooltip-overlay" onclick="closeEquipTooltip(event)">
         <div class="equip-tooltip" id="equip-tooltip-content" onclick="event.stopPropagation()">
             <!-- 動態生成內容 -->
+        </div>
+    </div>
+
+    <!-- 📓 作者日記彈窗 -->
+    <div id="diary-overlay" class="diary-overlay" onclick="window.closeAuthorDiary()">
+        <div class="diary-modal" onclick="event.stopPropagation()">
+            <div class="diary-header">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <span style="font-size:20px;">📓</span>
+                    <h3 style="margin:0; border:none; padding:0; color:var(--gold-bright);">作者開發日記 & 公告</h3>
+                </div>
+                <div class="diary-close" onclick="window.closeAuthorDiary()">×</div>
+            </div>
+            <div class="diary-body">
+                <!-- 日記條目 -->
+                <div class="diary-item">
+                    <!--<div class="diary-date">2026-02-26</div>-->
+                    <div class="diary-title">⭐關於作者</div>
+                    <div class="diary-text">
+                        這是一個人的興趣，也是一群人的工具。網站與官方無合作關係，don1 會持續更新，直到冒險結束的那一天。
+                    </div>
+                </div>
+                <div class="diary-item">
+                    <!--<div class="diary-date">2026-02-25</div>-->
+                    <div class="diary-title">✨ 近期改動內容</div>
+                    <div class="diary-text">
+                        調整了裝備品階顯示，並重新優化了排名指標的視覺層次，讓高階數據用顏色分辨一目瞭然。
+                    </div>
+                </div>
+                <div class="diary-item">
+                    <!--<div class="diary-date">2026-02-24</div>-->
+                    <div class="diary-title">🛡️ 正在向作者許願</div>
+                    <div class="diary-text">
+                        ■ | 建置角色比較系統<br>
+                        ■ | 增加防禦力%係數
+                    </div>
+                </div>
+            </div>
+            <div class="diary-footer">
+                作者：don1 | 本專案非商業用途，資料僅供查詢與健檢參考
+            </div>
         </div>
     </div>
 </body>

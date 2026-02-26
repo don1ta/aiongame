@@ -4458,7 +4458,7 @@
         .screenshot-result-footer {
             padding: 15px;
             background: rgba(0, 0, 0, 0.3);
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
             text-align: center;
         }
 
@@ -4482,4 +4482,149 @@
         .screenshot-download-btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 15px var(--blue-glow);
+        }
+
+        /* 📓 作者日記連結 (低調設計) */
+        .diary-float-btn {
+            position: fixed;
+            right: 20px;
+            top: 20px;
+            width: 32px;
+            height: 32px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 1001;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(4px);
+        }
+
+        .diary-float-btn span {
+            font-size: 16px;
+            opacity: 0.4;
+            filter: grayscale(1);
+            transition: all 0.3s;
+        }
+
+        .diary-float-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--gold);
+            transform: translateY(2px);
+        }
+
+        .diary-float-btn:hover span {
+            opacity: 1;
+            filter: grayscale(0);
+        }
+
+        @media (max-width: 768px) {
+            .diary-float-btn {
+                right: 15px;
+                top: 15px;
+                width: 34px;
+                height: 34px;
+            }
+        }
+
+        /* 📓 日記彈窗 */
+        .diary-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            z-index: 20002;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .diary-modal {
+            background: #0f172a;
+            border: 1px solid var(--border);
+            border-top: 4px solid var(--gold);
+            border-radius: 12px;
+            width: 100%;
+            max-width: 500px;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px var(--gold-glow);
+            overflow: hidden;
+        }
+
+        .diary-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .diary-close {
+            color: #8b949e;
+            font-size: 24px;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .diary-close:hover {
+            color: #fff;
+        }
+
+        .diary-body {
+            padding: 20px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .diary-item {
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.05);
+        }
+
+        .diary-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .diary-date {
+            font-size: 12px;
+            color: var(--gold);
+            margin-bottom: 6px;
+            font-family: monospace;
+            opacity: 0.8;
+        }
+
+        .diary-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #fff;
+            margin-bottom: 8px;
+        }
+
+        .diary-text {
+            font-size: 14px;
+            color: #94a3b8;
+            line-height: 1.6;
+            word-break: break-all;
+        }
+
+        .diary-footer {
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            text-align: center;
+            color: #64748b;
+            font-size: 12px;
         }
