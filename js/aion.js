@@ -335,7 +335,7 @@ const GAIN_EFFECT_DATABASE = {
         },
         default: true
     },
-    '艾萊修奇卡獨石柱': {
+    '種族石柱': {
         stats: {
             '生命[尤斯迪埃]': 20,
             '行動力': 620,
@@ -395,8 +395,18 @@ const GAIN_EFFECT_DATABASE = {
     '被動技能': {
         stats: {},
         default: true
+    },
+    '排除PVE與首領': {
+        stats: {},
+        default: false,
+        _isFlag: true,   // 特殊標記，不參與數值加成，僅作為開閘旗標
+        _desc: '勾選後，戰力指標將排除 PVE攻擊力、首領攻擊力、PVE/首領字樣的加成。'
     }
 };
+
+// PVE 與首領相關的鍵名前缀
+const PVE_BOSS_PREFIXES = ['PVE', '首領'];
+window.isExcludePveBoss = () => !!(GAIN_EFFECT_DATABASE['排除PVE與首領'] && GAIN_EFFECT_DATABASE['排除PVE與首領'].active);
 
 // Helper function to fetch all titles with pagination
 async function fetchAllTitles(serverId, characterId, initialTitleList, ownedCount) {
@@ -1046,84 +1056,104 @@ function initGainControls() {
         const item = GAIN_EFFECT_DATABASE[key];
         const checked = item.active ? 'checked' : '';
         const isWingCollection = key === '翅膀收藏';
+        const isFlag = !!item._isFlag;
 
         // Build stats detail string
         let statsInfo = "";
         let hasStats = false;
 
-        // 優先顯示 breakdown 細項 (如被動技能)
-        if (item.breakdowns && Object.keys(item.breakdowns).length > 0) {
-            for (let s in item.breakdowns) {
-                // s 是屬性名稱 (如 暴擊傷害增幅)
-                let total = item.stats ? (item.stats[s] || 0) : 0;
-                // 💡 強化判斷：精確區分百分比與固定值顯示
-                let displayTotal = total;
-                let unit = s.includes('%') ? '%' : '';
-
-                // 如果 Key 明確不是百分比類別（例如只是「暴擊抵抗」而非「暴擊抵抗%」）
-                // 則強制不顯示百分比，也不進行 100 倍轉換
-                const isFlatStat = !s.includes('%') && (s === "暴擊抵抗" || s === "物理防禦" || s === "生命力" || s === "守護力" || s === "敏捷");
-
-                if (!isFlatStat && (unit === '%' || !unit) && Math.abs(total) < 1 && Math.abs(total) > 0) {
-                    displayTotal = Number((total * 100).toFixed(2));
-                    unit = '%';
-                } else if (isFlatStat) {
-                    displayTotal = Math.round(total);
-                    unit = '';
-                } else {
-                    displayTotal = Math.round(total * 1000) / 1000;
+        // 旗標型項目：顯示說明文字 + 啟用時顯示排除明細
+        if (isFlag) {
+            statsInfo = `<div style="color:#8b949e; margin-bottom:6px;">${item._desc || '開啟後影響計算行為'}</div>`;
+            if (item.active && item._excludedStats && Object.keys(item._excludedStats).length > 0) {
+                statsInfo += `<div style="color:#ff7675; font-weight:bold; margin:4px 0 3px;">🚫 已排除項目：</div>`;
+                for (const label in item._excludedStats) {
+                    const val = item._excludedStats[label];
+                    if (Math.abs(val) > 0.001) {
+                        statsInfo += `<div style="padding:1px 0; display:flex; justify-content:space-between; gap:8px;">
+                            <span style="color:#8b949e;">${label}</span>
+                            <span style="color:#ff7675; font-weight:bold;">-${Math.round(val * 100) / 100}</span>
+                        </div>`;
+                    }
                 }
+            } else if (item.active) {
+                statsInfo += `<div style="color:#8b949e; font-size:11px;">（搜尋角色後顯示明細）</div>`;
+            }
+        } else {
+            // 優先顯示 breakdown 細項 (如被動技能)
+            if (item.breakdowns && Object.keys(item.breakdowns).length > 0) {
+                for (let s in item.breakdowns) {
+                    // s 是屬性名稱 (如 暴擊傷害增幅)
+                    let total = item.stats ? (item.stats[s] || 0) : 0;
+                    // 💡 強化判斷：精確區分百分比與固定值顯示
+                    let displayTotal = total;
+                    let unit = s.includes('%') ? '%' : '';
 
-                statsInfo += `<div style="margin-bottom:2px; margin-top:4px; border-bottom:1px dashed #444; padding-bottom:2px;">
+                    // 如果 Key 明確不是百分比類別（例如只是「暴擊抵抗」而非「暴擊抵抗%」）
+                    // 則強制不顯示百分比，也不進行 100 倍轉換
+                    const isFlatStat = !s.includes('%') && (s === "暴擊抵抗" || s === "物理防禦" || s === "生命力" || s === "守護力" || s === "敏捷");
+
+                    if (!isFlatStat && (unit === '%' || !unit) && Math.abs(total) < 1 && Math.abs(total) > 0) {
+                        displayTotal = Number((total * 100).toFixed(2));
+                        unit = '%';
+                    } else if (isFlatStat) {
+                        displayTotal = Math.round(total);
+                        unit = '';
+                    } else {
+                        displayTotal = Math.round(total * 1000) / 1000;
+                    }
+
+                    statsInfo += `<div style="margin-bottom:2px; margin-top:4px; border-bottom:1px dashed #444; padding-bottom:2px;">
                             <span style="color:#ffd93d;">${s.replace('%', '')}</span> 
                             <span style="color:#fff; font-weight:bold;">+${displayTotal}${unit}</span>
                          </div>`;
 
-                item.breakdowns[s].forEach(desc => {
-                    statsInfo += `<div style="padding-left:8px; font-size:11px; color:#cbd5e1;">${desc}</div>`;
-                });
-                hasStats = true;
-            }
-        } else if (item.stats) {
-            for (let s in item.stats) {
-                let val = item.stats[s];
-                let unit = s.includes('%') ? '%' : '';
-                let dVal = val;
-                if (!unit && Math.abs(val) < 1 && Math.abs(val) > 0) {
-                    dVal = Number((val * 100).toFixed(2));
-                    unit = '%';
-                } else {
-                    dVal = Math.round(val * 1000) / 1000;
+                    item.breakdowns[s].forEach(desc => {
+                        statsInfo += `<div style="padding-left:8px; font-size:11px; color:#cbd5e1;">${desc}</div>`;
+                    });
+                    hasStats = true;
                 }
-                statsInfo += `<div style="margin-bottom:2px;">${s}: <span style="color:#fff;">+${dVal}${unit}</span></div>`;
-                hasStats = true;
-            }
-        }
-        if (!hasStats && !isWingCollection) statsInfo = "<div>暫無詳細數值</div>";
-
-        // Special handling for Wing Collection Tooltip
-        if (isWingCollection) {
-            if (!item.selectedWings || item.selectedWings.length === 0) {
-                statsInfo = "<div>請先勾選並選擇翅膀</div>";
-            } else {
-                const count = item.selectedWings.length;
-                statsInfo = `<div style="margin-bottom:4px; color:var(--primary);">裝備稱號已預設 ${count} 個翅膀</div>`;
-
-                // List selected wings with colors, ensuring all are shown or scrollable
-                const wingsListHtml = item.selectedWings.map(wName => {
-                    const w = WING_DATABASE[wName];
-                    const color = w ? getWingGradeColor(w.grade) : '#ccc';
-                    return `<span style="color:${color}">${wName}</span>`;
-                }).join(', ');
-
-                statsInfo += `<div style="font-size:10px; color:#8b949e; margin-bottom:5px; white-space:normal; border-bottom:1px solid #333; padding-bottom:3px; line-height:1.4; max-height:80px; overflow-y:auto;">${wingsListHtml}</div>`;
-
-                statsInfo += `<div style="margin-bottom:4px; color:#ccc;">數值總計:</div>`;
+            } else if (item.stats) {
                 for (let s in item.stats) {
-                    statsInfo += `<div>${s}: <span style="color:#fff;">+${Math.round(item.stats[s] * 1000) / 1000}</span></div>`;
+                    let val = item.stats[s];
+                    let unit = s.includes('%') ? '%' : '';
+                    let dVal = val;
+                    if (!unit && Math.abs(val) < 1 && Math.abs(val) > 0) {
+                        dVal = Number((val * 100).toFixed(2));
+                        unit = '%';
+                    } else {
+                        dVal = Math.round(val * 1000) / 1000;
+                    }
+                    statsInfo += `<div style="margin-bottom:2px;">${s}: <span style="color:#fff;">+${dVal}${unit}</span></div>`;
+                    hasStats = true;
                 }
             }
-        }
+            if (!hasStats && !isWingCollection) statsInfo = "<div>暫無詳細數值</div>";
+
+            // Special handling for Wing Collection Tooltip
+            if (isWingCollection) {
+                if (!item.selectedWings || item.selectedWings.length === 0) {
+                    statsInfo = "<div>請先勾選並選擇翅膀</div>";
+                } else {
+                    const count = item.selectedWings.length;
+                    statsInfo = `<div style="margin-bottom:4px; color:var(--primary);">裝備稱號已預設 ${count} 個翅膀</div>`;
+
+                    // List selected wings with colors, ensuring all are shown or scrollable
+                    const wingsListHtml = item.selectedWings.map(wName => {
+                        const w = WING_DATABASE[wName];
+                        const color = w ? getWingGradeColor(w.grade) : '#ccc';
+                        return `<span style="color:${color}">${wName}</span>`;
+                    }).join(', ');
+
+                    statsInfo += `<div style="font-size:10px; color:#8b949e; margin-bottom:5px; white-space:normal; border-bottom:1px solid #333; padding-bottom:3px; line-height:1.4; max-height:80px; overflow-y:auto;">${wingsListHtml}</div>`;
+
+                    statsInfo += `<div style="margin-bottom:4px; color:#ccc;">數值總計:</div>`;
+                    for (let s in item.stats) {
+                        statsInfo += `<div>${s}: <span style="color:#fff;">+${Math.round(item.stats[s] * 1000) / 1000}</span></div>`;
+                    }
+                }
+            }
+        } // end else (not isFlag)
 
         return `
                     <div style="position:relative; display:flex; align-items:center;" class="custom-tooltip-trigger">
@@ -1162,6 +1192,7 @@ function initGainControls() {
                     </div>
                 `;
     }).join('');
+
 
     // 翅膀選擇 UI 獨立渲染到 wing-selection-row（不影響 checkbox flex 排版）
     const wingRow = document.getElementById('wing-selection-row');
@@ -1261,9 +1292,10 @@ window.toggleGainEffect = function (key, isChecked) {
         });
         localStorage.setItem('gainEffectStates_v1', JSON.stringify(states));
 
-        // Special handling for Wing Collection: Re-render controls to show/hide dropdown
-        if (key === '翅膀收藏') {
-            initGainControls();
+        // Special handling for Wing Collection or flag-type toggles
+        const dbItem = GAIN_EFFECT_DATABASE[key];
+        if (key === '翅膀收藏' || dbItem._isFlag) {
+            if (key === '翅膀收藏') initGainControls();
             // Also handle data update
             if (window.__LAST_DATA_JSON__) {
                 processData(window.__LAST_DATA_JSON__, true, true, true);
@@ -3457,9 +3489,10 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                                     <div style="padding-left: 8px; font-size: 12px; color: #bdc3c7; line-height: 1.5;">
                                         <div style="margin-bottom: 4px;">• <b>計算方式：</b>依據板塊取得難度進行加權。</div>
                                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; color: #aaa; font-size: 11px; margin-top: 2px;"></div>
-                                            <div style="margin-bottom: 4px;">• <b>四塊板塊加總權重為</b>: 1.5分 </div>
-                                            <div style="margin-bottom: 4px;">• <b>艾瑞爾權重為</b>: 4.0分</div>
-                                            <div style="margin-bottom: 4px;">• <b>阿斯佩爾權重為</b>: 5.0分</div>
+                                            <div style="margin-bottom: 4px;">• <b>基礎四塊板塊（各）</b>: 1.5分</div>                                            
+                                            <div style="margin-bottom: 4px;">• <b>艾瑞爾權重為</b>: 2.0分</div>
+                                            <div style="margin-bottom: 4px;">• <b>阿斯佩爾權重為</b>: 4.0分</div>
+                                            <div style="margin-bottom: 4px;">• <b>瑪爾庫坦權重為</b>: 3.0分</div>
                                         
                                     </div>
                                 </div>
@@ -3804,6 +3837,10 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
             };
         }
 
+        // 每次渲染前重置排除統計的「已重置」旗標，確保能正確清空
+        const _pveBossFlag = GAIN_EFFECT_DATABASE['排除PVE與首領'];
+        if (_pveBossFlag) _pveBossFlag.__resetDone = false;
+
         // 🔍 狀態保存：記錄目前概覽分頁的展開項目
         const expandedLabels = new Set();
         overviewGrid.querySelectorAll('.stat-list-row.expanded').forEach(row => {
@@ -3908,7 +3945,22 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                 const baseRes = getSumOf(cfg.bases, 'flat');
                 const extraRes = getSumOf(cfg.extras, 'flat');
                 const percRes = getSumOf(cfg.percs, 'perc');
-                const fixedRes = getSumOf(cfg.fixeds, 'flat');
+                // 🛡️ 排除PVE與首領旗標：過濾 fixeds 中的 PVE/首領 key
+                const flagItem = GAIN_EFFECT_DATABASE['排除PVE與首領'];
+                if (window.isExcludePveBoss() && flagItem) {
+                    // 只在第一個 cfg 時清空（避免每次 cfg 都重置）
+                    if (!flagItem.__resetDone) { flagItem._excludedStats = {}; flagItem.__resetDone = true; }
+                    const excludedKeys = (cfg.fixeds || []).filter(k => PVE_BOSS_PREFIXES.some(p => k.startsWith(p)));
+                    const excludedRes = getSumOf(excludedKeys, 'flat');
+                    excludedRes.items.forEach(item => {
+                        const label = `${cfg.name} - ${item.key}`;
+                        flagItem._excludedStats[label] = (flagItem._excludedStats[label] || 0) + item.val;
+                    });
+                }
+                const effectiveFixeds = window.isExcludePveBoss()
+                    ? (cfg.fixeds || []).filter(k => !PVE_BOSS_PREFIXES.some(p => k.startsWith(p)))
+                    : cfg.fixeds;
+                const fixedRes = getSumOf(effectiveFixeds, 'flat');
 
 
                 gatheredDetails = [...baseRes.details, ...extraRes.details, ...percRes.details, ...fixedRes.details];

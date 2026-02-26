@@ -415,8 +415,9 @@ function calculateBoardScore(boardData) {
         '吉凱爾': 1.5,
         '白傑爾': 1.5,
         '崔妮爾': 1.5,
-        '艾瑞爾': 4.0,  // 困難 (PVE/PVP)
-        '阿斯佩爾': 5.0 // 極難
+        '瑪爾庫坦': 3.0, // 中高難度
+        '艾瑞爾': 2.0,  // 困難 (PVE/PVP)
+        '阿斯佩爾': 4.0 // 極難
     };
 
     // 計算所有板塊分數
@@ -864,7 +865,7 @@ function getScoreAnalysis(breakdown) {
     } else if (boardPercentage < 80) {
         suggestions.push({
             title: '📋 板塊進階衝刺',
-            desc: `板塊評分 <b style="color: #ffd700;">${boardScore.toFixed(1)}</b>/15 (<b style="color: #ffd700;">${boardPercentage.toFixed(0)}%</b>)。核心四板已有基礎，建議開始挑戰「艾瑞爾」與「阿斯佩爾」以獲取高權重加成。`,
+            desc: `板塊評分 <b style="color: #ffd700;">${boardScore.toFixed(1)}</b>/15 (<b style="color: #ffd700;">${boardPercentage.toFixed(0)}%</b>)。核心四板已有基礎，建議挑戰「瑪爾庫坦」(3.0分) 與「艾瑞爾」(2.0分) 以獲取加成，最終目標為「阿斯佩爾」(4.0分)。`,
             priority: '中'
         });
     } else if (boardPercentage < 95) {
