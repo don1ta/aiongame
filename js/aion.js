@@ -5238,7 +5238,7 @@ function renderSkills(data, boardSkillMap, cardSkillMap, stats) {
             if (filename.includes('.')) filename = filename.split('.')[0];
             iconUrl = 'https://assets.playnccdn.com/static-aion2-gamedata/resources/' + filename + '.png';
         }
-        let tip = `<div class="tooltip"><button class="tooltip-close-btn" onclick="this.parentElement.classList.remove('tooltip-pinned'); event.stopPropagation();">✕</button><b>${s.name}</b><br>基礎: Lv.${Math.max(0, s.skillLevel - bLv - cLv)}<br>板塊: +${bLv}<br>卡片: +${cLv}${effectsHtml}</div>`;
+        let tip = `<div class="tooltip"><button class="tooltip-close-btn">✕</button><b>${s.name}</b><br>基礎: Lv.${Math.max(0, s.skillLevel - bLv - cLv)}<br>板塊: +${bLv}<br>卡片: +${cLv}${effectsHtml}</div>`;
         let h = `<div class="skill-card"><img src="${iconUrl}"><div><span class="sk-name">${s.name}</span><span style="color:var(--blue);font-size:14px">Lv.${s.skillLevel}</span></div>${tip}</div>`;
 
         if (s.category === "Active") act += h;
@@ -5523,38 +5523,11 @@ function renderCombatAnalysis(stats, data) {
 
     // --- 💡 戰力計算說明彈窗 ---
     window.openCalculationGuide = function () {
-        const modal = document.createElement('div');
-        modal.style.cssText = `
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85); backdrop-filter: blur(10px);
-            display: flex; align-items: center; justify-content: center; z-index: 10000;
-        `;
-
-        const content = `
-            <div style="background:#1a1c1e; border: 1px solid var(--gold); border-radius: 12px; width: 90%; max-width: 500px; padding: 25px; position: relative; color: #eee; box-shadow: 0 0 30px rgba(255,215,0,0.2);">
-                <button onclick="this.parentElement.parentElement.remove()" style="position:absolute; top:15px; right:15px; background:none; border:none; color:#888; font-size:24px; cursor:pointer;">&times;</button>
-                <h3 style="color:var(--gold); margin-bottom:20px; border-bottom:1px solid rgba(255,215,0,0.3); padding-bottom:10px;">📊 戰力與數據計算說明</h3>
-                
-                <div style="font-size:14px; line-height:1.8; max-height: 400px; overflow-y: auto; padding-right: 10px;">
-                    <p><b>收集來源：系統會自動計算所有來源：</b></p>
-                    <ul style="list-style:none; padding-left:10px;">
-                        <li>🔱 <span style="color:#a29bfe">板塊分 (boardVal)：</span>七大守護力板塊的總和。</li>
-                        <li>🛡️ <span style="color:#3498db">裝備分 (equipVal)：</span>裝備基本屬性 + 翅膀 + 套裝效果。</li>
-                        <li>💎 <span style="color:#e67e22">強化分 (stoneVal)：</span>磨石鑲嵌與裝備隨機屬性。</li>
-                        <li>🧩 <span style="color:#bdc3c7">其他分 (otherVal)：</span>稱號 + 被動技能 + 已勾選的「數值類」增益。</li>
-                    </ul>
-
-                    <div style="background:rgba(255,215,0,0.05); padding:15px; border-radius:8px; margin-top:15px; border:1px dashed rgba(255,215,0,0.2);">
-                        <p style="margin:0;"><b>💡 戰力如何連動增益效果？</b></p>
-                        <p style="margin:5px 0 0; font-size:13px; color:#aaa;">當您在「增益控制」勾選特定項目（如聖柱、被動）時，系統會將這些屬性計入「其他分」並同步反映在戰鬥屬性的總值中。勾選「排除守護力」則會強制將板塊分數歸零，以便觀察純裝備強度。</p>
-                    </div>
-                </div>
-                
-                <button onclick="this.parentElement.parentElement.remove()" style="width:100%; margin-top:20px; padding:12px; background:var(--gold); border:none; border-radius:6px; color:#000; font-weight:bold; cursor:pointer;">我明白了</button>
-            </div>
-        `;
-        modal.innerHTML = content;
-        document.body.appendChild(modal);
+        const el = document.getElementById('guide-overlay');
+        if (el) {
+            el.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
     };
 
     const sections = [
@@ -5895,12 +5868,20 @@ function renderCombatAnalysis(stats, data) {
 
 // Tooltip 點擊固定功能
 document.addEventListener('DOMContentLoaded', function () {
-    // Tooltip 點擊固定功能 - 修正版 (改為必須點 X 或切換其他項目才關閉)
+    // Tooltip 點擊固定功能 - 修正版
     document.addEventListener('click', function (e) {
-        // 1. 如果點擊的是關閉按鈕 -> 關閉
-        if (e.target.classList.contains('tooltip-close-btn')) {
-            const tooltip = e.target.closest('.tooltip');
-            if (tooltip) tooltip.classList.remove('tooltip-pinned');
+        // 1. 如果點擊的是關閉按鈕 -> 關閉並返回
+        const closeBtn = e.target.closest('.tooltip-close-btn');
+        if (closeBtn) {
+            const tooltip = closeBtn.closest('.tooltip');
+            if (tooltip) {
+                tooltip.classList.remove('tooltip-pinned');
+                // 💡 強制隱藏：避免點擊關閉後，因滑鼠仍在卡片上導致 CSS :hover 繼續顯示
+                tooltip.style.visibility = 'hidden';
+                tooltip.style.opacity = '0';
+                tooltip.style.pointerEvents = 'none';
+            }
+            e.stopPropagation();
             return;
         }
 
@@ -5909,24 +5890,42 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        // 3. 如果點擊的是觸發區域 (.hover-calc 或 .skill-card 等有 tooltip 的容器)
+        // 3. 如果點擊的是觸發區域
         const trigger = e.target.closest('.hover-calc, .skill-card, .stat-mini-card, th.th-hover');
         if (trigger) {
             const tooltip = trigger.querySelector('.tooltip');
             if (tooltip) {
-                // 關閉其他已開啟的 tooltip (互斥)
-                document.querySelectorAll('.tooltip.tooltip-pinned').forEach(t => {
-                    if (t !== tooltip) t.classList.remove('tooltip-pinned');
-                });
+                // 點擊觸發區域時，先重設可能存在的強制隱藏狀態
+                tooltip.style.visibility = '';
+                tooltip.style.opacity = '';
+                tooltip.style.pointerEvents = '';
 
-                // 強制開啟當前 tooltip (不使用 toggle，避免誤關)
-                tooltip.classList.add('tooltip-pinned');
+                // 如果已經是開啟狀態，且點擊的是觸發容器本身（而非內容），則切換狀態 (toggle)
+                if (tooltip.classList.contains('tooltip-pinned')) {
+                    tooltip.classList.remove('tooltip-pinned');
+                } else {
+                    // 關閉其他已開啟的 tooltip
+                    document.querySelectorAll('.tooltip.tooltip-pinned').forEach(t => {
+                        if (t !== tooltip) t.classList.remove('tooltip-pinned');
+                    });
+                    tooltip.classList.add('tooltip-pinned');
+                }
                 e.stopPropagation();
             }
         }
+    });
 
-        // 4. 點擊空白處 -> 依照使用者要求「要點x才能關閉」，這裡不再自動關閉
-        // 原本的 document.querySelectorAll(...).remove(...) 已移除
+    // 🛡️ 當滑鼠離開觸發區域時，重設被強制隱藏的 Tooltip 狀態，讓下次 Hover 能正常顯示
+    document.addEventListener('mouseout', function (e) {
+        const trigger = e.target.closest('.hover-calc, .skill-card, .stat-mini-card, th.th-hover');
+        if (trigger && !trigger.contains(e.relatedTarget)) {
+            const tooltip = trigger.querySelector('.tooltip');
+            if (tooltip) {
+                tooltip.style.visibility = '';
+                tooltip.style.opacity = '';
+                tooltip.style.pointerEvents = '';
+            }
+        }
     });
 
     // 🛡️ 技能卡片 Tooltip 智能定位 (防止超出螢幕)

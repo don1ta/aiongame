@@ -2198,10 +2198,9 @@
                 padding: 15px !important;
             }
 
-            /* 統計網格改為單欄或少欄 */
+            /* 統計網格改為兩欄 (手機版) */
             .stat-general-grid {
-                grid-template-columns: 1fr;
-                /* 單欄 */
+                grid-template-columns: repeat(2, 1fr);
             }
 
             .equip-item-card {
