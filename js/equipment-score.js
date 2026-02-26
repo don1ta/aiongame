@@ -686,7 +686,9 @@ function calculateEquipmentScore(itemDetails, boardData, petInsight, skillData, 
     const rarityConverted = Math.min(Math.round((rarity.score / 540) * 30 * 10) / 10, 30);
 
     // 2. 板塊數量 (15分) - 權重計算
-    const boardConverted = Math.min(board.score, 15);
+    const boardConverted = (typeof window.isExcludeBoardStats === 'function' && window.isExcludeBoardStats())
+        ? 0
+        : Math.min(board.score, 15);
 
     // 3. 寵物理解度 (20分)
     const petConverted = Math.min(petInsightResult.score, 20);

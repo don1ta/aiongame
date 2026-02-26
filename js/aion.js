@@ -404,9 +404,10 @@ const GAIN_EFFECT_DATABASE = {
     },
     '排除守護力': {
         stats: {},
+        active: false, // 🛠️ 確保預設不打勾
         default: false,
         _isFlag: true,
-        _desc: '勾選後，戰力指標將排除七大守護力板塊（奈薩肯、吉凱爾、白傑爾、崔妮爾、瑪爾庫坦、艾瑞爾、阿斯佩爾）的所有屬性加成，顯示純裝備數字。'
+        _desc: '勾選後，戰力指標將排除七大守護力板塊的所有屬性加成，顯示純裝備數字。'
     }
 };
 
@@ -5415,7 +5416,9 @@ function renderCombatAnalysis(stats, data) {
         // 裝備總分為: 基礎(equipMain) + 隨格(random) + 磨石(stone)
         const calcTotal = (entry.equipMain || 0) + (entry.subtotals?.random || 0) + (entry.subtotals?.stone || 0) + bSum + sSum + (entry.subtotals?.mainStat || 0);
 
-        if (!entry.hasOfficialTotal || (calcTotal > entry.total + 0.1)) {
+        if (window.isExcludeBoardStats()) {
+            entry.total = (entry.equipMain || 0) + (entry.subtotals?.random || 0) + (entry.subtotals?.stone || 0) + sSum + (entry.subtotals?.mainStat || 0);
+        } else if (!entry.hasOfficialTotal || (calcTotal > entry.total + 0.1)) {
             entry.total = calcTotal;
         }
         return entry;
@@ -5429,21 +5432,23 @@ function renderCombatAnalysis(stats, data) {
         }
 
         const fmtVal = (v) => Number(parseFloat(v || 0).toFixed(2)) + (isPerc ? '%' : '');
-
-        let html = `<div style="flex:1; font-size:12px; display:flex; flex-direction:column; gap:4px;">`;
-        let hasContent = false;
         const TH = 0.001;
 
-        // 1. 基礎概覽 (讓使用者一眼看到裝備本身提供的總量)
+        // 🛡️ 佈局優化：使用 3 欄 Grid
+        let html = `<div style="flex:1; font-size:11px; display:grid; grid-template-columns: repeat(3, 1fr); gap:12px; padding:10px; background:rgba(255,255,255,0.02); border-radius:8px;">`;
+        let hasContent = false;
+
+        // 1. 基礎概覽 (置頂通欄)
         const baseTotal = (entry.equipMain || 0) + (entry.subtotals?.random || 0);
         if (Math.abs(baseTotal) > TH) {
-            html += `<div style="display:flex; justify-content:space-between; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:2px; margin-bottom:2px;">
+            html += `<div style="grid-column: 1 / -1; display:flex; justify-content:space-between; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:4px; margin-bottom:5px;">
                         <span style="color:#58a6ff; font-weight:bold;">🛡️ 裝備基礎合計</span>
                         <span style="color:#fff; font-weight:bold;">${fmtVal(baseTotal)}</span>
                      </div>`;
         }
 
-        // 2. Guardian Stats
+        // 2. Guardian Stats (第一欄)
+        let guardianHtml = `<div style="display:flex; flex-direction:column; gap:4px;">`;
         const guardians = [
             { k: 'nezakan', n: '奈薩肯', c: '#a29bfe' },
             { k: 'zikel', n: '吉凱爾', c: '#a29bfe' },
@@ -5454,97 +5459,102 @@ function renderCombatAnalysis(stats, data) {
             { k: 'asphel', n: '阿斯佩爾', c: '#a29bfe' }
         ];
 
+        let hasGuardian = false;
         if (!window.isExcludeBoardStats()) {
             guardians.forEach(g => {
                 const val = entry[g.k] || 0;
                 if (Math.abs(val) > TH) {
-                    html += `<div style="display:flex; justify-content:space-between;"><span style="color:${g.c};">⚔️ ${g.n}守護力</span><span style="color:#fff;">${fmtVal(val)}</span></div>`;
+                    guardianHtml += `<div style="display:flex; justify-content:space-between;"><span style="color:${g.c};">${g.n}</span><span style="color:#fff;">${fmtVal(val)}</span></div>`;
+                    hasGuardian = true;
                     hasContent = true;
                 }
             });
         }
+        guardianHtml += `</div>`;
+        html += guardianHtml;
 
-        // 3. Render Detail Groups
-        const renderGroup = (groupKey, icon, color, label) => {
+        // 3. Render Detail Groups (分配到後兩欄)
+        let col2Html = `<div style="display:flex; flex-direction:column; gap:4px;">`;
+        let col3Html = `<div style="display:flex; flex-direction:column; gap:4px;">`;
+
+        let subItemsCount = 0;
+        const renderToCols = (groupKey, icon, color, label) => {
             const list = entry.detailGroups?.[groupKey] || [];
-            if (list.length === 0) return 0;
-
             list.forEach(str => {
                 let displayHtml = "";
-                if (str.startsWith("<")) {
-                    displayHtml = `<div style="display:flex; justify-content:space-between; align-items:center;"><span style="color:${color};">${icon} [${label}]</span> ${str}</div>`;
+                let colonIdx = str.indexOf(':');
+                if (colonIdx > -1) {
+                    let name = str.substring(0, colonIdx).trim().replace(/^\[|\]$/g, '');
+                    let valPart = str.substring(colonIdx + 1).trim();
+                    displayHtml = `<div style="display:flex; justify-content:space-between; gap:5px;">
+                                <span style="color:${color}; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${name}">${icon} ${name}</span>
+                                <span style="color:#fff;">${valPart}</span>
+                            </div>`;
                 } else {
-                    let colonIdx = str.indexOf(':');
-                    if (colonIdx > -1) {
-                        let name = str.substring(0, colonIdx).trim().replace(/^\[|\]$/g, '');
-                        let valPart = str.substring(colonIdx + 1).trim();
-
-                        // 針對被動技能優化顯示：若 input 為 "[技能名]", 則顯示為 "⚡ [被動技能] 技能名"
-                        // 避免顯示成 "⚡ [被動技能] [技能名]"
-                        let displayName = (label === '被動技能' || label === '技能/被動')
-                            ? `[${label}] ${name}`
-                            : `[${label}] ${name}`;
-
-                        displayHtml = `<div style="display:flex; justify-content:space-between;">
-                                    <span style="color:${color};">${icon} ${displayName}</span>
-                                    <span style="color:#fff;">${valPart}</span>
-                                </div>`;
-                    } else {
-                        displayHtml = `<div style="display:flex; justify-content:space-between;"><span style="color:${color};">${icon} [${label}] ${str}</span></div>`;
-                    }
+                    displayHtml = `<div style="display:flex; justify-content:space-between;"><span style="color:${color};">${icon} ${str}</span></div>`;
                 }
-                html += displayHtml;
+
+                if (subItemsCount % 2 === 0) col2Html += displayHtml;
+                else col3Html += displayHtml;
+
+                subItemsCount++;
                 hasContent = true;
             });
         };
 
-        renderGroup('base', '🛡️', '#bdc3c7', '裝備/主體');
-        renderGroup('random', '🎲', '#95a5a6', '裝備/強化');
-        renderGroup('stone', '💎', '#e67e22', '磨石鑲嵌');
-        renderGroup('set', '📦', '#fab1a0', '套裝效果');
-        renderGroup('skill', '⚡', '#fd79a8', '被動技能');
-        renderGroup('title', '🎖️', '#ffd700', '稱號加成');
-        renderGroup('wing', '🪽', '#81ecec', '翅膀裝備');
-        renderGroup('wingHold', '🪽', '#8b949e', '翅膀持有');
-        renderGroup('arcana', '🎴', '#ff7675', '魔力聖物');
-        renderGroup('gainEffect', '💊', '#fdcb6e', '手動增益');
-        renderGroup('mainStat', '📊', '#74b9ff', '能力轉化');
-        renderGroup('etc', '🧩', '#8b949e', '其他細項');
+        renderToCols('stone', '💎', '#e67e22', '磨石');
+        renderToCols('set', '📦', '#fab1a0', '套裝');
+        renderToCols('skill', '⚡', '#fd79a8', '技能');
+        renderToCols('title', '🎖️', '#ffd700', '稱號');
+        renderToCols('wing', '🪽', '#81ecec', '翅膀');
+        renderToCols('arcana', '🎴', '#ff7675', '聖物');
+        renderToCols('gainEffect', '💊', '#fdcb6e', '增益');
+        renderToCols('mainStat', '📊', '#74b9ff', '轉化');
 
-        // 3. Unclassified Other
-        // Calculate total of known components to find remainder
-        const s = entry;
+        col2Html += `</div>`;
+        col3Html += `</div>`;
+        html += col2Html + col3Html;
 
-        // Get totals from subtotals object
-        const knownTotal = (s.subtotals?.title || 0) + (s.subtotals?.wing || 0) + (s.subtotals?.wingHold || 0) +
-            (s.subtotals?.arcana || 0) + (s.subtotals?.set || 0) + (s.subtotals?.skill || 0) +
-            (s.subtotals?.gainEffect || 0) + (s.subtotals?.mainStat || 0) +
-            (s.subtotals?.stone || 0) + (s.subtotals?.random || 0); // random is part of equipSub normally
-
-        // Note: s.equipMain and s.equipSub are NOT in s.other usually.
-        // s.other usually contains title, wing, etc.
-        // We need to check if 'other' has leftovers.
-
-        // s.other contains title, wing, arcana, set, skill, gain, mainStat, board(some), etc.
-        const otherBreakdownSum = (s.subtotals?.title || 0) + (s.subtotals?.wing || 0) + (s.subtotals?.wingHold || 0) +
-            (s.subtotals?.arcana || 0) + (s.subtotals?.set || 0) + (s.subtotals?.skill || 0) +
-            (s.subtotals?.gainEffect || 0) + (s.subtotals?.mainStat || 0);
-
-        let unclassified = (s.other || 0) - otherBreakdownSum;
-        if (Math.abs(unclassified) > 0.01) {
-            html += `<div style="display:flex; justify-content:space-between; border-top:1px dashed #444; padding-top:2px;">
-                        <span style="color:#8b949e;">🧩 未分類來源</span>
-                        <span style="color:#ccc;">${fmtVal(unclassified)}</span>
-                     </div>`;
-            hasContent = true;
-        }
-
-        if (!hasContent) {
-            return `<div style="flex:1; font-size:12px; color:#666;">無細項數據</div>`;
-        }
+        if (!hasContent) return `<div style="flex:1; font-size:12px; color:#666; text-align:center; padding:10px;">無細項數據</div>`;
 
         html += `</div>`;
         return html;
+    };
+
+    // --- 💡 戰力計算說明彈窗 ---
+    window.openCalculationGuide = function () {
+        const modal = document.createElement('div');
+        modal.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); backdrop-filter: blur(10px);
+            display: flex; align-items: center; justify-content: center; z-index: 10000;
+        `;
+
+        const content = `
+            <div style="background:#1a1c1e; border: 1px solid var(--gold); border-radius: 12px; width: 90%; max-width: 500px; padding: 25px; position: relative; color: #eee; box-shadow: 0 0 30px rgba(255,215,0,0.2);">
+                <button onclick="this.parentElement.parentElement.remove()" style="position:absolute; top:15px; right:15px; background:none; border:none; color:#888; font-size:24px; cursor:pointer;">&times;</button>
+                <h3 style="color:var(--gold); margin-bottom:20px; border-bottom:1px solid rgba(255,215,0,0.3); padding-bottom:10px;">📊 戰力與數據計算說明</h3>
+                
+                <div style="font-size:14px; line-height:1.8; max-height: 400px; overflow-y: auto; padding-right: 10px;">
+                    <p><b>收集來源：系統會自動計算所有來源：</b></p>
+                    <ul style="list-style:none; padding-left:10px;">
+                        <li>🔱 <span style="color:#a29bfe">板塊分 (boardVal)：</span>七大守護力板塊的總和。</li>
+                        <li>🛡️ <span style="color:#3498db">裝備分 (equipVal)：</span>裝備基本屬性 + 翅膀 + 套裝效果。</li>
+                        <li>💎 <span style="color:#e67e22">強化分 (stoneVal)：</span>磨石鑲嵌與裝備隨機屬性。</li>
+                        <li>🧩 <span style="color:#bdc3c7">其他分 (otherVal)：</span>稱號 + 被動技能 + 已勾選的「數值類」增益。</li>
+                    </ul>
+
+                    <div style="background:rgba(255,215,0,0.05); padding:15px; border-radius:8px; margin-top:15px; border:1px dashed rgba(255,215,0,0.2);">
+                        <p style="margin:0;"><b>💡 戰力如何連動增益效果？</b></p>
+                        <p style="margin:5px 0 0; font-size:13px; color:#aaa;">當您在「增益控制」勾選特定項目（如聖柱、被動）時，系統會將這些屬性計入「其他分」並同步反映在戰鬥屬性的總值中。勾選「排除守護力」則會強制將板塊分數歸零，以便觀察純裝備強度。</p>
+                    </div>
+                </div>
+                
+                <button onclick="this.parentElement.parentElement.remove()" style="width:100%; margin-top:20px; padding:12px; background:var(--gold); border:none; border-radius:6px; color:#000; font-weight:bold; cursor:pointer;">我明白了</button>
+            </div>
+        `;
+        modal.innerHTML = content;
+        document.body.appendChild(modal);
     };
 
     const sections = [
@@ -6792,7 +6802,7 @@ window.showEquipTooltip = function (slotId, mode = 'modal', event = null) {
                 ${d.subStats.map(s => `
                     <div class="stat-row">
                         <span class="stat-label">${s.name}</span>
-                        <span class="stat-value bonus">${s.value}</span>
+                        <span class="stat-value bonus">+${s.value}</span>
                     </div>
                 `).join('')
             }
