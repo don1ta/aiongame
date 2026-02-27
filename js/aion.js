@@ -1289,6 +1289,16 @@ function initGainControls() {
         });
         window._wingDropdownListenerAttached = true;
     }
+    // 📱 手機版預設收合增益效果面板
+    if (window.innerWidth <= 768) {
+        const geBody = document.getElementById('ge-body');
+        const geArrow = document.getElementById('ge-arrow');
+        if (geBody && !window._geInitialCollapseApplied) {
+            geBody.style.display = 'none';
+            if (geArrow) geArrow.style.transform = 'rotate(-90deg)';
+            window._geInitialCollapseApplied = true;
+        }
+    }
 }
 
 window.toggleGainEffect = function (key, isChecked) {
@@ -4340,8 +4350,14 @@ function renderTrendChart(json, type = 'itemLevel') {
                     legend: { display: false },
                     datalabels: {
                         display: true,
-                        align: 'top',
-                        anchor: 'end',
+                        align: function (context) {
+                            // 交替上下排列避免重疊
+                            return context.dataIndex % 2 === 0 ? 'top' : 'bottom';
+                        },
+                        anchor: function (context) {
+                            return context.dataIndex % 2 === 0 ? 'end' : 'start';
+                        },
+                        offset: 8,
                         backgroundColor: function (context) {
                             return context.dataIndex === context.dataset.data.length - 1
                                 ? 'rgba(255, 217, 61, 0.9)'
@@ -4351,9 +4367,10 @@ function renderTrendChart(json, type = 'itemLevel') {
                         color: '#fff',
                         font: {
                             weight: 'bold',
-                            size: 15
+                            size: 12
                         },
-                        padding: 6,
+                        padding: { top: 4, bottom: 4, left: 6, right: 6 },
+                        clamp: true,
                         formatter: function (value) {
                             return value.toLocaleString();
                         }

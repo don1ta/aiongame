@@ -2755,41 +2755,15 @@
 
             .card-sticky-header.mobile-flex-header {
                 display: flex;
-                flex-direction: row;
-                align-items: stretch;
-                /* Make the left bar stretch to full height of header */
+                flex-direction: column;
             }
 
             .mobile-vertical-title {
-                display: flex !important;
-                flex-direction: column;
-                align-items: center;
-                justify-content: flex-start;
-                width: 36px;
-                flex-shrink: 0;
-                padding-top: 15px;
-                padding-bottom: 15px;
-                color: var(--gold);
-                font-weight: bold;
-                font-size: 16px;
-                line-height: 1.4;
-                letter-spacing: 0px;
-                background: rgba(0, 0, 0, 0.2);
-                border-right: 1px solid rgba(255, 255, 255, 0.05);
-                box-sizing: border-box;
-            }
-
-            .mobile-vertical-title span:not(.m-icon) {
-                margin-top: 2px;
-            }
-
-            .m-icon {
-                font-size: 18px;
-                margin-bottom: 10px;
+                display: none !important;
             }
 
             .desktop-only-title {
-                display: none !important;
+                display: block !important;
             }
 
             .mobile-header-content {

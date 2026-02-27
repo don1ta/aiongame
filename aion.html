@@ -274,15 +274,31 @@
                                         style="display:flex; gap:10px; align-items:center;">
                                     </div>
                                 </div>
-                                <!-- 增益效果控制面板 -->
-                                <div id="gain-effect-controls" style="padding:15px 25px; margin:0;">
-                                    <div style="font-size:13px; font-weight:bold; color:#bdc3c7; margin-bottom:10px;">⚙️
-                                        增益效果 | 無法計算寵物理解度</div>
-                                    <div style="display:flex; flex-wrap:wrap; gap:15px;" id="ge-checkbox-container">
+                                <!-- 增益效果控制面板 (可收合) -->
+                                <div id="gain-effect-controls" style="padding:0 25px; margin:0;">
+                                    <div onclick="(function(){
+                                        const body = document.getElementById('ge-body');
+                                        const arrow = document.getElementById('ge-arrow');
+                                        if(body.style.display === 'none'){
+                                            body.style.display = 'block';
+                                            arrow.style.transform = 'rotate(0deg)';
+                                        } else {
+                                            body.style.display = 'none';
+                                            arrow.style.transform = 'rotate(-90deg)';
+                                        }
+                                    })()"
+                                        style="font-size:13px; font-weight:bold; color:#bdc3c7; padding:12px 0; cursor:pointer; display:flex; justify-content:space-between; align-items:center; user-select:none;">
+                                        <span>⚙️ 增益效果 | 無法計算寵物理解度</span>
+                                        <span id="ge-arrow"
+                                            style="font-size:11px; color:#58a6ff; transition:transform 0.3s; transform:rotate(0deg);">▼</span>
                                     </div>
-                                    <!-- 翅膀選擇獨立行（不影響 checkbox 排版） -->
-                                    <div id="wing-selection-row"
-                                        style="display:none; margin-top:10px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.06);">
+                                    <div id="ge-body">
+                                        <div style="display:flex; flex-wrap:wrap; gap:15px;" id="ge-checkbox-container">
+                                        </div>
+                                        <!-- 翅膀選擇獨立行（不影響 checkbox 排版） -->
+                                        <div id="wing-selection-row"
+                                            style="display:none; margin-top:10px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.06);">
+                                        </div>
                                     </div>
                                 </div>
                             </div>
