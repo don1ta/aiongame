@@ -2773,10 +2773,56 @@
                 flex-direction: column;
             }
 
+            #pinned-stats-panel {
+                display: none !important;
+            }
+
+            #btn-pin-stats,
+            #btn-pin-stats+div {
+                display: none !important;
+            }
+
+            /* 手機版明細行：左右屬性改上下堆疊，並顯示屬性名稱標籤 */
+            [id^="row-detail-"] {
+                flex-direction: column !important;
+                gap: 10px !important;
+            }
+
+            .detail-col-label {
+                display: block !important;
+            }
+
+            /* 手機版分析標頭：標題縮小並允許按鈕換行 */
             .desk-title-row {
+                flex-wrap: wrap !important;
+                gap: 6px !important;
+                padding: 8px 12px !important;
+            }
+
+            .desktop-only-title {
+                font-size: 14px !important;
+                padding: 0 !important;
+                white-space: nowrap;
+                flex-shrink: 0;
+            }
+
+            #combat-analysis-global-controls {
+                flex-wrap: wrap !important;
+                gap: 5px !important;
                 justify-content: flex-start !important;
-                padding: 10px 15px 10px 15px !important;
-                border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+            }
+
+            /* 強制「全部展開/收合」換到第二排 */
+            .mobile-ctrl-break {
+                flex-basis: 100% !important;
+                height: 0 !important;
+            }
+
+            .desk-title-row {
+                flex-wrap: wrap !important;
+                gap: 6px !important;
+                padding: 8px 12px !important;
+                justify-content: flex-start !important;
             }
 
 

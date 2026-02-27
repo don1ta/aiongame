@@ -3042,11 +3042,6 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                 let unit = info.isPerc ? '%' : '';
                 let str = `+${i.enchantLevel} ${d.name}: +${parseFloat(info.total.toFixed(2))}${unit}`;
 
-                // 如果有細項且總數不等於單一細項(避免單一來源時重複顯示)
-                if (parts.length > 0 && !(parts.length === 1 && info.total === (info.base || info.enchant || info.exceed))) {
-                    str += ` <span style="font-size:11px; color:#8b949e">(${parts.join(' ')})</span>`;
-                }
-
                 getEntry(k).detailGroups.base.push(str);
             }
             (d.subStats || []).forEach(ss => {
@@ -3884,7 +3879,7 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
 
                     <div id="stat-tab-extra" class="stat-tab-content active">
                         <div class="stat-general-grid">
-                            ${extraConfig.map(cfg => {
+                            ${(window.__PINNED_STAT_VALUES__ = [], extraConfig).map(cfg => {
             // 提取屬性值的輔助函數
             const getSumOf = (keyList, searchType = 'any', forceContext = null) => {
                 let sum = 0;
@@ -4091,6 +4086,9 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
 
                 return isPerc ? totalVal.toFixed(1) + '%' : Math.floor(totalVal);
             })();
+            // 📌 儲存計算結果供釘選預覽使用
+            window.__PINNED_STAT_VALUES__.push({ icon: cfg.icon, name: cfg.name, val: displayVal });
+
             return `
                                     <div class="stat-list-row" onclick="toggleRowExpand(this)">
                                         <div class="stat-row-label">
@@ -4230,6 +4228,10 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
 
     renderCombatAnalysis(stats, data);
 
+    // 📌 如果戰力指標已釘選，同步更新釘選面板
+    if (window._statsPinned && typeof window._renderPinnedPreview === 'function') {
+        window._renderPinnedPreview();
+    }
     if (!statsOnly) {
         renderTrendChart(json, 'itemLevel'); // 預設顯示裝備等級
         // 觸發排行榜載入 (強制更新，因為角色已變更)
@@ -5517,9 +5519,9 @@ function renderCombatAnalysis(stats, data) {
                             nameStyle = 'color:#bdc3c7;';
                         }
 
-                        catHtml += `<div style="display:flex; justify-content:space-between; align-items:baseline; gap:8px;">
+                        catHtml += `<div style="display:flex; justify-content:space-between; align-items:baseline; gap:8px; flex-wrap:wrap;">
                                     <span style="${nameStyle} white-space:nowrap;">${name}</span>
-                                    <span style="color:#fff; white-space:nowrap; flex-shrink:0;">${valPart}</span>
+                                    <span style="color:#fff; flex-shrink:0; word-break:break-all; text-align:right;">${valPart}</span>
                                 </div>`;
                     } else {
                         catHtml += `<div><span style="color:${color}; opacity:0.85;">${str}</span></div>`;
@@ -5741,13 +5743,14 @@ function renderCombatAnalysis(stats, data) {
                 onmouseout="this.style.background='rgba(255,215,0,0.1)';" title="查看戰力指標計算說明">
                 💡 使用說明
             </button>
-            <button onclick="window.toggleStickyHeader()" 
+            <button id="btn-sticky-header" onclick="window.toggleStickyHeader()" 
                 style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#8b949e; cursor:pointer; font-size:11px; padding:4px 10px; border-radius:4px; transition:all 0.2s; white-space:nowrap;"
                 onmouseover="this.style.borderColor='var(--gold)'; this.style.color='#fff';"
                 onmouseout="this.style.borderColor='rgba(255,255,255,0.1)'; this.style.color='#8b949e';">
                 ${isStickyDisabled ? '📌 釘選標頭' : '🔓 取消固定'}
             </button>
             <div style="width:1px; height:15px; background:rgba(255,255,255,0.1); margin:0 5px;"></div>
+            <div class="mobile-ctrl-break" style="flex-basis:0; height:0;"></div>
             <button onclick="(function(){
                 for(let i=0;i<${totalSections};i++){
                     const c=document.getElementById('combat-section-'+i);
@@ -5764,6 +5767,13 @@ function renderCombatAnalysis(stats, data) {
                     if(ic){ic.style.transform='rotate(-90deg)';}
                 }
             })()" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#8b949e; cursor:pointer; font-size:11px; padding:4px 12px; border-radius:4px; transition:all 0.2s; white-space:nowrap;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">全部收合 ▲</button>
+            <div style="width:1px; height:15px; background:rgba(255,255,255,0.1); margin:0 5px;"></div>
+            <button id="btn-pin-stats" onclick="window.togglePinStats()" 
+                style="background:${window._statsPinned ? 'rgba(255,215,0,0.2)' : 'rgba(255,255,255,0.05)'}; border:1px solid ${window._statsPinned ? 'rgba(255,215,0,0.4)' : 'rgba(255,255,255,0.1)'}; color:${window._statsPinned ? '#ffd700' : '#8b949e'}; cursor:pointer; font-size:11px; padding:4px 12px; border-radius:4px; transition:all 0.2s; white-space:nowrap;"
+                onmouseover="this.style.borderColor='var(--gold)'; this.style.color='#ffd700';"
+                onmouseout="if(!window._statsPinned){this.style.borderColor='rgba(255,255,255,0.1)'; this.style.color='#8b949e';}">
+                ${window._statsPinned ? '📌 取消預覽' : '📌 預覽指標'}
+            </button>
         `;
     }
 
@@ -5776,11 +5786,86 @@ function renderCombatAnalysis(stats, data) {
             localStorage.setItem('sticky_header_disabled', isDisabled);
 
             // 不刷新重新渲染資料以免遺失狀態，只更新按鈕文字
-            const btn = document.querySelector('button[onclick="window.toggleStickyHeader()"]');
+            const btn = document.getElementById('btn-sticky-header');
             if (btn) {
                 btn.innerHTML = isDisabled ? '📌 釘選標頭' : '🔓 取消固定';
             }
+
+            // 同步更新預覽指標面板的 top offset
+            const pinnedPanel = document.getElementById('pinned-stats-panel');
+            if (pinnedPanel && window._statsPinned) {
+                const hdrH = isDisabled ? 0 : header.offsetHeight;
+                pinnedPanel.style.top = (hdrH + 8) + 'px';
+            }
         }
+    }
+
+    // 📌 釘選戰力指標功能 — 直接讀取主要能力值概覽的計算結果
+    window._renderPinnedPreview = function () {
+        const panel = document.getElementById('pinned-stats-panel');
+        if (!panel || !window._statsPinned) return;
+
+        const values = window.__PINNED_STAT_VALUES__ || [];
+        if (values.length === 0) {
+            panel.innerHTML = '<div style="color:#8b949e; font-size:11px; text-align:center; padding:10px;">尚無計算資料</div>';
+            return;
+        }
+
+        let html = `<div style="font-size:11px; font-weight:bold; color:var(--gold); padding-bottom:6px; border-bottom:1px solid rgba(255,215,0,0.2); margin-bottom:4px; text-align:center;">
+                        📌 戰力指標
+                    </div>`;
+
+        values.forEach(item => {
+            const valStr = (item.val === 0 || item.val === '0') ? '--' : item.val;
+            html += `<div style="display:flex; justify-content:space-between; align-items:center; padding:3px 2px; border-bottom:1px solid rgba(255,255,255,0.03);">
+                        <span style="color:#8b949e; font-size:10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${item.icon} ${item.name}</span>
+                        <span style="color:#fff; font-size:11px; font-weight:bold; font-family:'Outfit',sans-serif; flex-shrink:0; margin-left:4px;">${valStr}</span>
+                    </div>`;
+        });
+
+        panel.innerHTML = html;
+    };
+
+    if (!window.togglePinStats) {
+        window.togglePinStats = function () {
+            const isPinned = window._statsPinned;
+            const pinnedPanel = document.getElementById('pinned-stats-panel');
+            const btn = document.getElementById('btn-pin-stats');
+
+            if (!pinnedPanel) return;
+
+            if (!isPinned) {
+                // === 釘選 ===
+                window._statsPinned = true;
+                pinnedPanel.style.display = 'block';
+
+                // 動態計算釘選標頭高度，讓預覽面板從標頭下方開始 sticky
+                const stickyHdr = document.querySelector('.card-sticky-header:not(.sticky-disabled)');
+                const hdrH = stickyHdr ? stickyHdr.offsetHeight : 0;
+                pinnedPanel.style.top = (hdrH + 8) + 'px';
+
+                window._renderPinnedPreview();
+
+                if (btn) {
+                    btn.innerHTML = '📌 取消釘選';
+                    btn.style.background = 'rgba(255,215,0,0.2)';
+                    btn.style.borderColor = 'rgba(255,215,0,0.4)';
+                    btn.style.color = '#ffd700';
+                }
+            } else {
+                // === 取消釘選 ===
+                window._statsPinned = false;
+                pinnedPanel.style.display = 'none';
+                pinnedPanel.innerHTML = '';
+
+                if (btn) {
+                    btn.innerHTML = '📌 預覽指標';
+                    btn.style.background = 'rgba(255,255,255,0.05)';
+                    btn.style.borderColor = 'rgba(255,255,255,0.1)';
+                    btn.style.color = '#8b949e';
+                }
+            }
+        };
     }
 
     sections.forEach((section, sIdx) => {
@@ -5836,11 +5921,22 @@ function renderCombatAnalysis(stats, data) {
                                     if(d.style.display==='none'){
                                         d.style.display='flex';
                                         if(arrow) arrow.style.transform='rotate(0deg)';
+                                        setTimeout(function(){
+                                            const sh = document.querySelector('.card-sticky-header:not(.sticky-disabled)');
+                                            const hh = sh ? sh.offsetHeight : 0;
+                                            if(hh > 0){
+                                                const rowEl = d.previousElementSibling;
+                                                if(rowEl){
+                                                    const rt = rowEl.getBoundingClientRect().top + window.scrollY - hh - 8;
+                                                    window.scrollTo({ top: rt, behavior: 'smooth' });
+                                                }
+                                            }
+                                        }, 50);
                                     }else{
                                         d.style.display='none';
                                         if(arrow) arrow.style.transform='rotate(-90deg)';
                                     }
-                                })()` : ''}"
+                                })() ` : ''}"
                                 style="cursor:${canExpand ? 'pointer' : 'default'}; border-bottom:1px solid rgba(255,255,255,0.02);">
                                 
                                 <div style="display:flex; ${rIdx % 2 === 0 ? '' : 'background:rgba(255,255,255,0.015);'} padding:8px 15px; align-items:center; min-height:28px;">
@@ -5865,9 +5961,15 @@ function renderCombatAnalysis(stats, data) {
                                 </div>
 
                                 <!-- Detail Row (Hidden) -->
-                                <div id="${rowDetailId}" style="display:none; padding:10px 15px 15px 15px; background:rgba(0,0,0,0.2); border-top:1px dashed rgba(255,255,255,0.1); gap:20px;">
-                                    ${generateDetailColumn(leftEntry, leftKey ? normalizeKey(leftKey).includes('%') : false)}
-                                    ${generateDetailColumn(rightEntry, rightKey ? normalizeKey(rightKey).includes('%') : false)}
+                                <div id="${rowDetailId}" style="display:none; padding:10px 15px 15px 15px; background:rgba(0,0,0,0.2); border-top:1px dashed rgba(255,255,255,0.1); gap:20px; overflow:hidden; max-width:100%; box-sizing:border-box;">
+                                    <div style="flex:1; min-width:0;">
+                                        ${leftKey ? `<div class="detail-col-label" style="font-size:11px; font-weight:bold; color:#58a6ff; margin-bottom:6px; display:none;">▸ ${leftKey.replace('%', '增加')}</div>` : ''}
+                                        ${generateDetailColumn(leftEntry, leftKey ? normalizeKey(leftKey).includes('%') : false)}
+                                    </div>
+                                    ${rightKey ? `<div style="flex:1; min-width:0;">
+                                        <div class="detail-col-label" style="font-size:11px; font-weight:bold; color:#58a6ff; margin-bottom:6px; display:none;">▸ ${rightKey.replace('%', '增加')}</div>
+                                        ${generateDetailColumn(rightEntry, rightKey ? normalizeKey(rightKey).includes('%') : false)}
+                                    </div>` : generateDetailColumn(rightEntry, rightKey ? normalizeKey(rightKey).includes('%') : false)}
                                 </div>
                             </div>`;
         });
@@ -6627,7 +6729,8 @@ window.downloadEquipScreenshot = function () {
                 btn.innerHTML = originalText;
                 btn.style.pointerEvents = "auto";
             }, 2000);
-            alert("截圖失敗，可能是頁面過大或圖片載入問題。");
+            const msg = (err && err.message) ? err.message : err;
+            alert("截圖失敗: " + msg + "\\n(可能是頁面過大或圖片載入問題)");
         });
     }, 500);
 };
@@ -6705,17 +6808,27 @@ window.showScreenshotResult = function (canvas, fileName) {
 
     const img = document.getElementById('screenshot-result-img');
     const downloadBtn = document.getElementById('screenshot-download-btn');
-    const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
 
-    img.src = dataUrl;
-    overlay.style.display = 'flex';
+    let dataUrl = "";
+    try {
+        dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+    } catch (e) {
+        console.error("toDataURL Error:", e);
+        alert("圖片產生失敗: " + e.message + "\\n(可能是安全限制或記憶體不足，請嘗試縮小視窗)");
+        return;
+    }
 
-    downloadBtn.onclick = () => {
-        const link = document.createElement('a');
-        link.download = fileName;
-        link.href = dataUrl;
-        link.click();
-    };
+    if (img) img.src = dataUrl;
+    if (overlay) overlay.style.display = 'flex';
+
+    if (downloadBtn) {
+        downloadBtn.onclick = () => {
+            const link = document.createElement('a');
+            link.download = fileName;
+            link.href = dataUrl;
+            link.click();
+        };
+    }
 };
 
 
