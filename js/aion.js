@@ -5428,27 +5428,17 @@ function renderCombatAnalysis(stats, data) {
         if (!entry || !entry.key) return `<div style="flex:1;"></div>`;
 
         if (entry.isOfficial) {
-            return `<div style="flex:1; font-size:12px; color:#666;">來源: 官方提供的面板數值</div>`;
+            return `<div style="flex:1; font-size:12px; color:#666; text-align:center; padding:10px;">來源: 官方提供的面板數值</div>`;
         }
 
         const fmtVal = (v) => Number(parseFloat(v || 0).toFixed(2)) + (isPerc ? '%' : '');
         const TH = 0.001;
 
-        // 🛡️ 佈局優化：使用 3 欄 Grid
-        let html = `<div style="flex:1; font-size:11px; display:grid; grid-template-columns: repeat(3, 1fr); gap:12px; padding:10px; background:rgba(255,255,255,0.02); border-radius:8px;">`;
+        let html = `<div style="flex:1; font-size:11px; padding:10px; background:rgba(255,255,255,0.02); border-radius:8px; display:flex; flex-direction:column; gap:8px;">`;
         let hasContent = false;
 
-        // 1. 基礎概覽 (置頂通欄)
-        const baseTotal = (entry.equipMain || 0) + (entry.subtotals?.random || 0);
-        if (Math.abs(baseTotal) > TH) {
-            html += `<div style="grid-column: 1 / -1; display:flex; justify-content:space-between; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:4px; margin-bottom:5px;">
-                        <span style="color:#58a6ff; font-weight:bold;">🛡️ 裝備基礎合計</span>
-                        <span style="color:#fff; font-weight:bold;">${fmtVal(baseTotal)}</span>
-                     </div>`;
-        }
-
-        // 2. Guardian Stats (第一欄)
-        let guardianHtml = `<div style="display:flex; flex-direction:column; gap:4px;">`;
+        // Guardian Stats
+        let guardianHtml = ``;
         const guardians = [
             { k: 'nezakan', n: '奈薩肯', c: '#a29bfe' },
             { k: 'zikel', n: '吉凱爾', c: '#a29bfe' },
@@ -5459,63 +5449,83 @@ function renderCombatAnalysis(stats, data) {
             { k: 'asphel', n: '阿斯佩爾', c: '#a29bfe' }
         ];
 
-        let hasGuardian = false;
+        let guardianCount = 0;
         if (!window.isExcludeBoardStats()) {
             guardians.forEach(g => {
                 const val = entry[g.k] || 0;
                 if (Math.abs(val) > TH) {
+                    if (guardianCount === 0) {
+                        guardianHtml += `<div>
+                                            <div style="color:#a29bfe; font-weight:bold; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:4px; margin-bottom:4px; display:flex; justify-content:space-between;">
+                                                <span>📋 守護力板塊</span>
+                                            </div>
+                                            <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:4px;">`;
+                    }
                     guardianHtml += `<div style="display:flex; justify-content:space-between;"><span style="color:${g.c};">${g.n}</span><span style="color:#fff;">${fmtVal(val)}</span></div>`;
-                    hasGuardian = true;
+                    guardianCount++;
                     hasContent = true;
                 }
             });
+            if (guardianCount > 0) guardianHtml += `</div></div>`;
         }
-        guardianHtml += `</div>`;
+
         html += guardianHtml;
 
-        // 3. Render Detail Groups (分配到後兩欄)
-        let col2Html = `<div style="display:flex; flex-direction:column; gap:4px;">`;
-        let col3Html = `<div style="display:flex; flex-direction:column; gap:4px;">`;
-
-        let subItemsCount = 0;
-        const renderToCols = (groupKey, icon, color, label) => {
+        // Helper string layout
+        const renderCategory = (groupKey, icon, color, label, sumVal) => {
             const list = entry.detailGroups?.[groupKey] || [];
-            list.forEach(str => {
-                let displayHtml = "";
-                let colonIdx = str.indexOf(':');
-                if (colonIdx > -1) {
-                    let name = str.substring(0, colonIdx).trim().replace(/^\[|\]$/g, '');
-                    let valPart = str.substring(colonIdx + 1).trim();
-                    displayHtml = `<div style="display:flex; justify-content:space-between; gap:5px;">
-                                <span style="color:${color}; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${name}">${icon} ${name}</span>
-                                <span style="color:#fff;">${valPart}</span>
-                            </div>`;
-                } else {
-                    displayHtml = `<div style="display:flex; justify-content:space-between;"><span style="color:${color};">${icon} ${str}</span></div>`;
-                }
+            if (list.length === 0 && Math.abs(sumVal || 0) <= TH) return ``;
 
-                if (subItemsCount % 2 === 0) col2Html += displayHtml;
-                else col3Html += displayHtml;
+            hasContent = true;
+            let catHtml = `<div style="margin-bottom:2px;">`;
 
-                subItemsCount++;
-                hasContent = true;
-            });
+            // Header
+            let sumHtml = sumVal ? `<span style="color:#fff; font-weight:bold;">${fmtVal(sumVal)}</span>` : '';
+            catHtml += `<div style="display:flex; justify-content:space-between; align-items:center; color:${color}; font-weight:bold; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:4px; margin-bottom:4px;">
+                            <span>${icon} ${label}</span>
+                            ${sumHtml}
+                        </div>`;
+
+            // Items — 單欄排版，每行一件裝備
+            if (list.length > 0) {
+                catHtml += `<div style="display:flex; flex-direction:column; gap:3px; padding-left:8px;">`;
+                list.forEach(str => {
+                    let colonIdx = str.indexOf(':');
+                    if (colonIdx > -1) {
+                        let name = str.substring(0, colonIdx).trim().replace(/^\[|\]$/g, '');
+                        let valPart = str.substring(colonIdx + 1).trim();
+
+                        let nameStyle = `color:${color}; opacity:0.85;`;
+                        if (groupKey === 'base' || groupKey === 'random') {
+                            nameStyle = 'color:#bdc3c7;';
+                        }
+
+                        catHtml += `<div style="display:flex; justify-content:space-between; align-items:baseline; gap:8px;">
+                                    <span style="${nameStyle} white-space:nowrap;">${name}</span>
+                                    <span style="color:#fff; white-space:nowrap; flex-shrink:0;">${valPart}</span>
+                                </div>`;
+                    } else {
+                        catHtml += `<div><span style="color:${color}; opacity:0.85;">${str}</span></div>`;
+                    }
+                });
+                catHtml += `</div>`;
+            }
+            catHtml += `</div>`;
+            return catHtml;
         };
 
-        renderToCols('stone', '💎', '#e67e22', '磨石');
-        renderToCols('set', '📦', '#fab1a0', '套裝');
-        renderToCols('skill', '⚡', '#fd79a8', '技能');
-        renderToCols('title', '🎖️', '#ffd700', '稱號');
-        renderToCols('wing', '🪽', '#81ecec', '翅膀');
-        renderToCols('arcana', '🎴', '#ff7675', '聖物');
-        renderToCols('gainEffect', '💊', '#fdcb6e', '增益');
-        renderToCols('mainStat', '📊', '#74b9ff', '轉化');
+        html += renderCategory('base', '🛡️', '#58a6ff', '裝備基礎', entry.equipMain);
+        html += renderCategory('random', '🎲', '#a29bfe', '隨機屬性', entry.subtotals?.random);
+        html += renderCategory('stone', '💎', '#e67e22', '磨石與加成', entry.subtotals?.stone);
+        html += renderCategory('set', '📦', '#fab1a0', '套裝效果', entry.subtotals?.set);
+        html += renderCategory('skill', '⚡', '#fd79a8', '技能', entry.subtotals?.skill);
+        html += renderCategory('title', '🎖️', '#ffd700', '稱號', entry.subtotals?.title);
+        html += renderCategory('wing', '🪽', '#81ecec', '翅膀', entry.subtotals?.wing);
+        html += renderCategory('arcana', '🎴', '#ff7675', '聖物', entry.subtotals?.arcana);
+        html += renderCategory('gainEffect', '💊', '#fdcb6e', '增益', entry.subtotals?.gainEffect);
+        html += renderCategory('mainStat', '📊', '#74b9ff', '轉化', entry.subtotals?.mainStat);
 
-        col2Html += `</div>`;
-        col3Html += `</div>`;
-        html += col2Html + col3Html;
-
-        if (!hasContent) return `<div style="flex:1; font-size:12px; color:#666; text-align:center; padding:10px;">無細項數據</div>`;
+        if (!hasContent) return `<div style="flex:1; font-size:12px; color:#666; text-align:center; padding:10px;">未偵測到細項來源</div>`;
 
         html += `</div>`;
         return html;
@@ -5789,10 +5799,12 @@ function renderCombatAnalysis(stats, data) {
             const leftEntry = getStatEntry(leftKey);
             const rightEntry = getStatEntry(rightKey);
 
-            // 如果 Entry 是官方值 (isOfficial) 或者有值，就顯示數值，不要顯示 --
+            const hasLeftBreakdown = leftEntry && Object.values(leftEntry.detailGroups).some(arr => arr.length > 0);
+            const hasRightBreakdown = rightEntry && Object.values(rightEntry.detailGroups).some(arr => arr.length > 0);
+
             // 修正: 檢查 total 是否為 0 (且沒有 breakdown) 才顯示 --
-            const hasLeftVal = leftEntry && (leftEntry.total !== 0 || Object.keys(leftEntry.detailGroups).length > 0 || leftEntry.isOfficial);
-            const hasRightVal = rightEntry && (rightEntry.total !== 0 || Object.keys(rightEntry.detailGroups).length > 0 || rightEntry.isOfficial);
+            const hasLeftVal = leftEntry && (leftEntry.total !== 0 || hasLeftBreakdown || leftEntry.isOfficial);
+            const hasRightVal = rightEntry && (rightEntry.total !== 0 || hasRightBreakdown || rightEntry.isOfficial);
 
             // 只要有數據就可以展開 (即使是 0，如果有細項)
             const canExpand = hasLeftVal || hasRightVal;
