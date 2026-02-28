@@ -3305,6 +3305,7 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
     // 修正: 根據使用者提供的 API 結構，目標是 daevanionBoardList 陣列
     // 嘗試從多個可能路徑獲取 (直接在 data 下，或在 board/divinityBoard 下)
     const boardData = data.daevanionBoardList ||
+        (data.daevanionBoard ? data.daevanionBoard.daevanionBoardList : null) ||
         (data.board ? data.board.daevanionBoardList : null) ||
         (data.divinityBoard ? data.divinityBoard.daevanionBoardList : null) ||
         data.board ||
@@ -4879,7 +4880,7 @@ async function renderComparison(type) {
     const petInsight = myData.petInsight || (myData.queryResult ? myData.queryResult.petInsight : null) || data.petInsight;
 
     // 從 processData 複製邏輯取得所有參數
-    const boardData = data.daevanionBoardList || (data.board ? data.board.daevanionBoardList : null) || (data.divinityBoard ? data.divinityBoard.daevanionBoardList : null) || data.board || [];
+    const boardData = data.daevanionBoardList || (data.daevanionBoard ? data.daevanionBoard.daevanionBoardList : null) || (data.board ? data.board.daevanionBoardList : null) || (data.divinityBoard ? data.divinityBoard.daevanionBoardList : null) || data.board || [];
     let stigmaList = (data.skill ? data.skill.skillList : []) ||
         (data.skills ? (Array.isArray(data.skills) ? data.skills : data.skills.skillList) : []) ||
         (data.stigma || data.stigmaList || []);
@@ -4908,7 +4909,7 @@ async function renderComparison(type) {
         let targetFullData = json.data || (json.queryResult ? json.queryResult.data : null);
 
         // 計算對手分數
-        let t_board = targetFullData.daevanionBoardList || (targetFullData.board ? targetFullData.board.daevanionBoardList : null) || targetFullData.board || [];
+        let t_board = targetFullData.daevanionBoardList || (targetFullData.daevanionBoard ? targetFullData.daevanionBoard.daevanionBoardList : null) || (targetFullData.board ? targetFullData.board.daevanionBoardList : null) || targetFullData.board || [];
         let t_pet = json.petInsight || (json.queryResult ? json.queryResult.petInsight : null); // 注意: 有時在外面
         let t_stigma = (targetFullData.skill && targetFullData.skill.skillList) ? targetFullData.skill.skillList : (targetFullData.stigmaList || []);
         let t_title = targetFullData.title || {};

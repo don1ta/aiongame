@@ -409,7 +409,7 @@ function calculateBoardScore(boardData) {
     let maxNodes = 0;
     let details = [];
 
-    // 定義權重 (總計 15 分)
+    // 定義權重 
     const weightMap = {
         '奈薩肯': 1.5,
         '吉凱爾': 1.5,
@@ -417,7 +417,7 @@ function calculateBoardScore(boardData) {
         '崔妮爾': 1.5,
         '瑪爾庫坦': 3.0, // 中高難度
         '艾瑞爾': 2.0,  // 困難 (PVE/PVP)
-        '阿斯佩爾': 4.0 // 極難
+        '阿斯佩爾': 4.0  // 極難
     };
 
     // 計算所有板塊分數
@@ -439,8 +439,10 @@ function calculateBoardScore(boardData) {
                 }
             }
 
-            // 計算該板塊得分: (已解鎖 / 總數) * 權重
-            // 避免除以0
+            // 動態調整滿分：原本滿分為 15，加上新版塊會變化。為了保證總分為 15 不變更總評分 100 分體系，我們計算佔總權重的比例
+            // 但如果採用絕對權重計分，會超過 15 分，這裡改為根據實際開放板塊的總權重來做 normalize
+            // 目前先採用原有邏輯，如果是新增板塊，這裡會單純把它的分數加進去，後續在最後用縮放處理
+
             const boardScore = total > 0 ? (count / total) * weight : 0;
             totalWeightScore += boardScore;
 
@@ -457,9 +459,9 @@ function calculateBoardScore(boardData) {
     // 總分四捨五入到小數點第一位
     const finalScore = Math.round(totalWeightScore * 10) / 10;
 
-    // 返回結構包含加權後的總分 (0-15)
+    // 返回結構包含加權後的總分，上限強制鎖定在 15 避免破壞 100 分計算
     return {
-        score: finalScore,        // 加權後的總分
+        score: Math.min(finalScore, 15),        // 加權後的總分 (Max 15)
         rawScore: totalNodes,     // 原始總板塊數
         maxRawScore: maxNodes,    // 總節點上限
         maxScore: 15,             // 滿分
