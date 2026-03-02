@@ -3040,7 +3040,8 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
 
 
                 let unit = info.isPerc ? '%' : '';
-                let str = `+${i.enchantLevel} ${d.name}: +${parseFloat(info.total.toFixed(2))}${unit}`;
+                let partsStr = parts.length > 1 ? ` (${parts.join(' / ')})` : '';
+                let str = `+${i.enchantLevel} ${d.name}: +${parseFloat(info.total.toFixed(2))}${unit}${partsStr}`;
 
                 getEntry(k).detailGroups.base.push(str);
             }
