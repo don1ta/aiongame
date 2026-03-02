@@ -213,7 +213,16 @@ function calculateEquipmentRarityScore(itemDetails) {
     // 假設：神話(15) × 最高倍率(3.0) = 45分為單件滿分
     const SINGLE_ITEM_MAX = 45;
 
-    itemDetails.forEach(item => {
+    // 🛡️ 去重複：同一 slotPos 只計算一次（不影響兩戒/兩耳等不同槽位）
+    const seenSlots = new Set();
+    const uniqueItems = itemDetails.filter(item => {
+        const s = item.slotPos;
+        if (seenSlots.has(s)) return false;
+        seenSlots.add(s);
+        return true;
+    });
+
+    uniqueItems.forEach(item => {
         const d = item.detail;
         if (!d || !d.name) return;
 
@@ -315,7 +324,16 @@ function calculateMagicStoneScore(itemDetails) {
     let count = 0;
     let details = [];
 
-    itemDetails.forEach(item => {
+    // 🛡️ 去重複：同一 slotPos 只計算一次
+    const seenSlots2 = new Set();
+    const uniqueItems2 = itemDetails.filter(item => {
+        const s = item.slotPos;
+        if (seenSlots2.has(s)) return false;
+        seenSlots2.add(s);
+        return true;
+    });
+
+    uniqueItems2.forEach(item => {
         const d = item.detail;
         if (!d || !d.name) return;
 

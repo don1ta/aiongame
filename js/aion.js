@@ -2796,7 +2796,17 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
     const setCountMap = new Map(); // 用於計算套裝件數
 
     (data.equipment ? data.equipment.equipmentList : []).forEach(item => { equipMap[item.slotPos] = item; });
-    (data.itemDetails || []).forEach(i => {
+
+    // 🛡️ 去重複：以 slotPos 為 key，確保同一槽位只計算一次
+    const seenSlots = new Set();
+    const uniqueItemDetails = (data.itemDetails || []).filter(i => {
+        const slot = i.slotPos;
+        if (seenSlots.has(slot)) return false;
+        seenSlots.add(slot);
+        return true;
+    });
+
+    uniqueItemDetails.forEach(i => {
         const d = i.detail; if (!d) return;
         const slot = i.slotPos;
         const isArmor = (slot >= 1 && slot <= 8) || slot === 21;
@@ -5371,7 +5381,7 @@ function renderCombatAnalysis(stats, data) {
                     for (let sk in source.subtotals) entry.subtotals[sk] = (entry.subtotals[sk] || 0) + source.subtotals[sk];
                     for (let gk in source.detailGroups) {
                         (source.detailGroups[gk] || []).forEach(str => {
-                            if (!entry.detailGroups[gk].includes(str)) entry.detailGroups[gk].push(str);
+                            entry.detailGroups[gk].push(str);
                         });
                     }
                 }
@@ -6923,15 +6933,31 @@ window.showEquipTooltip = function (slotId, mode = 'modal', event = null) {
         mainStatsHtml = `
         <div class="tooltip-section">
         <div class="tooltip-section-title">主要能力值</div>
-                ${d.mainStats.map(s => `
-                    <div class="stat-row">
-                        <span class="stat-label">${s.name}</span>
-                        <span class="stat-value">
-                            <span class="val-base">${s.value}</span>
-                            ${s.extra && s.extra !== '0' ? `<span class="val-enchant"> (+${s.extra})</span>` : ''}
-                        </span>
-                    </div>
-                `).join('')
+                ${d.mainStats.map(s => {
+            const extraVal = s.extra && s.extra !== '0' ? s.extra.toString().replace('+', '') : null;
+            const baseValNum = parseFloat(s.value) || 0;
+
+            if (baseValNum === 0 && extraVal) {
+                return `
+                            <div class="stat-row">
+                                <span class="stat-label">${s.name}</span>
+                                <span class="stat-value">
+                                    <span class="${s.exceed ? 'val-exceed' : 'val-enchant'}">+${extraVal}</span>
+                                </span>
+                            </div>
+                        `;
+            }
+
+            return `
+                        <div class="stat-row">
+                            <span class="stat-label">${s.name}</span>
+                            <span class="stat-value">
+                                <span class="val-base">${s.value}</span>
+                                ${extraVal ? `<span class="${s.exceed ? 'val-exceed' : 'val-enchant'}"> (+${extraVal})</span>` : ''}
+                            </span>
+                        </div>
+                    `;
+        }).join('')
             }
             </div>`;
     }
