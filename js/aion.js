@@ -2808,6 +2808,10 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
 
     // 🛡️ 去重複：以 slotPos 為 key，確保同一槽位只計算一次
     const seenSlots = new Set();
+    let maxBaseAtkSeen = 0;
+    let minBaseAtkLinked = 0;
+    let bestWeaponName = "";
+
     const uniqueItemDetails = (data.itemDetails || []).filter(i => {
         const slot = i.slotPos;
         if (seenSlots.has(slot)) return false;
@@ -3046,6 +3050,19 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                     if (ms.exceed) mainStatAcc[key].exceed += extraVal;
                     else mainStatAcc[key].enchant += extraVal;
                 }
+
+                // 🌟 新增：最大攻擊力 (value) 與 最小攻擊力 (minValue)
+                // 修正：僅取武器中「最大攻擊力」最高的那一把，不進行累加
+                const isWeapon = (slot === 1 || slot === 2);
+                if (isWeapon && ms.id === "WeaponFixingDamage") {
+                    const curMax = parseFloat(ms.value) || 0;
+                    const curMin = parseFloat(ms.minValue) || 0;
+                    if (curMax > maxBaseAtkSeen) {
+                        maxBaseAtkSeen = curMax;
+                        minBaseAtkLinked = curMin;
+                        bestWeaponName = d.name;
+                    }
+                }
             });
 
             // 將整合後的單品項數據寫入 detailGroups
@@ -3129,6 +3146,17 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
             });
         }
     });
+
+    // 🌟 在所有裝備掃描完後，將「最強武器」的範圍攻擊力寫入統計 (僅取最大的一把，不累加)
+    if (maxBaseAtkSeen > 0) {
+        let eMax = getEntry("最大攻擊力");
+        eMax.equipMain = maxBaseAtkSeen;
+        eMax.detailGroups.base = [`${bestWeaponName}: +${maxBaseAtkSeen}`];
+
+        let eMin = getEntry("最小攻擊力");
+        eMin.equipMain = minBaseAtkLinked;
+        eMin.detailGroups.base = [`${bestWeaponName}: +${minBaseAtkLinked}`];
+    }
 
     // 渲染套裝效果（在計算完所有件數後）
     setCountMap.forEach((setData, setName) => {
@@ -5607,6 +5635,7 @@ function renderCombatAnalysis(stats, data) {
             title: "戰鬥",
             rows: [
                 ["貫穿", "封魂石額外傷害"],
+                ["最大攻擊力", "最小攻擊力"],
                 ["暴擊攻擊力", "暴擊防禦力"],
                 ["後方攻擊力", "後方防禦力"],
                 ["傷害增幅", "傷害耐性"],
