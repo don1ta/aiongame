@@ -23,6 +23,15 @@ window.onload = function () {
     if (typeof initGainControls === 'function') {
         initGainControls();
     }
+
+    // 載入屬性說明資料
+    fetch('./js/stat_descriptions.json')
+        .then(r => r.json())
+        .then(data => {
+            window.STAT_DESCRIPTIONS = data;
+            console.log('[屬性說明] 已載入');
+        })
+        .catch(e => console.warn('[屬性說明] 載入失敗', e));
 }
 
 // 供外部腳本呼叫的重繪函數 (例如 QuestLog 資料庫載入完成後)
@@ -5730,6 +5739,28 @@ function renderCombatAnalysis(stats, data) {
         }
     ];
 
+    // 💡 屬性名稱渲染 helper (包含 Tooltip)
+    const renderStatLabelWithTooltip = (key) => {
+        if (!key) return '';
+        // 移除常見的前綴與符號以匹配 JSON Key
+        const cleanKey = key.replace('%', '').replace(/增加|提升/g, '').trim();
+        const desc = window.STAT_DESCRIPTIONS ? window.STAT_DESCRIPTIONS[cleanKey] : null;
+        const displayName = key.replace('%', '增加');
+
+        if (desc) {
+            return `<div class="custom-tooltip-trigger" style="position:relative; display:inline-flex; align-items:center;">
+                        <span style="font-size:13px; color:#bdc3c7; border-bottom:1px dotted rgba(255,255,255,0.4); cursor:help;">${displayName}</span>
+                        <div class="custom-tooltip-content" style="display:none; position:absolute; bottom:140%; left:50%; transform:translateX(-50%); background:rgba(15,20,25,0.98); border:1px solid var(--border); border-radius:6px; padding:10px; width:260px; z-index:1002; box-shadow:0 4px 20px rgba(0,0,0,0.6); pointer-events:none; font-size:12px; color:#8b949e; text-align:left; white-space:normal; word-break:break-word;">
+                            <b style="color:var(--gold); display:block; border-bottom:1px solid rgba(255,255,255,0.1); margin-bottom:8px; padding-bottom:5px;">📊 ${cleanKey} 說明</b>
+                            <div style="line-height:1.5; color:#e6edf3;">${desc.replace(/\n/g, '<br>')}</div>
+                            <!-- Arrow -->
+                            <div style="position:absolute; top:100%; left:50%; transform:translateX(-50%); border-width:6px; border-style:solid; border-color:rgba(15,20,25,0.98) transparent transparent transparent;"></div>
+                        </div>
+                    </div>`;
+        }
+        return `<span style="font-size:13px; color:#bdc3c7;">${displayName}</span>`;
+    };
+
     let html = `<div style="display:flex; flex-direction:column; gap:10px; padding-top:12px;">`;
 
     // 定義需要收合的區塊標題（所有區塊都可收合）
@@ -5887,7 +5918,7 @@ function renderCombatAnalysis(stats, data) {
         const iconId = `combat-icon-${sIdx}`;
 
         html += `
-                <div style="background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); border-radius:8px; overflow:hidden;">
+                <div style="background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); border-radius:8px; overflow:visible;">
                     <div 
                         onclick="${isCollapsible ? `(function(){
                             const content = document.getElementById('${contentId}');
@@ -5957,7 +5988,7 @@ function renderCombatAnalysis(stats, data) {
                                     <div style="flex:1; display:flex; justify-content:space-between; align-items:center;">
                                         <div style="display:flex; align-items:center; gap:5px;">
                                             ${canExpand && leftKey ? `<span id="${rowIconId}" style="color:#58a6ff; font-size:10px; transition:transform 0.2s; transform:rotate(-90deg); width:12px; display:inline-block;">▶</span>` : ''}
-                                            <span style="font-size:13px; color:#bdc3c7;">${leftKey ? leftKey.replace('%', '增加') : ''}</span>
+                                            ${renderStatLabelWithTooltip(leftKey)}
                                         </div>
                                         <span style="font-size:13px; font-weight:bold; color:#fff;">${(leftKey && hasLeftVal) ? fmt(leftEntry.total, leftKey.includes('%'), leftKey) : (leftKey ? '--' : '')}</span>
                                     </div>
@@ -5967,7 +5998,7 @@ function renderCombatAnalysis(stats, data) {
 
                                     <!-- Right Column -->
                                     <div style="flex:1; display:flex; justify-content:space-between; align-items:center;">
-                                        <span style="font-size:13px; color:#bdc3c7;">${rightKey ? rightKey.replace('%', '增加') : ''}</span>
+                                        ${renderStatLabelWithTooltip(rightKey)}
                                         <span style="font-size:13px; font-weight:bold; color:#fff;">${(rightKey && hasRightVal) ? fmt(rightEntry.total, rightKey.includes('%'), rightKey) : (rightKey ? '--' : '')}</span>
                                     </div>
                                 </div>

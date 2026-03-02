@@ -1034,9 +1034,11 @@
         .th-hover:hover .tooltip,
         .hover-calc:hover .tooltip,
         .skill-card:hover .tooltip,
-        .stat-mini-card:hover .tooltip {
+        .stat-mini-card:hover .tooltip,
+        .custom-tooltip-trigger:hover .custom-tooltip-content {
             visibility: visible;
             opacity: 1;
+            display: block !important;
         }
 
         /* 💡 核心修正：懸停時提升容器層級，防止 Tooltip 被後方元素 (如表格的下一行) 遮擋 */
