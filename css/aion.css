@@ -1846,6 +1846,7 @@
             padding-left: 8px;
             font-size: 12px;
             text-shadow: 0 0 10px var(--blue-glow);
+
         }
 
         /* 趨勢圖切換按鈕樣式 */
@@ -4659,4 +4660,15 @@
             text-align: center;
             color: #64748b;
             font-size: 12px;
+        }
+
+
+        /* 當螢幕寬度小於或等於 768px 時（通常是手機） */
+        @media (max-width: 768px) {
+            #arcana-grid {
+                grid-template-columns: 1fr !important;
+
+            }
+
+
         }

@@ -6460,7 +6460,7 @@ window.renderLayoutTab = function (json) {
 
             <div class="layout-meta-tags" style="width: 100%; margin-top: 5px;">
                 <div class="meta-tag-btn">${p.serverName} | ${guildName}</div>
-                <div class="meta-tag-btn"><span class="icon">${(getLocalClassIcon(p.className) || p.classIcon) ? `<img src="${getLocalClassIcon(p.className) || getCorrectIcon(p.classIcon)}" style="width:16px; height:16px; vertical-align: middle; margin-right: 2px;">` : '⚔️'}</span> ${p.className}</div>
+                <div class="meta-tag-btn"><span class="icon">${(getLocalClassIcon(p.className) || p.classIcon) ? `<img src="${getLocalClassIcon(p.className) || getCorrectIcon(p.classIcon)}" style="width:25px; height:25px; vertical-align: middle; margin-right: 2px;">` : '⚔️'}</span> ${p.className}</div>
                 ${p.titleName ? `<div class="meta-tag-btn" style="color:#ffd93d;"><span class="icon">✨</span> ${p.titleName}</div>` : ''}
             </div>
 
