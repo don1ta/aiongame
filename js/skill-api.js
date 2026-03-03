@@ -10,7 +10,7 @@
 
 const SKILL_API_BASE = 'https://questlog.gg/aion-2/api/trpc/database.getSkill';
 const CACHE_PREFIX = 'aion_skill_v16_'; // 強制刷新快取代 v7 (全面數值偵測版)
-const CACHE_EXPIRE = 0;
+const CACHE_EXPIRE = 0; // 改回 0 模式，確保每次重整皆重新解析 API 數值
 
 // 處理 descriptionData 模板變數解析 (移至頂部確保可用)
 function processDescriptionData(dd, targetLevel) {
@@ -118,97 +118,106 @@ async function fetchSkillFromAPI(skillId, level) {
     const cached = FastCache.get(skillId, level);
     if (cached) return cached;
 
-    try {
-        const input = encodeURIComponent(JSON.stringify({ id: skillId.toString(), language: 'zh' }));
-        const targetUrl = `${SKILL_API_BASE}?input=${input}`;
+    let skillData = null;
 
-        const proxies = [
-            `https://proxy.kk69347321.workers.dev/?url=${encodeURIComponent(targetUrl)}`,
-            `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`,
-            `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`
-        ];
+    // 1. 優先檢查靜態載入的資料 (window.SKILL_DATA_STATIC)
+    if (window.SKILL_DATA_STATIC && window.SKILL_DATA_STATIC[skillId]) {
+        skillData = window.SKILL_DATA_STATIC[skillId];
+    } else {
+        // 2. 網路請求邏輯
+        try {
+            const input = encodeURIComponent(JSON.stringify({ id: skillId.toString(), language: 'zh' }));
+            const targetUrl = `${SKILL_API_BASE}?input=${input}`;
 
-        let response = null;
-        let lastError = null;
+            const proxies = [
+                `https://proxy.kk69347321.workers.dev/?url=${encodeURIComponent(targetUrl)}`,
+                `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`,
+                `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`
+            ];
 
-        for (let proxy of proxies) {
-            try {
-                response = await fetchWithTimeout(proxy, { timeout: 5000 });
-                if (response.ok) break;
-            } catch (e) { lastError = e; }
-        }
+            let response = null;
+            let lastError = null;
 
-        if (!response || !response.ok) throw lastError;
-
-        const data = await response.json();
-        let skillData = data.result?.data?.json || data.result?.data || data.data;
-        if (!skillData) return null;
-
-        // console.log(`[SkillAPI] 用戶端取得資料 ID:${skillId}`, skillData);
-
-        let levelData = skillData.levels?.find(l => l.level === level);
-        if (!levelData && skillData.levels?.length > 0) {
-            const sorted = [...skillData.levels].sort((a, b) => b.level - a.level);
-            levelData = sorted.find(l => l.level <= level) || sorted[sorted.length - 1];
-        }
-
-        // 處理 descriptionData (優先於純文字描述)
-        // 這是解決高等級技能數值顯示錯誤（如 Lv16 顯示 Lv1 數值）的關鍵
-        if (skillData.descriptionData && skillData.descriptionData.text) {
-            description = processDescriptionData(skillData.descriptionData, level);
-        } else {
-            // 舊邏輯 fallback
-            description = levelData?.description || skillData.description || '';
-            // 如果原始描述太短，才找 levels 中的 descriptionData (有些舊 API 結構)
-            if ((!description || description.length < 5) && levelData?.descriptionData?.text) {
-                description = levelData.descriptionData.text;
-            }
-        }
-
-        if (description) {
-            // 1. 去除引擎雜訊字 (FALSE, DeBuff...)
-            const noise = ['FALSE', 'DeBuff', 'Vacant', 'SkillUI', 'Sum', 'Min', 'Max', 'Dmg'];
-            noise.forEach(word => description = description.replace(new RegExp(word, 'gi'), ''));
-
-            // 2. 數值填充 (僅當 descriptionData 未處理時使用舊邏輯)
-            if (!skillData.descriptionData && levelData) {
-                const clean = (v) => (v && v.length < 8 && v !== '0') ? v : null;
-                const val1 = clean(levelData.minValue), val2 = clean(levelData.maxValue),
-                    val3 = clean(levelData.minValue2), val4 = clean(levelData.maxValue2);
-                let finalVal = val3 ? (val4 && val4 !== val3 ? `${val3}~${val4}` : val3)
-                    : (val1 ? (val2 && val2 !== val1 ? `${val1}~${val2}` : val1) : '');
-
-                // 使用官方金色樣式填充
-                if (finalVal) {
-                    description = description.replace(/~+/g, `<span style="color: #FCC78B">${finalVal}</span>`);
-                }
+            for (let proxy of proxies) {
+                try {
+                    response = await fetchWithTimeout(proxy, { timeout: 5000 });
+                    if (response.ok) break;
+                } catch (e) { lastError = e; }
             }
 
-            // 3. 最終清理 (修正點：保留 span 和 br 標籤，只移除 se_ 等垃圾標籤)
-            description = description
-                .replace(/\{[^}]+\}/g, '') // 清理未解析的 {變數}
-                .replace(/<(se_|SkillUI)[^>]+>/g, '') // 只清理特定垃圾標籤 <se_...>
-                .replace(/<(?!\/?(span|br|b|strong))[^>]+>/gi, '') // 移除除了 span, br, b 以外的標籤 (更安全)
-                .replace(/\d+!\d+!\d+/g, '')
-                .replace(/\d{9,}/g, '')
-                .replace(/[a-zA-Z]+(?=\d)/g, '')
-                .replace(/(?<=\d)[a-zA-Z]+/g, '')
-                .replace(/、+/g, '、')
-                .replace(/、\s*$/g, '')
-                .trim();
+            if (response && response.ok) {
+                const data = await response.json();
+                skillData = data.result?.data?.json || data.result?.data || data.data;
+            }
+        } catch (e) {
+            console.warn(`[SkillAPI] 請求失敗 ID:${skillId}`, e);
         }
-
-        const result = {
-            id: skillId, name: skillData.name || '未知', level: level,
-            description: description, effects: levelData?.effects || [],
-            icon: skillData.icon || ''
-        };
-
-        FastCache.set(skillId, level, result);
-        return result;
-    } catch (error) {
-        return null;
     }
+
+    if (!skillData) return null;
+
+    let levelData = skillData.levels?.find(l => l.level === level);
+    if (!levelData && skillData.levels?.length > 0) {
+        const sorted = [...skillData.levels].sort((a, b) => b.level - a.level);
+        levelData = sorted.find(l => l.level <= level) || sorted[sorted.length - 1];
+    }
+
+    let description = '';
+
+    // 處理 descriptionData (優先於純文字描述)
+    // 這是解決高等級技能數值顯示錯誤（如 Lv16 顯示 Lv1 數值）的關鍵
+    if (skillData.descriptionData && skillData.descriptionData.text) {
+        description = processDescriptionData(skillData.descriptionData, level);
+    } else {
+        // 舊邏輯 fallback
+        description = levelData?.description || skillData.description || '';
+        // 如果原始描述太短，才找 levels 中的 descriptionData (有些舊 API 結構)
+        if ((!description || description.length < 5) && levelData?.descriptionData?.text) {
+            description = levelData.descriptionData.text;
+        }
+    }
+
+    if (description) {
+        // 1. 去除引擎雜訊字 (FALSE, DeBuff...)
+        const noise = ['FALSE', 'DeBuff', 'Vacant', 'SkillUI', 'Sum', 'Min', 'Max', 'Dmg'];
+        noise.forEach(word => description = description.replace(new RegExp(word, 'gi'), ''));
+
+        // 2. 數值填充 (僅當 descriptionData 未處理時使用舊邏輯)
+        if (!skillData.descriptionData && levelData) {
+            const clean = (v) => (v && v.length < 8 && v !== '0') ? v : null;
+            const val1 = clean(levelData.minValue), val2 = clean(levelData.maxValue),
+                val3 = clean(levelData.minValue2), val4 = clean(levelData.maxValue2);
+            let finalVal = val3 ? (val4 && val4 !== val3 ? `${val3}~${val4}` : val3)
+                : (val1 ? (val2 && val2 !== val1 ? `${val1}~${val2}` : val1) : '');
+
+            // 使用官方金色樣式填充
+            if (finalVal) {
+                description = description.replace(/~+/g, `<span style="color: #FCC78B">${finalVal}</span>`);
+            }
+        }
+
+        // 3. 最終清理 (修正點：保留 span 和 br 標籤，只移除 se_ 等垃圾標籤)
+        description = description
+            .replace(/\{[^}]+\}/g, '') // 清理未解析的 {變數}
+            .replace(/<(se_|SkillUI)[^>]+>/g, '') // 只清理特定垃圾標籤 <se_...>
+            .replace(/<(?!\/?(span|br|b|strong))[^>]+>/gi, '') // 移除除了 span, br, b 以外的標籤 (更安全)
+            .replace(/\d+!\d+!\d+/g, '')
+            .replace(/\d{9,}/g, '')
+            .replace(/[a-zA-Z]+(?=\d)/g, '')
+            .replace(/(?<=\d)[a-zA-Z]+/g, '')
+            .replace(/、+/g, '、')
+            .replace(/、\s*$/g, '')
+            .trim();
+    }
+
+    const result = {
+        id: skillId, name: skillData.name || '未知', level: level,
+        description: description, effects: levelData?.effects || [],
+        icon: skillData.icon || ''
+    };
+
+    FastCache.set(skillId, level, result);
+    return result;
 }
 
 function formatSkillEffects(skillInfo) {

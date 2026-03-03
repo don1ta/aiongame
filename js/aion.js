@@ -18,14 +18,10 @@ window.onload = function () {
         initGainControls();
     }
 
-    // 載入屬性說明資料
-    fetch('./js/stat_descriptions.json')
-        .then(r => r.json())
-        .then(data => {
-            window.STAT_DESCRIPTIONS = data;
-            console.log('[屬性說明] 已載入');
-        })
-        .catch(e => console.warn('[屬性說明] 載入失敗', e));
+    // 屬性說明資料 (已透過 stat_descriptions.js 載入至 window.STAT_DESCRIPTIONS)
+    if (window.STAT_DESCRIPTIONS) {
+        console.log('[屬性說明] 已預載');
+    }
 }
 
 // 供外部腳本呼叫的重繪函數 (例如 QuestLog 資料庫載入完成後)
@@ -87,18 +83,17 @@ const WING_PERCENT_KEYS = new Set([
     'criticaladddamage',
 ]);
 
-// 從 wings_data.json 載入翅膀資料 (以名稱為 key 的 Map)
+// 從翅膀資料庫 (wings_data.js) 載入翅膀資料 (以名稱為 key 的 Map)
 let WINGS_JSON_MAP = null;
-fetch('./wings_data.json')
-    .then(r => r.json())
-    .then(d => {
-        WINGS_JSON_MAP = {};
-        (d.result?.data || []).forEach(w => {
-            WINGS_JSON_MAP[w.name] = w;
-        });
-        console.log(`[翅膀資料庫] 已載入 ${Object.keys(WINGS_JSON_MAP).length} 筆翅膀資料`);
-    })
-    .catch(e => console.warn('[翅膀資料庫] 載入失敗，將使用靜態資料庫', e));
+if (window.WINGS_DATA_DB) {
+    WINGS_JSON_MAP = {};
+    (window.WINGS_DATA_DB.result?.data || []).forEach(w => {
+        WINGS_JSON_MAP[w.name] = w;
+    });
+    console.log(`[翅膀資料庫] 已預載 ${Object.keys(WINGS_JSON_MAP).length} 筆翅膀資料`);
+} else {
+    console.warn('[翅膀資料庫] 未找到預載資料，將使用靜態資料庫');
+}
 
 /**
  * 從 wings_data.json 取得翅膀的裝備加成 (依強化等級)
@@ -721,32 +716,26 @@ async function fetchFromApi() {
 // 🧬 被動技能數據庫 (從 JSON 載入，用於定義應追蹤的技能與屬性名稱)
 window.PASSIVE_SKILL_DATABASE = {};
 
-// 載入被動技能資料庫
-fetch('passive_skills.json?v=' + Date.now())
-    .then(response => {
-        if (!response.ok) throw new Error(response.statusText);
-        return response.json();
-    })
-    .then(data => {
-        // 保存原始 JSON 結構以供職業篩選
-        window.__RAW_PASSIVE_JSON__ = data;
-        // 將分層結構 (職業 -> 技能) 攤平，以利快速查找
-        window.PASSIVE_SKILL_DATABASE = {};
-        for (const className in data) {
-            const skills = data[className];
-            for (const skillName in skills) {
-                window.PASSIVE_SKILL_DATABASE[skillName] = skills[skillName];
-            }
+// 載入被動技能資料庫 (已透過 passive_skills.js 預載至 window.PASSIVE_SKILLS_DB)
+if (window.PASSIVE_SKILLS_DB) {
+    const data = window.PASSIVE_SKILLS_DB;
+    // 保存原始 JSON 結構以供職業篩選
+    window.__RAW_PASSIVE_JSON__ = data;
+    // 將分層結構 (職業 -> 技能) 攤平，以利快速查找
+    for (const className in data) {
+        const skills = data[className];
+        for (const skillName in skills) {
+            window.PASSIVE_SKILL_DATABASE[skillName] = skills[skillName];
         }
-        console.log('✅ 被動技能定義庫已載入:', Object.keys(window.PASSIVE_SKILL_DATABASE).length, '個技能');
+    }
+    console.log('✅ 被動技能定義庫已預載:', Object.keys(window.PASSIVE_SKILL_DATABASE).length, '個技能');
 
-        if (window.__LAST_DATA_JSON__) {
-            debouncedPassiveUpdate(window.__LAST_DATA_JSON__);
-        }
-    })
-    .catch(err => {
-        console.warn('⚠️ 無法載入 passive_skills.json，分類可能受限');
-    });
+    if (window.__LAST_DATA_JSON__) {
+        debouncedPassiveUpdate(window.__LAST_DATA_JSON__);
+    }
+} else {
+    console.warn('⚠️ 未找到預載被動技能分類 passive_skills.js，可能受限');
+}
 
 
 // 🟢 被動技能快取與更新機制 (V11: JSON 導向 + API 實時數值 + 異步防手震)
@@ -954,51 +943,54 @@ function updatePassiveSkills(data) {
             return acc;
         }, {});
 
-    // 3. 處理數值 (JSON 結構作為藍圖，API 作為數據源)
-    Object.values(targetSkills).forEach(skill => {
-        const definedStats = window.PASSIVE_SKILL_DATABASE[skill.baseName];
-        const skillNameForDisplay = skill.baseName; // 使用乾淨的名稱作為顯示
-        const skillId = skill.skillId || skill.id;
-        const level = skill.level || skill.skillLevel || 1;
-        const cacheKey = `${skillId}_${level}`;
-
-        const cachedStats = window.PASSIVE_REAL_CACHE && window.PASSIVE_REAL_CACHE[cacheKey];
-        if (cachedStats) {
-            processStats(skill.name, cachedStats, true);
-        } else {
-            // 利用 SkillAPI 抓取實時數據
-            if (window.SkillAPI && window.SkillAPI.fetchSkill) {
-                window.SkillAPI.fetchSkill(skillId, level)
-                    .then(info => {
-                        const fullText = (info.description || '') + " " + (info.effects ? info.effects.join(" ") : "");
-                        const parsed = extractDefinedStats(fullText, definedStats);
-
-                        if (Object.keys(parsed).length > 0) {
-                            window.PASSIVE_REAL_CACHE[cacheKey] = parsed;
-                            savePassiveCache();
-
-                            if (!window._IS_PASSIVE_UPDATING_) {
-                                window._IS_PASSIVE_UPDATING_ = true;
-                                updatePassiveSkills(data);
-                                setTimeout(() => {
-                                    if (typeof initGainControls === 'function') initGainControls();
-                                    window._IS_PASSIVE_UPDATING_ = false;
-                                }, 500);
-                            }
-                        }
-                    }).catch(e => { });
-            }
-        }
-    });
-
-    // 4. 非同步生成被動技能 UI：使用 API 回傳的原始文字格式
+    // 3 + 4. 【優化】合併兩輪 API 呼叫為一輪：同時處理數值統計與 UI 渲染
+    // 原本第一輪(數值)與第二輪(UI)各自打一次 API，現在共用同一次結果
     if (Object.keys(targetSkills).length > 0) {
         window.__PASSIVE_STATS_READY__ = true;
-        Promise.all(Object.values(targetSkills).map(skill => {
+
+        // 先用快取同步處理已有資料的技能數值
+        Object.values(targetSkills).forEach(skill => {
             const skillId = skill.skillId || skill.id;
             const level = skill.level || skill.skillLevel || 1;
-            return window.SkillAPI.fetchSkill(skillId, level).then(info => ({ skill, info }));
+            const cacheKey = `${skillId}_${level}`;
+            const cachedStats = window.PASSIVE_REAL_CACHE && window.PASSIVE_REAL_CACHE[cacheKey];
+            if (cachedStats) {
+                processStats(skill.name, cachedStats, true);
+            }
+        });
+
+        // 一輪 API：同時取得數值與 UI 資料
+        Promise.all(Object.values(targetSkills).map(skill => {
+            const definedStats = window.PASSIVE_SKILL_DATABASE[skill.baseName];
+            const skillId = skill.skillId || skill.id;
+            const level = skill.level || skill.skillLevel || 1;
+            return window.SkillAPI.fetchSkill(skillId, level).then(info => ({ skill, info, definedStats }));
         })).then(results => {
+            let needCacheUpdate = false;
+
+            // 先批次更新數值快取（只處理快取未命中的技能）
+            results.forEach(({ skill, info, definedStats }) => {
+                if (!info) return;
+                const skillId = skill.skillId || skill.id;
+                const level = skill.level || skill.skillLevel || 1;
+                const cacheKey = `${skillId}_${level}`;
+                if (!window.PASSIVE_REAL_CACHE[cacheKey]) {
+                    const fullText = (info.description || '') + " " + (info.effects ? info.effects.join(" ") : "");
+                    const parsed = extractDefinedStats(fullText, definedStats);
+                    if (Object.keys(parsed).length > 0) {
+                        window.PASSIVE_REAL_CACHE[cacheKey] = parsed;
+                        needCacheUpdate = true;
+                    }
+                }
+            });
+
+            // 統一儲存快取並觸發一次 UI 重整（加旗標防止再入）
+            if (needCacheUpdate && !window._IS_PASSIVE_UPDATING_) {
+                savePassiveCache();
+                window._IS_PASSIVE_UPDATING_ = true;
+                debouncedPassiveUpdate(data);
+                setTimeout(() => { window._IS_PASSIVE_UPDATING_ = false; }, 1000);
+            }
             let detailHtml = '';
             results.forEach(({ skill, info }) => {
                 if (!info) return;

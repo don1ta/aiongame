@@ -3,8 +3,29 @@
 const scoreRequestQueue = [];
 let isProcessingQueue = false;
 
-// 分數快取，避免短時間內重複查同一個角色的裝分
-const _scoreCache = {};
+// 分數快取 (1小時效期)
+const CACHE_TIME_LIMIT = 60 * 60 * 1000;
+const _scoreCache = (function () {
+    try {
+        const stored = localStorage.getItem('char_score_cache_v1');
+        return stored ? JSON.parse(stored) : {};
+    } catch (e) { return {}; }
+})();
+
+function saveToScoreCache(charId, score) {
+    _scoreCache[charId] = { score, timestamp: Date.now() };
+    try {
+        localStorage.setItem('char_score_cache_v1', JSON.stringify(_scoreCache));
+    } catch (e) { }
+}
+
+function getFromScoreCache(charId) {
+    const item = _scoreCache[charId];
+    if (item && (Date.now() - item.timestamp < CACHE_TIME_LIMIT)) {
+        return item.score;
+    }
+    return null;
+}
 
 // 清空當前佇列 (用於切換搜尋關鍵字時，取消舊的無效請求)
 function clearScoreQueue() {
@@ -38,8 +59,9 @@ function queueScoreFetch(serverId, characterId, containerId) {
     const container = document.getElementById(containerId);
     if (container) {
         // 如果已經有快取，直接顯示
-        if (_scoreCache[characterId]) {
-            renderScoreToContainer(container, characterId, _scoreCache[characterId]);
+        const cachedScore = getFromScoreCache(characterId);
+        if (cachedScore) {
+            renderScoreToContainer(container, characterId, cachedScore);
             return;
         }
 
@@ -73,7 +95,7 @@ async function fetchAndRenderScore(container, serverId, characterId) {
         }
 
         if (gameScore > 0) {
-            _scoreCache[characterId] = gameScore; // 記錄快取
+            saveToScoreCache(characterId, gameScore); // 記錄快取
             renderScoreToContainer(container, characterId, gameScore);
         } else {
             container.innerHTML = '<span style="color:#666; font-size:10px;">--</span>';

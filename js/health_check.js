@@ -24,16 +24,21 @@
     let SKILL_NAMES_DB = {}; // 從 JSON 載入的完整技能名稱資料庫
     let dbLoaded = false;
 
-    // 載入技能名稱資料庫
+    // 載入技能名稱資料庫 (改由靜態預載)
     async function loadSkillNamesDB() {
         if (dbLoaded) return;
-        try {
-            const res = await fetch('skill-names.json');
-            if (res.ok) {
-                SKILL_NAMES_DB = await res.json();
-                dbLoaded = true;
+        if (window.SKILL_NAMES_DB) {
+            SKILL_NAMES_DB = window.SKILL_NAMES_DB;
+            dbLoaded = true;
+        } else {
+            try {
+                const res = await fetch('skill-names.json');
+                if (res.ok) {
+                    SKILL_NAMES_DB = await res.json();
+                    dbLoaded = true;
+                }
+            } catch (e) {
             }
-        } catch (e) {
         }
     }
 

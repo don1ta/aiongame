@@ -26,9 +26,26 @@ let hasFetchedExternalDB = false;
 
 // 透過 Proxy 取得 QuestLog 資料庫 (針對防具與飾品)
 async function fetchItemDetailsFromQuestLog() {
-    if (hasFetchedExternalDB) return; // 避免重複請求
+    if (hasFetchedExternalDB) return;
+
+    // --- 🚀 快取機制優化 ---
+    const CACHE_KEY = 'aion_item_db_v1';
+    const CACHE_TIME_KEY = 'aion_item_db_time';
+    const EXPIRE_TIME = 24 * 60 * 60 * 1000; // 24小時
+
+    try {
+        const cachedData = localStorage.getItem(CACHE_KEY);
+        const cachedTime = localStorage.getItem(CACHE_TIME_KEY);
+        if (cachedData && cachedTime && (Date.now() - parseInt(cachedTime) < EXPIRE_TIME)) {
+            EXTERNAL_ITEM_DB = JSON.parse(cachedData);
+            hasFetchedExternalDB = true;
+            console.log(`[Cache] 已從快取載入裝備資料庫 (${Object.keys(EXTERNAL_ITEM_DB).length} 筆)`);
+            return;
+        }
+    } catch (e) { console.warn("Cache load failed", e); }
 
     console.log('正在從 QuestLog 同步物品資料庫...');
+    // --- End 快取機制 ---
 
     // 定義要抓取的類別 (只抓前 2 頁的高級裝備應該就夠了)
     const categories = ['armor', 'accessory'];
@@ -46,7 +63,6 @@ async function fetchItemDetailsFromQuestLog() {
                 subCategory: "",
                 facets: {}
             };
-            // 轉為 URL 編碼字串
             const inputStr = encodeURIComponent(JSON.stringify(input));
             const targetUrl = `https://questlog.gg/aion-2/api/trpc/database.getItems?input=${inputStr}`;
             const proxyUrl = `https://proxy.kk69347321.workers.dev/?url=${encodeURIComponent(targetUrl)}`;
@@ -55,7 +71,6 @@ async function fetchItemDetailsFromQuestLog() {
                 fetch(proxyUrl)
                     .then(res => res.json())
                     .then(data => {
-                        // 解析 TRPC 回傳結構 (result.data.json.items)
                         if (data && data.result && data.result.data && data.result.data.json && data.result.data.json.items) {
                             return data.result.data.json.items;
                         }
@@ -71,10 +86,8 @@ async function fetchItemDetailsFromQuestLog() {
 
     try {
         const results = await Promise.all(requests);
-        // 合併所有結果
         results.flat().forEach(item => {
             if (item && item.name) {
-                // 建立映射: 名稱 -> 詳細資訊 (包含品階 quality)
                 EXTERNAL_ITEM_DB[item.name] = {
                     quality: item.quality,
                     grade: item.grade,
@@ -86,8 +99,18 @@ async function fetchItemDetailsFromQuestLog() {
         hasFetchedExternalDB = true;
         console.log(`QuestLog 資料庫同步完成，共 ${Object.keys(EXTERNAL_ITEM_DB).length} 筆資料`);
 
-        // 觸發重新渲染 (如果已經有資料的話)
-        // 注意: 這裡假設全域有 renderEquipment 函數，若無則忽略
+        // 💾 儲存到快取
+        try {
+            localStorage.setItem(CACHE_KEY, JSON.stringify(EXTERNAL_ITEM_DB));
+            localStorage.setItem(CACHE_TIME_KEY, Date.now().toString());
+        } catch (e) {
+            // 如果超出 localStorage 額度，清空這類快取
+            if (e.name === 'QuotaExceededError') {
+                localStorage.removeItem(CACHE_KEY);
+                localStorage.removeItem(CACHE_TIME_KEY);
+            }
+        }
+
         if (typeof window.renderEquipment === 'function') {
             console.log("重新計算並渲染裝備...");
             window.renderEquipment();

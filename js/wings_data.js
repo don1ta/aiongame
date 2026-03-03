@@ -1,4 +1,4 @@
-{
+window.WINGS_DATA_DB = {
     "result": {
         "data": [
             {
@@ -23703,4 +23703,4 @@
             }
         ]
     }
-}
+};
