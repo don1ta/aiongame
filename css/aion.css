@@ -171,8 +171,6 @@
             /* Ensure it fills available space */
         }
 
-
-
         .import-controls {
             display: flex;
             gap: 15px;
@@ -206,49 +204,6 @@
 
         input[type="file"] {
             display: none;
-        }
-
-        .file-label {
-            background: linear-gradient(135deg, var(--panel-elevated), var(--panel));
-            color: var(--blue-bright);
-            padding: 12px 20px;
-            border-radius: 8px;
-            border: 2px solid var(--border);
-            cursor: pointer;
-            font-weight: bold;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .file-label::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.1);
-            transform: translate(-50%, -50%);
-            transition: width 0.6s, height 0.6s;
-        }
-
-        .file-label:hover {
-            background: linear-gradient(135deg, var(--panel-elevated), var(--border));
-            border-color: var(--primary);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4),
-                0 0 20px var(--blue-glow);
-        }
-
-        .file-label:hover::before {
-            width: 300px;
-            height: 300px;
-        }
-
-        .file-label:active {
-            transform: translateY(0);
         }
 
         .btn-api {
@@ -292,50 +247,6 @@
             transform: translateY(0);
         }
 
-        button#parseBtn {
-            background: linear-gradient(135deg, var(--gold), var(--gold-dark));
-            color: #0a0e17;
-            border: 2px solid var(--gold-bright);
-            padding: 12px 40px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 18px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
-        }
-
-        button#parseBtn::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.3);
-            transform: translate(-50%, -50%);
-            transition: width 0.6s, height 0.6s;
-        }
-
-        button#parseBtn:hover {
-            background: linear-gradient(135deg, var(--gold-bright), var(--gold));
-            border-color: var(--gold-bright);
-            transform: translateY(-3px) scale(1.02);
-            box-shadow: 0 10px 30px var(--gold-glow),
-                0 0 40px var(--gold-glow);
-        }
-
-        button#parseBtn:hover::after {
-            width: 400px;
-            height: 400px;
-        }
-
-        button#parseBtn:active {
-            transform: translateY(-1px) scale(1);
-        }
-
         .loading-overlay {
             display: none;
             position: fixed;
@@ -351,41 +262,12 @@
             font-size: 24px;
         }
 
-
         /* 儀表板樣式 */
         .dashboard {
             display: none;
             flex-direction: column;
             gap: 20px;
             overflow: visible !important;
-        }
-
-        .profile-card {
-            background: var(--profile-bg);
-            border: 2px solid var(--gold);
-            border-radius: 16px;
-            padding: 25px;
-            display: flex;
-            align-items: center;
-            gap: 30px;
-            flex-wrap: wrap;
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7),
-                0 0 40px var(--gold-glow),
-                inset 0 1px 0 rgba(255, 255, 255, 0.1);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .profile-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.1), transparent);
-            animation: shimmer 3s infinite;
-            pointer-events: none;
         }
 
         @keyframes shimmer {
@@ -398,16 +280,6 @@
             50% {
                 left: 100%;
             }
-        }
-
-        .profile-img {
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-            border: 3px solid var(--gold);
-            padding: 3px;
-            background: linear-gradient(135deg, var(--gold), var(--primary));
-            box-shadow: 0 0 30px var(--gold-glow);
         }
 
         .profile-name {
@@ -725,10 +597,6 @@
             font-family: 'Inter', system-ui, sans-serif;
         }
 
-        .stat-group-section.extra-group .stat-row-desc {
-            color: var(--gold);
-        }
-
         /* 響應式優化：手機版自動隱藏中間描述或縮小字體 */
         @media (max-width: 600px) {
             .stat-list-row {
@@ -808,7 +676,6 @@
         .stat-mini-card.extra-stat .stat-mini-desc {
             color: var(--gold);
         }
-
 
         .skill-list {
             display: grid;
@@ -1056,20 +923,7 @@
             overflow: visible;
         }
 
-
         /* 表格容器:統一設定最大高度與自動滾動,以實現固定表頭 */
-        .table-wrapper {
-            position: relative;
-            max-height: 70vh;
-            /* 設定最大高度使表頭能固定在容器頂部 */
-            overflow: auto !important;
-            /* 同時支援水平與垂直滾動 */
-            -webkit-overflow-scrolling: touch;
-            margin-bottom: 80px;
-            /* 增加底部間距,讓 tooltip 有空間顯示 */
-            border: 1px solid var(--border);
-            border-radius: 8px;
-        }
 
         /* 網頁版表頭凍結調整:黏在螢幕頂部,並留下一點頂部間距 */
         thead th {
@@ -1131,7 +985,6 @@
             border-bottom: 3px solid var(--primary);
             z-index: 10000 !important;
         }
-
 
         /* 5. 新版 Header 與排名樣式 (Step 1117) */
         .profile-new-header {
@@ -1216,20 +1069,6 @@
 
         .item-score-box {
             text-align: right;
-        }
-
-        .is-label {
-            font-size: 11px;
-            color: #64748b;
-            text-transform: uppercase;
-        }
-
-        .is-val {
-            font-size: 28px;
-            font-weight: bold;
-            color: var(--gold);
-            text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
-            font-family: 'Segoe UI', sans-serif;
         }
 
         .update-time {
@@ -1373,7 +1212,6 @@
             border-radius: 2px;
         }
 
-
         /* 5.1 新版 Header 樣式修正 (Step 1180) - 覆蓋舊樣式 */
         .profile-new-header {
             gap: 30px;
@@ -1418,19 +1256,6 @@
             gap: 8px;
         }
 
-        .is-label {
-            font-size: 14px;
-            letter-spacing: 1.5px;
-            margin-bottom: 4px;
-        }
-
-        .is-val {
-            font-size: 48px;
-            text-shadow: 0 0 25px rgba(255, 215, 0, 0.6);
-            line-height: 1;
-            margin-bottom: 5px;
-        }
-
         .update-time {
             font-size: 14px;
             color: #4ade80;
@@ -1451,7 +1276,6 @@
         .rank-card-new {
             cursor: pointer;
         }
-
 
         /* 5.2 Header 與 Percentile 合併面板樣式 (Step 1272) */
         .header-combine-card {
@@ -1475,7 +1299,6 @@
             margin-bottom: 0 !important;
             border-radius: 0 !important;
         }
-
 
         /* 暫時性提示框樣式 */
         .temp-alert {
@@ -1528,27 +1351,10 @@
         }
 
         /* 凍結首欄基礎樣式 */
-        .td-left {
-            text-align: left !important;
-            font-weight: bold;
-            color: #fff;
-            padding-left: 15px !important;
-            position: sticky;
-            left: 0;
-            background: #1a1f29 !important;
-            z-index: 90;
-            min-width: 140px;
-            box-shadow: 3px 0 6px rgba(0, 0, 0, 0.4);
-        }
 
         /* 表頭樣式移至上方 table-wrapper 區塊統一管理 */
 
         /* 左上角交叉點：需同時具備 top 與 left 凍結 */
-        thead th.td-left {
-            z-index: 110;
-            top: 0;
-            left: 0;
-        }
 
         .hover-calc {
             border-bottom: 1px dashed var(--primary);
@@ -1882,25 +1688,6 @@
             text-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
         }
 
-        .charts-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 25px;
-            align-items: start;
-        }
-
-        .charts-row>div {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-        }
-
-        .charts-row .grid-box-container {
-            flex: 1;
-            align-content: start;
-        }
-
         /* RWD 調整 */
         /* RWD 調整 */
         @media (min-width: 1200px) {
@@ -1954,10 +1741,6 @@
         }
 
         @media (max-width: 600px) {
-            .profile-card {
-                flex-direction: column;
-                text-align: center;
-            }
 
             .api-input-group {
                 flex-direction: column;
@@ -2042,13 +1825,7 @@
                 width: 100%
             }
 
-            .charts-row {
-                grid-template-columns: 1fr;
-            }
-
         }
-
-
 
         /* RWD 響應式佈局設定 */
 
@@ -2098,16 +1875,7 @@
                 height: auto !important;
             }
 
-
-
             /* 2. 表格：啟用水平捲動與固定高度 */
-            .table-wrapper {
-                max-height: 500px;
-                overflow-x: auto !important;
-                overflow-y: auto !important;
-                -webkit-overflow-scrolling: touch;
-                /* 滑順捲動 */
-            }
 
             /* 表頭 sticky 修正 */
             thead th {
@@ -2117,12 +1885,6 @@
             }
 
             /* 凍結首欄在手機上可能佔空間，視情況取消或保留，這裡保留但加陰影 */
-            .td-left {
-                position: sticky;
-                left: 0;
-                z-index: 11;
-                /* 比表頭高 */
-            }
 
         }
 
@@ -2258,7 +2020,6 @@
             }
         }
 
-
         /* 表格腳步輔助樣式已整合至上方 */
 
         /* 7. 行內懸停效果 (Hover) */
@@ -2277,19 +2038,6 @@
         }
 
         /* 8. 捲動條美化 */
-        .table-wrapper::-webkit-scrollbar {
-            height: 6px;
-            width: 6px;
-        }
-
-        .table-wrapper::-webkit-scrollbar-thumb {
-            background: var(--gold, #c5a059);
-            border-radius: 10px;
-        }
-
-        .table-wrapper::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0.1);
-        }
 
         /* 11. 摺疊面板相關樣式 */
         .collapsible-header {
@@ -2841,7 +2589,6 @@
                 box-sizing: border-box !important;
             }
 
-
             .split-integrated-layout {
                 flex-direction: column !important;
                 height: auto !important;
@@ -3202,40 +2949,6 @@
 
         .rank-row .change-none {
             color: rgba(255, 255, 255, 0.1);
-        }
-
-        .rank-row .change-up {
-            color: #e74c3c;
-        }
-
-        .rank-row .change-down {
-            color: #3498db;
-        }
-
-        .rank-row .value {
-            color: #111;
-            font-weight: 900;
-            font-family: 'Outfit', sans-serif;
-            font-size: 15px;
-        }
-
-        .rank-row .val-num {
-            color: #111;
-        }
-
-        .rank-row .val-hash {
-            color: #aaa;
-            margin-right: 2px;
-        }
-
-        .rank-row .change-icon {
-            font-size: 14px;
-            width: 18px;
-            text-align: center;
-        }
-
-        .rank-row .change-none {
-            color: #ccc;
         }
 
         .rank-row .change-up {
@@ -4664,13 +4377,11 @@
             font-size: 12px;
         }
 
-
         /* 當螢幕寬度小於或等於 768px 時（通常是手機） */
         @media (max-width: 768px) {
             #arcana-grid {
                 grid-template-columns: 1fr !important;
 
             }
-
 
         }

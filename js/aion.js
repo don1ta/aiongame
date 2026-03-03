@@ -9,15 +9,9 @@
  */
 
 // 初始化：讀取上次搜尋的角色與伺服器
-// 初始化：讀取上次搜尋的角色
 window.onload = function () {
     const savedName = localStorage.getItem('last_char_name');
     if (savedName) document.getElementById('charNameInput').value = savedName;
-
-    // 啟動 QuestLog 資料庫同步 (強化評分準確度)
-    if (typeof fetchItemDetailsFromQuestLog === 'function') {
-        fetchItemDetailsFromQuestLog();
-    }
 
     // 初始化增益效果控制面板
     if (typeof initGainControls === 'function') {
@@ -475,10 +469,27 @@ async function fetchAllTitles(serverId, characterId, initialTitleList, ownedCoun
 
 // Helper: 直接載入角色數據 (已知 ID 時使用)
 async function loadCharacterData(serverId, characterId, charName = '') {
-    // 顯示載入中
+    // 隱藏搜尋結果
+    const resultsContainer = document.getElementById('search-results');
+    if (resultsContainer) {
+        resultsContainer.style.display = 'none';
+        resultsContainer.innerHTML = ''; // 清空結果
+    }
+
+    // 將已選擇的名字填入輸入框並保存
+    if (charName) {
+        document.getElementById('charNameInput').value = charName;
+        localStorage.setItem('last_char_name', charName);
+    }
+
+    // 開始分析時，在背景啟動 QuestLog 裝備資料庫同步，增強評分準確度
+    // 這個動作只有在真正選擇玩家並載入資料時才進行，不會在網頁剛打開就亂按 API
+    if (typeof fetchItemDetailsFromQuestLog === 'function') {
+        fetchItemDetailsFromQuestLog();
+    }
+
     document.getElementById('loading').style.display = 'flex';
-    document.getElementById('search-results').style.display = 'none'; // 隱藏搜尋結果
-    document.getElementById('main-content').style.display = 'none'; // 隱藏舊資料
+    document.getElementById('main-content').style.display = 'none';
 
     try {
         console.log(`[DirectLoad] Loading ${charName} (${serverId}, ${characterId})...`);
@@ -551,6 +562,11 @@ async function executeSearch(keyword) {
     resultsContainer.innerHTML = '';
     resultsContainer.style.display = 'none';
 
+    // 清空舊的裝分抓取佇列 (避免使用者快速修改關鍵字導致無效請求堆積)
+    if (typeof clearScoreQueue === 'function') {
+        clearScoreQueue();
+    }
+
     try {
         const searchUrl = `https://aion-api.bnshive.com/character/search?keyword=${encodeURIComponent(keyword)}&page=1&size=30`;
         const proxyUrl = getProxyUrl(searchUrl);
@@ -600,7 +616,7 @@ async function executeSearch(keyword) {
             const scoreContainerId = `score-box-${char.characterId}`;
 
             html += `
-            <div id="search-card-${char.characterId}" class="search-card" data-class="${classKey}" onclick="loadCharacterData(${char.serverId}, '${char.characterId}', '${char.characterName}')">
+            <div id="search-card-${char.characterId}" class="search-card" data-class="${classKey}" data-character-id="${char.characterId}" data-server-id="${char.serverId}" onclick="loadCharacterData(${char.serverId}, '${char.characterId}', '${char.characterName}')">
                 
                 <div style="display: flex; align-items: center; gap: 20px; width: 100%; margin-left: 2px;">
                     <!-- 頭像區 (88px) 加大 -->
@@ -644,10 +660,35 @@ async function executeSearch(keyword) {
         resultsContainer.innerHTML = html;
         resultsContainer.style.display = 'grid';
 
-        // 🚀 自動觸發分數獲取 (使用佇列機制)
+        // 🚀 自動觸發分數獲取 (使用 IntersectionObserver 延遲載入，畫面進入視野才打 API)
         if (typeof queueScoreFetch === 'function') {
-            list.forEach(char => {
-                queueScoreFetch(char.serverId, char.characterId, `score-box-${char.characterId}`);
+            const observerOptions = {
+                root: null,
+                rootMargin: '50px 0px', // 稍微微提早 50px 載入
+                threshold: 0.1
+            };
+
+            const scoreObserver = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const target = entry.target;
+                        const charId = target.getAttribute('data-character-id');
+                        const serverId = target.getAttribute('data-server-id');
+
+                        if (charId && serverId) {
+                            queueScoreFetch(serverId, charId, `score-box-${charId}`);
+                        }
+
+                        // 載入過後就解除觀察，避免重複排隊或重複觸發
+                        observer.unobserve(target);
+                    }
+                });
+            }, observerOptions);
+
+            // 註冊所有已經渲染出的 search-card，交給 Observer 監控
+            const searchCards = resultsContainer.querySelectorAll('.search-card');
+            searchCards.forEach(card => {
+                scoreObserver.observe(card);
             });
         }
 
@@ -5850,7 +5891,6 @@ window.renderRadarChart = function () {
 };
 
 // 全局切換主圖表頁籤 (歷史趨勢 vs 職業分布)
-// 全局切換主圖表頁籤 (歷史趨勢 vs 職業分布 vs 伺服器)
 window.switchMainChartTab = function (tabName) {
     // Buttons
     document.querySelectorAll('.stat-tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -5858,11 +5898,9 @@ window.switchMainChartTab = function (tabName) {
     // Contents
     const trendContent = document.getElementById('tab-content-trend');
     const classContent = document.getElementById('tab-content-class');
-    const serverContent = document.getElementById('tab-content-server');
 
     if (trendContent) trendContent.style.display = 'none';
     if (classContent) classContent.style.display = 'none';
-    if (serverContent) serverContent.style.display = 'none';
 
     if (tabName === 'trend') {
         const btn = document.getElementById('tab-btn-trend');
@@ -5876,15 +5914,6 @@ window.switchMainChartTab = function (tabName) {
         // 觸發渲染
         if (typeof window.renderClassDistributionTab === 'function') {
             window.renderClassDistributionTab();
-        }
-    } else if (tabName === 'server') {
-        const btn = document.getElementById('tab-btn-server');
-        if (btn) btn.classList.add('active');
-        if (serverContent) serverContent.style.display = 'block';
-
-        // 觸發渲染
-        if (typeof window.renderServerDistributionTab === 'function') {
-            window.renderServerDistributionTab();
         }
     }
 };

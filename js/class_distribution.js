@@ -18,6 +18,11 @@
     // State
     let g_currentRegion = 'tw';
 
+    // API 結果快取 (避免重複請求)
+    const _dataCache = {};       // { region: { data, timestamp } }
+    const _inflight = {};        // { region: Promise } 防止同時發送重複請求
+    const CACHE_TTL = 5 * 60 * 1000; // 5 分鐘快取
+
     // 職業顏色定義
     // 職業顏色定義 (參考用戶截圖風格 - Vibrant Flat Colors)
     const CLASS_COLORS = {
@@ -88,18 +93,39 @@
     // 抓取數據
     async function fetchData(targetRegion) {
         const region = targetRegion || g_currentRegion;
+
+        // 檢查快取是否有效
+        if (_dataCache[region] && (Date.now() - _dataCache[region].timestamp < CACHE_TTL)) {
+            console.log(`[ClassDist] Using cached data for region: ${region}`);
+            return _dataCache[region].data;
+        }
+
+        // 防止同一區域的重複請求 (等待進行中的請求)
+        if (_inflight[region]) {
+            console.log(`[ClassDist] Waiting for in-flight request for region: ${region}`);
+            return _inflight[region];
+        }
+
+        // 建立請求 Promise 並存入 inflight
+        _inflight[region] = _fetchDataImpl(region);
+        try {
+            const result = await _inflight[region];
+            return result;
+        } finally {
+            delete _inflight[region];
+        }
+    }
+
+    async function _fetchDataImpl(region) {
         const baseUrl = "https://questlog.gg/aion-2/api/trpc";
         const input = encodeURIComponent(JSON.stringify({ region: region }));
 
         try {
-            console.log(`[ClassDist] Fetching data for region: ${region}`);
-
-            const raceUrl = `${baseUrl}/armoryMeta.getRaceDistribution?input=${input}`;
-            console.log(`[ClassDist] Fetching Race URL via Proxy: ${raceUrl}`);
+            console.log(`[ClassDist] Fetching fresh data for region: ${region}`);
 
             const results = await Promise.allSettled([
                 fetch(getProxyUrl(`${baseUrl}/armoryMeta.getClassDistribution?input=${input}`)),
-                fetch(getProxyUrl(raceUrl)),
+                fetch(getProxyUrl(`${baseUrl}/armoryMeta.getRaceDistribution?input=${input}`)),
                 fetch(getProxyUrl(`${baseUrl}/armoryMeta.getClassPerformanceMatrix?input=${input}`)),
                 fetch(getProxyUrl(`${baseUrl}/armoryMeta.getArenaStats?input=${input}`)),
                 fetch(getProxyUrl(`${baseUrl}/armoryMeta.getAbyssStats?input=${input}`))
@@ -118,13 +144,19 @@
             const arenaJson = await parseResult(results[3]);
             const abyssJson = await parseResult(results[4]);
 
-            return {
+            const result = {
                 classData: classJson?.result?.data?.json || classJson?.result?.data,
                 raceData: raceJson?.result?.data?.json || raceJson?.result?.data,
                 perfData: perfJson?.result?.data?.json || perfJson?.result?.data,
                 arenaData: arenaJson?.result?.data?.json || arenaJson?.result?.data,
                 abyssData: abyssJson?.result?.data?.json || abyssJson?.result?.data
             };
+
+            // 存入快取
+            _dataCache[region] = { data: result, timestamp: Date.now() };
+            console.log(`[ClassDist] Data cached for region: ${region}`);
+
+            return result;
         } catch (e) {
             console.error("[ClassDist] Failed to fetch distribution data", e);
             return null;
@@ -559,23 +591,7 @@
         window.renderClassDistributionTab();
     };
 
-    // Expose race rendering for external use (e.g. by server_stats.js)
-    // Expose race rendering for external use (e.g. by server_stats.js)
-    window.renderRaceDistributionPart = async function (region) {
-        console.log(`[ClassDist] renderRaceDistributionPart called for region: ${region}`);
 
-        // Pass region to fetchData
-        const data = await fetchData(region);
-
-        if (data && data.raceData) {
-            // Render to the race container, wherever it is
-            const raceContainerId = 'race-dist-container';
-            // Use internal render function which has fallback logic
-            renderRaceBar(data.raceData, raceContainerId);
-        } else {
-            console.warn("[ClassDist] No race data found or fetch failed.");
-        }
-    };
 
     // 主渲染函數
     window.renderClassDistributionTab = async function () {

@@ -152,8 +152,6 @@
                                     onclick="switchMainChartTab('trend')">📊 歷史趨勢</div>
                                 <div id="tab-btn-class" class="stat-tab-btn" onclick="switchMainChartTab('class')">👥
                                     職業分布</div>
-                                <div id="tab-btn-server" class="stat-tab-btn" onclick="switchMainChartTab('server')">🏢
-                                    全伺服器</div>
                             </div>
                         </div>
 
@@ -184,28 +182,6 @@
                             </div>
                             <div id="class-dist-chart-container" style="position: relative; height: 450px;">
                                 <canvas id="class-dist-chart"></canvas>
-                            </div>
-                        </div>
-
-                        <!-- Content 3: Server Distribution -->
-                        <div id="tab-content-server" style="display:none;">
-                            <div
-                                style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; padding:15px; border-bottom:1px solid rgba(255,255,255,0.05);">
-                                <div style="color:#8b949e; font-size:14px;">伺服器排行 (Server Distribution)</div>
-                                <div id="region-toggle-server-container"
-                                    style="display:flex; gap:5px; background:rgba(0,0,0,0.3); padding:4px; border-radius:6px;">
-                                    <button id="server-stats-region-btn-tw" onclick="switchServerRegion('tw')"
-                                        style="background:#3b82f6; color:white; border:none; padding:4px 10px; border-radius:4px; cursor:pointer; font-size:12px; font-weight:bold;">TW
-                                        (台灣)</button>
-                                    <button id="server-stats-region-btn-ko" onclick="switchServerRegion('ko')"
-                                        style="background:transparent; color:#8b949e; border:none; padding:4px 10px; border-radius:4px; cursor:pointer; font-size:12px; font-weight:bold;">KO
-                                        (韓國)</button>
-                                </div>
-                            </div>
-                            <!-- Will be rendered by JS -->
-                            <div id="race-dist-container" style="margin-bottom: 20px; padding: 0 15px;"></div>
-                            <div id="server-dist-chart-container" style="position: relative;  padding:15px;">
-                                <!-- Will be rendered by JS -->
                             </div>
                         </div>
                     </div>
@@ -381,7 +357,6 @@
         <script src="js/peek_score.js?v=score_colors_v5"></script>
         <script src="js/aion.js?v=v_tooltip_godstone_v6"></script>
         <script src="js/class_distribution.js"></script>
-        <script src="js/server_stats.js"></script>
         <!-- 裝備詳情彈窗 -->
         <div id="equip-tooltip-overlay" class="tooltip-overlay" onclick="closeEquipTooltip(event)">
             <div class="equip-tooltip" id="equip-tooltip-content" onclick="event.stopPropagation()">
