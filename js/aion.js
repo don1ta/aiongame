@@ -20,14 +20,14 @@ window.onload = function () {
 
     // 屬性說明資料 (已透過 stat_descriptions.js 載入至 window.STAT_DESCRIPTIONS)
     if (window.STAT_DESCRIPTIONS) {
-        console.log('[屬性說明] 已預載');
+        // [屬性說明] 已預載
     }
 }
 
 // 供外部腳本呼叫的重繪函數 (例如 QuestLog 資料庫載入完成後)
 window.renderEquipment = function () {
     if (window.__LAST_DATA_JSON__) {
-        console.log("觸發重新渲染: 裝備與評分");
+        // 觸發重新渲染 log 已移除
         // skipScroll=true, skipWingRender=true (僅更新裝備與評分)
         processData(window.__LAST_DATA_JSON__, true, true);
     }
@@ -90,7 +90,7 @@ if (window.WINGS_DATA_DB) {
     (window.WINGS_DATA_DB.result?.data || []).forEach(w => {
         WINGS_JSON_MAP[w.name] = w;
     });
-    console.log(`[翅膀資料庫] 已預載 ${Object.keys(WINGS_JSON_MAP).length} 筆翅膀資料`);
+    // [翅膀資料庫] 已預載資訊已移除
 } else {
     console.warn('[翅膀資料庫] 未找到預載資料，將使用靜態資料庫');
 }
@@ -487,7 +487,7 @@ async function loadCharacterData(serverId, characterId, charName = '') {
     document.getElementById('main-content').style.display = 'none';
 
     try {
-        console.log(`[DirectLoad] Loading ${charName} (${serverId}, ${characterId})...`);
+        // [DirectLoad] 已移除 log
 
         // === 步驟 2: 使用 refresh=true 觸發更新並獲取最新資料 ===
         const refreshUrl = `https://aion-api.bnshive.com/character/query?serverId=${serverId}&characterId=${encodeURIComponent(characterId)}&refresh=true`;
@@ -728,7 +728,7 @@ if (window.PASSIVE_SKILLS_DB) {
             window.PASSIVE_SKILL_DATABASE[skillName] = skills[skillName];
         }
     }
-    console.log('✅ 被動技能定義庫已預載:', Object.keys(window.PASSIVE_SKILL_DATABASE).length, '個技能');
+    // 被動技能庫預載 log 已移除
 
     if (window.__LAST_DATA_JSON__) {
         debouncedPassiveUpdate(window.__LAST_DATA_JSON__);
@@ -771,7 +771,7 @@ const debouncedPassiveUpdate = (data) => {
         // 🚀 關鍵修復：被動技能數據更新後，必須重新觸發統計計算與 UI 渲染
         // 使用 statsOnly=true 模式，僅更新數值與表格，不重複解析技能，避免無限循環
         if (window.__LAST_DATA_JSON__) {
-            console.log("🔄 被動技能數據已更新，觸發主要統計表重新渲染...");
+            // 🔄 被動技能數據更新 log 已移除
             processData(window.__LAST_DATA_JSON__, true, true, true);
         }
 
@@ -1885,7 +1885,8 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                 ((rating && rating.ratings) ? rating.ratings : null)));
 
 
-    console.log("[RatingDebug] Extracted ratings:", ratingsData);
+
+    // [RatingDebug] 已移除 log
 
     // Update Stat Header ID and Score
     if (!statsOnly) {
@@ -6449,7 +6450,7 @@ window.handleSlotLeave = function () {
 };
 
 window.showEquipTooltip = function (slotId, mode = 'modal', event = null) {
-    console.log("[Tooltip] SlotId:", slotId, "Mode:", mode);
+    // [Tooltip] SlotId log 已移除
 
     // 切換模式或顯示時，先清除定時器
     if (tooltipHideTimer) {

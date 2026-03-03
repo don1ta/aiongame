@@ -96,13 +96,13 @@
 
         // 檢查快取是否有效
         if (_dataCache[region] && (Date.now() - _dataCache[region].timestamp < CACHE_TTL)) {
-            console.log(`[ClassDist] Using cached data for region: ${region}`);
+            // [ClassDist] Using cached data log 已移除
             return _dataCache[region].data;
         }
 
         // 防止同一區域的重複請求 (等待進行中的請求)
         if (_inflight[region]) {
-            console.log(`[ClassDist] Waiting for in-flight request for region: ${region}`);
+            // [ClassDist] Waiting for in-flight request log 已移除
             return _inflight[region];
         }
 
@@ -121,7 +121,7 @@
         const input = encodeURIComponent(JSON.stringify({ region: region }));
 
         try {
-            console.log(`[ClassDist] Fetching fresh data for region: ${region}`);
+            // [ClassDist] Fetching fresh data log 已移除
 
             const results = await Promise.allSettled([
                 fetch(getProxyUrl(`${baseUrl}/armoryMeta.getClassDistribution?input=${input}`)),
@@ -154,7 +154,7 @@
 
             // 存入快取
             _dataCache[region] = { data: result, timestamp: Date.now() };
-            console.log(`[ClassDist] Data cached for region: ${region}`);
+            // [ClassDist] Data cached log 已移除
 
             return result;
         } catch (e) {

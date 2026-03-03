@@ -39,12 +39,13 @@ async function fetchItemDetailsFromQuestLog() {
         if (cachedData && cachedTime && (Date.now() - parseInt(cachedTime) < EXPIRE_TIME)) {
             EXTERNAL_ITEM_DB = JSON.parse(cachedData);
             hasFetchedExternalDB = true;
-            console.log(`[Cache] 已從快取載入裝備資料庫 (${Object.keys(EXTERNAL_ITEM_DB).length} 筆)`);
+            // [Cache] log 已移除
             return;
         }
     } catch (e) { console.warn("Cache load failed", e); }
 
-    console.log('正在從 QuestLog 同步物品資料庫...');
+
+    // 正在從 QuestLog 同步物品資料庫 log 已移除
     // --- End 快取機制 ---
 
     // 定義要抓取的類別 (只抓前 2 頁的高級裝備應該就夠了)
@@ -97,7 +98,7 @@ async function fetchItemDetailsFromQuestLog() {
         });
 
         hasFetchedExternalDB = true;
-        console.log(`QuestLog 資料庫同步完成，共 ${Object.keys(EXTERNAL_ITEM_DB).length} 筆資料`);
+        // QuestLog 資料庫同步完成 log 已移除
 
         // 💾 儲存到快取
         try {
@@ -112,7 +113,7 @@ async function fetchItemDetailsFromQuestLog() {
         }
 
         if (typeof window.renderEquipment === 'function') {
-            console.log("重新計算並渲染裝備...");
+            // 重新計算並渲染裝備 log 已移除
             window.renderEquipment();
         }
 
