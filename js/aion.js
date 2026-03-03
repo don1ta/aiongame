@@ -5764,7 +5764,7 @@ function renderCombatAnalysis(stats, data) {
                 ["精神力消耗量", "精神力獲得增加"],
                 ["戰鬥行動力自然恢復", "非戰鬥行動力自然恢復"],
                 ["戰鬥飛行力自然恢復", "非戰鬥飛行力自然恢復"],
-                ["最大攻擊力", "最小攻擊力"]
+
             ]
         }
     ];
@@ -6509,12 +6509,12 @@ window.renderLayoutTab = function (json) {
                 <div class="lv-badge">Lv.${p.characterLevel || "--"}</div>
             </div>
             
-            <div class="score-luxury-card gold" style="width: 100%; text-align: center; border-left: none; border-bottom: 4px solid #f1c40f; background: rgba(0,0,0,0.4); margin-top: 10px;">
+            <div class="score-luxury-card gold" style="width: 100%; text-align: center; border-left: none; border-bottom: 4px solid #f1c40f; background: rgba(0,0,0,0.4); margin-top: 10px; min-height: fit-content;">
                 <div class="card-bg-glow"></div>
                 <div class="card-header" style="justify-content: center; font-size: 18px; color: ${itemScoreColor}; font-weight: 900; letter-spacing: 1px;">
                     <span class="icon">🏆</span> ${itemLv.toLocaleString()}
                 </div>
-                <div class="card-value" style="font-size: 22px; margin: 10px 0; font-weight: 800; color: ${rankColor}; text-shadow: 0 0 10px ${rankColor}33; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                <div class="card-value" style="font-size: 22px; font-weight: 800; color: ${rankColor}; text-shadow: 0 0 10px ${rankColor}33; display: flex; align-items: center; justify-content: center; gap: 6px;">
                     ${abyssGradeIcon ? `<img src="${getCorrectIcon(abyssGradeIcon)}" style="width:24px; height:24px;"><span>${abyssRankName}</span>` : '<span>--</span>'}
                 </div>
             </div>
