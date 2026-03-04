@@ -1307,7 +1307,7 @@ function initGainControls() {
                                     ${optionsHtml}
                                 </div>
                             </div>
-                            <span style="font-size:11px; color:#58a6ff;">${wingItem.selectedWings.length > 0 ? wingItem.selectedWings.map(wName => { const w = WING_DATABASE[wName]; const c = w ? getWingGradeColor(w.grade) : '#ccc'; return `<span style="color:${c}">${wName}</span>`; }).join('<span style="color:#8b949e;">、</span>') : '尚未選擇'}</span>
+                            <span id="selected-wings-display" style="font-size:11px; color:#58a6ff;">${wingItem.selectedWings.length > 0 ? wingItem.selectedWings.map(wName => { const w = WING_DATABASE[wName]; const c = w ? getWingGradeColor(w.grade) : '#ccc'; return `<span style="color:${c}">${wName}</span>`; }).join('<span style="color:#8b949e;">、</span>') : '尚未選擇'}</span>
                         </div>
                     `;
         } else {
@@ -1497,20 +1497,16 @@ window.toggleWingItem = function (wingName, isAdded) {
             finalBtn.innerHTML = `選擇翅膀 (${item.selectedWings.length}) ▼`;
         }
         // Update selected wings display text in wing-selection-row
-        const wingRow = document.getElementById('wing-selection-row');
-        if (wingRow) {
-            const spans = wingRow.querySelectorAll('span');
-            const lastSpan = spans[spans.length - 1];
-            if (lastSpan) {
-                if (item.selectedWings.length > 0) {
-                    lastSpan.innerHTML = item.selectedWings.map(wName => {
-                        const w = WING_DATABASE[wName];
-                        const c = w ? getWingGradeColor(w.grade) : '#ccc';
-                        return `<span style="color:${c}">${wName}</span>`;
-                    }).join('<span style="color:#8b949e;">、</span>');
-                } else {
-                    lastSpan.textContent = '尚未選擇';
-                }
+        const wingDisplaySpan = document.getElementById('selected-wings-display');
+        if (wingDisplaySpan) {
+            if (item.selectedWings.length > 0) {
+                wingDisplaySpan.innerHTML = item.selectedWings.map(wName => {
+                    const w = WING_DATABASE[wName];
+                    const c = w ? getWingGradeColor(w.grade) : '#ccc';
+                    return `<span style="color:${c}">${wName}</span>`;
+                }).join('<span style="color:#8b949e;">、</span>');
+            } else {
+                wingDisplaySpan.textContent = '尚未選擇';
             }
         }
     }
