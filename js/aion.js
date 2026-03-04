@@ -278,7 +278,7 @@ const WING_DATABASE = {
     '惡夢翅膀': {
         grade: 'unique',
         icon: 'https://questlog.gg/assets/Game/UI/Resource/Texture/Item/Wing/Icon_WingA_005.Icon_WingA_005.png',
-        equip: { '額外攻擊力': 60, '傷害增幅': 0.035, '暴擊': 35, '首領傷害增幅': 0.035 },
+        equip: { '額外攻擊力': 60, '額外命中': 35, '暴擊': 35, '首領傷害增幅': 0.035 },
         hold: { '飛行力': 200, '首領攻擊力': 30, '首領防禦力': 250 }
     },
     '鬥士翅膀': {
