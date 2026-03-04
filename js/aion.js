@@ -3413,9 +3413,16 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
         [];
     const petInsightData = petInsight; // 寵物洞察力數據
     // 嘗試從多個來源獲取烙印技能數據
-    let stigmaList = (data.skill ? data.skill.skillList : []) ||
-        (data.skills ? (Array.isArray(data.skills) ? data.skills : data.skills.skillList) : []) ||
-        data.stigma || data.stigmaList || data.specialSkill || data.abyssSkill || [];
+    const hasItems = (list) => list && (Array.isArray(list) ? list.length > 0 : (typeof list === 'object' ? Object.keys(list).length > 0 : false));
+
+    let stigmaList = [];
+    let pot_stigma1 = data.skill ? (Array.isArray(data.skill) ? data.skill : data.skill.skillList) : null;
+    let pot_stigma2 = data.skills ? (Array.isArray(data.skills) ? data.skills : data.skills.skillList) : null;
+    let pot_stigma3 = data.stigma || data.stigmaList || data.specialSkill || data.abyssSkill || [];
+
+    if (hasItems(pot_stigma1)) stigmaList = pot_stigma1;
+    else if (hasItems(pot_stigma2)) stigmaList = pot_stigma2;
+    else stigmaList = pot_stigma3;
 
 
     // 如果是在 equipment 下
@@ -4831,7 +4838,16 @@ function renderSkills(data, boardSkillMap, cardSkillMap, stats) {
         return false;
     };
 
-    const rawSkillList = (data.skill ? data.skill.skillList : []) || (data.skills ? (Array.isArray(data.skills) ? data.skills : data.skills.skillList) : []) || [];
+    const hasItems = (list) => list && (Array.isArray(list) ? list.length > 0 : (typeof list === 'object' ? Object.keys(list).length > 0 : false));
+
+    let rawSkillList = [];
+    let pot_skill1 = data.skill ? (Array.isArray(data.skill) ? data.skill : data.skill.skillList) : null;
+    let pot_skill2 = data.skills ? (Array.isArray(data.skills) ? data.skills : data.skills.skillList) : null;
+    let pot_skill3 = data.stigma || data.stigmaList || data.specialSkill || data.abyssSkill || [];
+
+    if (hasItems(pot_skill1)) rawSkillList = pot_skill1;
+    else if (hasItems(pot_skill2)) rawSkillList = pot_skill2;
+    else rawSkillList = pot_skill3;
     const skillList = Array.isArray(rawSkillList) ? rawSkillList : Object.values(rawSkillList);
 
     skillList.forEach(s => {
