@@ -588,7 +588,7 @@ function calculateStigmaScore(skillData) {
     let allSkills = [];
     if (skillData.stigma && Array.isArray(skillData.stigma)) {
         skillData.stigma.forEach(skill => {
-            // 嚴格過濾：排除主動與被動技能，只計算烙印 (Stigma/AdvancedStigma)
+            // 寬鬆過濾：排除明確指定為何非烙印的 Active 與 Passive 技能
             if (skill.category === 'Active' || skill.category === 'Passive') return;
 
             let level = 0;
@@ -600,7 +600,12 @@ function calculateStigmaScore(skillData) {
             // 移除模糊搜尋，因為可能抓到 learnLevel 或 maxLevel (導致沒學的技能顯示 Lv22)
 
             // 排除等級為 0 的技能
-            if (!level || level <= 0) return;
+            if (!level || level <= 0) {
+                console.log(`DEBUG: Skill ${skill.name} skipped (level 0)`);
+                return;
+            }
+
+            console.log(`DEBUG: Processing stigma ${skill.name} with level ${level}`);
 
             allSkills.push({
                 name: skill.name,

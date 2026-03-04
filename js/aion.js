@@ -3426,13 +3426,24 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
 
 
     // 如果是在 equipment 下
-    if (stigmaList.length === 0 && data.equipment && data.equipment.stigmaList) {
+    if (!hasItems(stigmaList) && data.equipment && data.equipment.stigmaList) {
         stigmaList = data.equipment.stigmaList;
     }
     // 部分 API 可能回傳 object 而非 array
     if (typeof stigmaList === 'object' && !Array.isArray(stigmaList)) {
         stigmaList = Object.values(stigmaList);
     }
+
+    console.log("DEBUG: Original data.skill:", data.skill);
+    console.log("DEBUG: Original data.stigmaList:", data.stigmaList);
+
+    // 如果從全體技能抓來的，要先主動過濾掉非烙印技能
+    if (Array.isArray(stigmaList)) {
+        stigmaList = stigmaList.filter(s => s.category !== 'Active' && s.category !== 'Passive');
+    }
+
+    console.log("DEBUG: Final stigmaList for scoring:", stigmaList);
+
     const skillData = { stigma: stigmaList }; // 技能烙印數據
     const titleData = data.title || {}; // 稱號數據
 
