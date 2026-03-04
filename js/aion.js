@@ -1091,10 +1091,18 @@ function initGainControls() {
             let totalStats = {};
             saved.forEach(wName => {
                 const w = WING_DATABASE[wName];
-                if (w && w.hold) {
-                    for (let s in w.hold) {
-                        if (!totalStats[s]) totalStats[s] = 0;
-                        totalStats[s] += w.hold[s];
+                if (w) {
+                    if (w.hold) {
+                        for (let s in w.hold) {
+                            if (!totalStats[s]) totalStats[s] = 0;
+                            totalStats[s] += w.hold[s];
+                        }
+                    }
+                    if (w.equip) {
+                        for (let s in w.equip) {
+                            if (!totalStats[s]) totalStats[s] = 0;
+                            totalStats[s] += w.equip[s];
+                        }
                     }
                 }
             });
@@ -1400,10 +1408,18 @@ window.toggleWingItem = function (wingName, isAdded) {
         let totalStats = {};
         item.selectedWings.forEach(wName => {
             const w = WING_DATABASE[wName];
-            if (w && w.hold) {
-                for (let s in w.hold) {
-                    if (!totalStats[s]) totalStats[s] = 0;
-                    totalStats[s] += w.hold[s];
+            if (w) {
+                if (w.hold) {
+                    for (let s in w.hold) {
+                        if (!totalStats[s]) totalStats[s] = 0;
+                        totalStats[s] += w.hold[s];
+                    }
+                }
+                if (w.equip) {
+                    for (let s in w.equip) {
+                        if (!totalStats[s]) totalStats[s] = 0;
+                        totalStats[s] += w.equip[s];
+                    }
                 }
             }
         });
@@ -2797,33 +2813,40 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
     const ownedWings = JSON.parse(localStorage.getItem('ownedWings') || '[]');
     ownedWings.forEach(wingName => {
         const wing = WING_DATABASE[wingName];
-        if (wing && wing.hold) {
-            for (let statName in wing.hold) {
-                let val = wing.hold[statName];
-                let absVal = Math.abs(val);
-                let isDecimal = (absVal > 0 && absVal < 1);
+        if (wing) {
+            // Helper to process both hold and equip stats
+            const processWingStats = (statsObj, sourceType) => {
+                if (!statsObj) return;
+                for (let statName in statsObj) {
+                    let val = statsObj[statName];
+                    let absVal = Math.abs(val);
+                    let isDecimal = (absVal > 0 && absVal < 1);
 
-                // 根據關鍵字強制視為百分比 (除了小數判定外)
-                const percentKeywords = ['增幅', '增加', '減少', '率', '耐性'];
-                const matchesKeyword = percentKeywords.some(k => statName.includes(k));
+                    // 根據關鍵字強制視為百分比 (除了小數判定外)
+                    const percentKeywords = ['增幅', '增加', '減少', '率', '耐性'];
+                    const matchesKeyword = percentKeywords.some(k => statName.includes(k));
 
-                if (isDecimal) val = val * 100;
+                    if (isDecimal) val = val * 100;
 
-                // 標準化屬性名稱 (不再去除 "額外" 前綴，以便使用者能看到獨立項目)
-                let normName = statName;
+                    // 標準化屬性名稱 (不再去除 "額外" 前綴，以便使用者能看到獨立項目)
+                    let normName = statName;
 
-                // 若是小數轉換而來，或名稱包含百分比關鍵字，則確保名稱有 %
-                if ((isDecimal || matchesKeyword) && !normName.includes('%')) {
-                    normName += '%';
+                    // 若是小數轉換而來，或名稱包含百分比關鍵字，則確保名稱有 %
+                    if ((isDecimal || matchesKeyword) && !normName.includes('%')) {
+                        normName += '%';
+                    }
+
+                    let entry = getEntry(normName);
+                    entry.other += val;
+                    entry.subtotals.wingHold += val;
+
+                    const unit = normName.includes('%') ? '%' : '';
+                    entry.detailGroups.wingHold.push(`[${wingName} ${sourceType}]: +${parseFloat(val.toFixed(2))}${unit}`);
                 }
+            };
 
-                let entry = getEntry(normName);
-                entry.other += val;
-                entry.subtotals.wingHold += val;
-
-                const unit = normName.includes('%') ? '%' : '';
-                entry.detailGroups.wingHold.push(`[${wingName} 持有]: +${parseFloat(val.toFixed(2))}${unit}`);
-            }
+            processWingStats(wing.hold, '持有');
+            processWingStats(wing.equip, '裝備');
         }
     });
 
@@ -5148,6 +5171,7 @@ function renderCombatAnalysis(stats, data) {
         html += renderCategory('skill', '⚡', '#fd79a8', '技能', entry.subtotals?.skill);
         html += renderCategory('title', '🎖️', '#ffd700', '稱號', entry.subtotals?.title);
         html += renderCategory('wing', '🪽', '#81ecec', '翅膀', entry.subtotals?.wing);
+        html += renderCategory('wingHold', '🪽', '#81ecec', '翅膀收藏', entry.subtotals?.wingHold);
         html += renderCategory('arcana', '🎴', '#ff7675', '聖物', entry.subtotals?.arcana);
         html += renderCategory('gainEffect', '💊', '#fdcb6e', '增益', entry.subtotals?.gainEffect);
         html += renderCategory('mainStat', '📊', '#74b9ff', '轉化', entry.subtotals?.mainStat);
