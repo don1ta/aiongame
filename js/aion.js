@@ -2969,10 +2969,97 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
             let soulBindHtml = (sbRate !== undefined) ? `<span style="float:right; color:#bdc3c7;">靈魂刻印 ${sbRate}%</span>` : "";
 
 
-            let cardHtml = `<div class="equip-item-card" style="border-color: ${gradeColor}; border-top-color: ${gradeColor}; box-shadow: 0 0 10px ${gradeColor}44;"><div class="equip-left-section"><div style="display:flex; align-items:center; gap:10px;"><div class="equip-img-container" style="border-color: ${gradeColor};"><img src="${finalIcon}">${exceedBadge}</div><div style="flex:1;"><span class="equip-name" style="color:${gradeColor}; font-weight:bold; text-shadow:0 0 5px ${gradeColor}44;">${d.name}</span>${sourcesHtml}<div><span style="color:#fff; font-weight:bold;">+${i.enchantLevel}</span></div></div></div><div style="margin-top:8px;">${mainStatsD}</div></div><div class="equip-right-section"><div style="color:#8b949e; font-size:13px; font-weight:bold; border-bottom:1px solid rgba(255,255,255,0.1); margin-bottom:5px;">附加屬性/神石 ${soulBindHtml}</div>${(d.subStats || []).map(s => `<div class="random-row"><span>${s.name}</span><span style="color:#fff;">+${s.value}</span></div>`).join('')}${(d.subSkills || []).map(sk => `<div class="skill-badge-mini" style="border-color:${gradeColor};">${sk.name} Lv.${sk.level}</div>`).join('')}${godStoneHtml}${(d.magicStoneStat || []).map(ms => {
-                let msColor = getGradeColor(ms.grade);
-                return `<div class="random-row" style="color:${msColor}; font-size:12px;"><span>[磨石] ${ms.name}</span><span>${ms.value}</span></div>`;
-            }).join('')}</div></div>`;
+            // 主能力值區塊（tooltip 格式）
+            const mainStatsSectionHtml = (d.mainStats && d.mainStats.length > 0) ? `
+                <div class="tooltip-section">
+                    <div class="tooltip-section-title">主要能力值</div>
+                    ${(d.mainStats).map(s => {
+                const extraVal = s.extra && s.extra !== '0' ? String(s.extra).replace('+', '') : null;
+                const minVal = s.minValue ? parseFloat(s.minValue) : null;
+                const baseDisplay = (minVal && minVal > 0)
+                    ? `<span class="val-base">${minVal}</span><span style="color:#555;"> ~ </span><span class="val-base">${s.value}</span>`
+                    : `<span class="val-base">${s.value}</span>`;
+                return `<div class="stat-row">
+                            <span class="stat-label">${s.name}</span>
+                            <span class="stat-value">
+                                ${baseDisplay}
+                                ${extraVal ? `<span class="val-enchant"> (+${extraVal})</span>` : ''}
+                            </span>
+                        </div>`;
+            }).join('')}
+                </div>` : '';
+
+
+            // 隨機能力值
+            const subStatsSectionHtml = (d.subStats && d.subStats.length > 0) ? `
+                <div class="tooltip-section">
+                    <div class="tooltip-section-title">隨機能力值</div>
+                    ${(d.subStats).map(s => `<div class="stat-row">
+                        <span class="stat-label">${s.name}</span>
+                        <span class="stat-value bonus">+${s.value}</span>
+                    </div>`).join('')}
+                </div>` : '';
+
+            // 磨石
+            const stoneSectionHtml = (d.magicStoneStat && d.magicStoneStat.length > 0) ? `
+                <div class="tooltip-section">
+                    <div class="tooltip-section-title">魔石槽位</div>
+                    <div class="magic-stone-list">
+                        ${(d.magicStoneStat).map(ms => {
+                const sColor = getGradeColor(ms.grade || 'common');
+                return `<div class="stone-item">
+                                <img class="stone-icon" src="${ms.icon || ''}">
+                                <div class="stone-text" style="color:${sColor}">${ms.name} ${ms.value}</div>
+                            </div>`;
+            }).join('')}
+                    </div>
+                </div>` : '';
+
+            // 神石
+            const godStoneSectionHtml = (d.godStoneStat && d.godStoneStat.length > 0) ? `
+                <div class="tooltip-section">
+                    <div class="tooltip-section-title">神石</div>
+                    ${(d.godStoneStat).map(gs => {
+                const gsColor = getGradeColor(gs.grade || 'unique');
+                return `<div style="border:1px dashed ${gsColor}; padding:8px; font-size:12px; border-radius:6px; background:rgba(0,0,0,0.2); margin-top:5px;">
+                            <b style="color:${gsColor}">${gs.name}</b>
+                            <div style="color:#adb5bd; margin-top:4px; line-height:1.4;">${gs.desc}</div>
+                        </div>`;
+            }).join('')}
+                </div>` : '';
+
+            // 突破 + 強化文字
+            const exceedText = (originalItem.exceedLevel || 0) > 0
+                ? `<span style="background:rgba(231,76,60,0.15); border:1px solid rgba(231,76,60,0.4); padding:1px 6px; border-radius:4px; font-size:11px; font-weight:bold; color:#ff7b7b; margin-left:6px;">突破+${originalItem.exceedLevel}</span>` : '';
+            const sbText = d.soulBindRate !== undefined
+                ? `<span style="color:#8b949e; font-size:11px; margin-left:auto;">靈魂 ${d.soulBindRate}%</span>` : '';
+
+            let cardHtml = `
+            <div class="equip-tooltip-card tooltip-rarity-${(() => {
+                    const g = (d.grade || originalItem.grade || '').toLowerCase();
+                    if (g.includes('myth') || g.includes('ancient') || g.includes('神話') || g.includes('古代')) return 'myth';
+                    if (g.includes('unique') || g.includes('唯一') || g.includes('獨特')) return 'unique';
+                    if (g.includes('special') || g.includes('特殊')) return 'special';
+                    if (g.includes('legend') || g.includes('傳說') || g.includes('epic') || g.includes('史詩')) return 'legend';
+                    if (g.includes('rare') || g.includes('稀有')) return 'rare';
+                    return 'common';
+                })()}" onclick="window.handleSlotClick(event, ${slot})" style="cursor:pointer;">
+                <div class="tooltip-header">
+                    <img class="tooltip-item-icon" src="${finalIcon}" onerror="this.src='https://questlog.gg/assets/Game/UI/Resource/Texture/Common/Icon/Icon_Default.png'">
+                    <div class="tooltip-item-info">
+                        <div class="tooltip-item-name">${d.name}</div>
+                        <div style="display:flex; align-items:center; gap:6px; margin-top:4px;">
+                            <span style="font-size:13px; color:#8b949e;">+${i.enchantLevel}</span>
+                            ${exceedText}
+                            ${sbText}
+                        </div>
+                    </div>
+                </div>
+                ${mainStatsSectionHtml}
+                ${subStatsSectionHtml}
+                ${stoneSectionHtml}
+                ${godStoneSectionHtml}
+            </div>`;
 
             let gradeNameMap = { 'Myth': '神話', 'Unique': '唯一', 'Legend': '傳說', 'Epic': '史詩', 'Rare': '稀有', 'Ancient': '古代' };
             let rawGrade = d.gradeName || originalItem.gradeName || d.grade || originalItem.grade || '';
@@ -6157,7 +6244,19 @@ window.renderLayoutTab = function (json) {
             if (!item) return `<div class="slot-item empty"></div>`;
             const d = item.detail || item;
             let icon = getCorrectIcon(item.icon || d.icon);
-            const enchant = (item.enchantLevel > 0) ? `<div class="slot-enchant">+${item.enchantLevel}</div>` : "";
+            const exceedLv = item.exceedLevel || d.exceedLevel || 0;
+            const hasExceed = exceedLv > 0;
+
+            // 強化等級：有突破時文字改橘紅色
+            const enchant = (item.enchantLevel > 0)
+                ? `<div class="slot-enchant ${hasExceed ? 'slot-enchant-exceeded' : ''}">+${item.enchantLevel}</div>`
+                : "";
+
+            // 突破等級徽章（右上角）
+            const exceedBadge = hasExceed
+                ? `<div class="slot-exceed">+${exceedLv}</div>`
+                : "";
+
             const rawG = (d.grade || item.grade || 'common').toLowerCase();
             let rc = 'common';
             if (rawG.includes('myth') || rawG.includes('神話') || rawG.includes('ancient') || rawG.includes('古代')) rc = 'myth';
@@ -6166,9 +6265,11 @@ window.renderLayoutTab = function (json) {
             else if (rawG.includes('legend') || rawG.includes('傳說') || rawG.includes('epic') || rc.includes('史詩')) rc = 'legend';
             else if (rawG.includes('rare') || rawG.includes('稀有')) rc = 'rare';
 
-            return `<div class="slot-item slot-rarity-${rc}" onclick="window.handleSlotClick(event, ${slotId})" onmouseenter="window.handleSlotHover(event, ${slotId})" onmouseleave="window.handleSlotLeave()">
-                <div class="slot-corner"></div><img src="${icon}" onerror="this.src='https://questlog.gg/assets/Game/UI/Resource/Texture/Common/Icon/Icon_Default.png'">${enchant}</div>`;
+            // 有突破加上 slot-item-exceeded class，套用紅色外框光暈
+            return `<div class="slot-item slot-rarity-${rc}${hasExceed ? ' slot-item-exceeded' : ''}" onclick="window.handleSlotClick(event, ${slotId})" onmouseenter="window.handleSlotHover(event, ${slotId})" onmouseleave="window.handleSlotLeave()">
+                <div class="slot-corner"></div><img src="${icon}" onerror="this.src='https://questlog.gg/assets/Game/UI/Resource/Texture/Common/Icon/Icon_Default.png'">${enchant}${exceedBadge}</div>`;
         };
+
 
         container.innerHTML = `
         <div style="position: relative; padding-bottom: 20px;">
@@ -6520,7 +6621,6 @@ window.showEquipTooltip = function (slotId, mode = 'modal', event = null) {
     else if (rawGrade.includes('legend') || rawGrade.includes('傳說') || rawGrade.includes('epic') || rawGrade.includes('史詩')) { rarityClass = 'legend'; gradeName = '傳說'; }
     else if (rawGrade.includes('rare') || rawGrade.includes('稀有')) { rarityClass = 'rare'; gradeName = '稀有'; }
 
-    // 主能力值
     let mainStatsHtml = '';
     if (d.mainStats && d.mainStats.length > 0) {
         mainStatsHtml = `
@@ -6529,8 +6629,14 @@ window.showEquipTooltip = function (slotId, mode = 'modal', event = null) {
                 ${d.mainStats.map(s => {
             const extraVal = s.extra && s.extra !== '0' ? s.extra.toString().replace('+', '') : null;
             const baseValNum = parseFloat(s.value) || 0;
+            const minVal = s.minValue ? parseFloat(s.minValue) : null;
 
-            if (baseValNum === 0 && extraVal) {
+            // 有 minValue 時顯示範圍（如攻擊力 392 ~ 617）
+            const baseDisplay = (minVal && minVal > 0)
+                ? `<span class="val-base">${minVal}</span><span style="color:#555;"> ~ </span><span class="val-base">${s.value}</span>`
+                : `<span class="val-base">${s.value}</span>`;
+
+            if (baseValNum === 0 && !minVal && extraVal) {
                 return `
                             <div class="stat-row">
                                 <span class="stat-label">${s.name}</span>
@@ -6545,7 +6651,7 @@ window.showEquipTooltip = function (slotId, mode = 'modal', event = null) {
                         <div class="stat-row">
                             <span class="stat-label">${s.name}</span>
                             <span class="stat-value">
-                                <span class="val-base">${s.value}</span>
+                                ${baseDisplay}
                                 ${extraVal ? `<span class="${s.exceed ? 'val-exceed' : 'val-enchant'}"> (+${extraVal})</span>` : ''}
                             </span>
                         </div>
