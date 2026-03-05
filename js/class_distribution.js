@@ -18,10 +18,29 @@
     // State
     let g_currentRegion = 'tw';
 
-    // API 結果快取 (避免重複請求)
-    const _dataCache = {};       // { region: { data, timestamp } }
+    // API 結果快取 (避免重複請求)——改用 localStorage 持久化
+    const CACHE_PREFIX = 'aion_classdist_v1_';
+    const CACHE_TTL = 30 * 60 * 1000; // 30 分鐘（就算關頁後重開也有效）
     const _inflight = {};        // { region: Promise } 防止同時發送重複請求
-    const CACHE_TTL = 5 * 60 * 1000; // 5 分鐘快取
+
+    function loadCache(region) {
+        try {
+            const item = localStorage.getItem(`${CACHE_PREFIX}${region}`);
+            if (!item) return null;
+            const parsed = JSON.parse(item);
+            if (Date.now() - parsed.timestamp > CACHE_TTL) {
+                localStorage.removeItem(`${CACHE_PREFIX}${region}`);
+                return null;
+            }
+            return parsed.data;
+        } catch (e) { return null; }
+    }
+
+    function saveCache(region, data) {
+        try {
+            localStorage.setItem(`${CACHE_PREFIX}${region}`, JSON.stringify({ timestamp: Date.now(), data }));
+        } catch (e) { }
+    }
 
     // 職業顏色定義
     // 職業顏色定義 (參考用戶截圖風格 - Vibrant Flat Colors)
@@ -94,19 +113,13 @@
     async function fetchData(targetRegion) {
         const region = targetRegion || g_currentRegion;
 
-        // 檢查快取是否有效
-        if (_dataCache[region] && (Date.now() - _dataCache[region].timestamp < CACHE_TTL)) {
-            // [ClassDist] Using cached data log 已移除
-            return _dataCache[region].data;
-        }
+        // 先檢查 localStorage 快取
+        const cached = loadCache(region);
+        if (cached) return cached;
 
         // 防止同一區域的重複請求 (等待進行中的請求)
-        if (_inflight[region]) {
-            // [ClassDist] Waiting for in-flight request log 已移除
-            return _inflight[region];
-        }
+        if (_inflight[region]) return _inflight[region];
 
-        // 建立請求 Promise 並存入 inflight
         _inflight[region] = _fetchDataImpl(region);
         try {
             const result = await _inflight[region];
@@ -152,8 +165,8 @@
                 abyssData: abyssJson?.result?.data?.json || abyssJson?.result?.data
             };
 
-            // 存入快取
-            _dataCache[region] = { data: result, timestamp: Date.now() };
+            // 存入 localStorage 快取
+            saveCache(region, result);
             // [ClassDist] Data cached log 已移除
 
             return result;

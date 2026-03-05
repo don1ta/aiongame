@@ -10,7 +10,7 @@
 
 const SKILL_API_BASE = 'https://questlog.gg/aion-2/api/trpc/database.getSkill';
 const CACHE_PREFIX = 'aion_skill_v16_'; // 強制刷新快取代 v7 (全面數值偵測版)
-const CACHE_EXPIRE = 0; // 改回 0 模式，確保每次重整皆重新解析 API 數值
+const CACHE_EXPIRE = 24 * 60 * 60 * 1000; // 24 小時內免重抓 API
 
 // 處理 descriptionData 模板變數解析 (移至頂部確保可用)
 function processDescriptionData(dd, targetLevel) {

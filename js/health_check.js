@@ -11,6 +11,31 @@
 (function () {
     const API_BASE = "https://aion-api.bnshive.com/stats";
 
+    // ── 快取設定：全服技能統計不常變動，30 分鐘內使用快取 ──
+    const STATS_CACHE_PREFIX = 'aion_hc_stats_v1_';
+    const STATS_CACHE_TTL = 30 * 60 * 1000; // 30 分鐘
+
+    function getStatsCache(className, minScore) {
+        try {
+            const key = `${STATS_CACHE_PREFIX}${className}_${minScore}`;
+            const item = localStorage.getItem(key);
+            if (!item) return null;
+            const parsed = JSON.parse(item);
+            if (Date.now() - parsed.timestamp > STATS_CACHE_TTL) {
+                localStorage.removeItem(key);
+                return null;
+            }
+            return parsed.data;
+        } catch (e) { return null; }
+    }
+
+    function setStatsCache(className, minScore, data) {
+        try {
+            const key = `${STATS_CACHE_PREFIX}${className}_${minScore}`;
+            localStorage.setItem(key, JSON.stringify({ timestamp: Date.now(), data }));
+        } catch (e) { }
+    }
+
     // Class Map
     const CLASS_MAP = {
         'GLADIATOR': '劍星', 'TEMPLAR': '守護星', 'ASSASSIN': '殺星', 'RANGER': '弓星',
@@ -118,7 +143,12 @@
             container.innerHTML = `<div class="loader" style="padding:20px;text-align:center;color:#888;">載入 ${className} (${minScore}+) 數據中...</div>`;
         }
 
-        const skillsData = await fetchAPI('skills', { className: className, itemMin: minScore, itemMax: 4500 });
+        // 先查快取，有的話直接用
+        let skillsData = getStatsCache(className, minScore);
+        if (!skillsData) {
+            skillsData = await fetchAPI('skills', { className: className, itemMin: minScore, itemMax: 4500 });
+            if (skillsData) setStatsCache(className, minScore, skillsData);
+        }
 
         const style = `
             <style>
