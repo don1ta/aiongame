@@ -5930,33 +5930,7 @@ window.renderRadarChart = function () {
     });
 };
 
-// 全局切換主圖表頁籤 (歷史趨勢 vs 職業分布)
-window.switchMainChartTab = function (tabName) {
-    // Buttons
-    document.querySelectorAll('.stat-tab-btn').forEach(btn => btn.classList.remove('active'));
 
-    // Contents
-    const trendContent = document.getElementById('tab-content-trend');
-    const classContent = document.getElementById('tab-content-class');
-
-    if (trendContent) trendContent.style.display = 'none';
-    if (classContent) classContent.style.display = 'none';
-
-    if (tabName === 'trend') {
-        const btn = document.getElementById('tab-btn-trend');
-        if (btn) btn.classList.add('active');
-        if (trendContent) trendContent.style.display = 'block';
-    } else if (tabName === 'class') {
-        const btn = document.getElementById('tab-btn-class');
-        if (btn) btn.classList.add('active');
-        if (classContent) classContent.style.display = 'block';
-
-        // 觸發渲染
-        if (typeof window.renderClassDistributionTab === 'function') {
-            window.renderClassDistributionTab();
-        }
-    }
-};
 
 /**
  * NEW: Render the visual equipment layout (Basic Tab)
