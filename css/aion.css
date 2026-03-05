@@ -1464,45 +1464,45 @@
             box-shadow: 0 12px 30px rgba(0, 0, 0, 0.7);
         }
 
-        /* 沿用 tooltip 的品階色條 */
+        /* 沿用 tooltip 的品階色條 - 與 JS getGradeColor 同步 */
         .equip-tooltip-card.tooltip-rarity-myth {
-            border-color: rgba(255, 71, 87, 0.25);
+            border-color: rgba(230, 126, 34, 0.3);
         }
 
         .equip-tooltip-card.tooltip-rarity-myth .tooltip-header::before {
-            background: #ff4757;
+            background: #e67e22;
         }
 
         .equip-tooltip-card.tooltip-rarity-unique {
-            border-color: rgba(255, 165, 2, 0.25);
+            border-color: rgba(241, 196, 15, 0.3);
         }
 
         .equip-tooltip-card.tooltip-rarity-unique .tooltip-header::before {
-            background: #ffa502;
+            background: #f1c40f;
         }
 
         .equip-tooltip-card.tooltip-rarity-legend {
-            border-color: rgba(123, 237, 159, 0.25);
+            border-color: rgba(52, 152, 219, 0.3);
         }
 
         .equip-tooltip-card.tooltip-rarity-legend .tooltip-header::before {
-            background: #7bed9f;
+            background: #3498db;
         }
 
         .equip-tooltip-card.tooltip-rarity-special {
-            border-color: rgba(46, 213, 115, 0.25);
+            border-color: rgba(0, 255, 204, 0.25);
         }
 
         .equip-tooltip-card.tooltip-rarity-special .tooltip-header::before {
-            background: #2ed573;
+            background: #00ffcc;
         }
 
         .equip-tooltip-card.tooltip-rarity-rare {
-            border-color: rgba(112, 161, 255, 0.25);
+            border-color: rgba(46, 204, 113, 0.3);
         }
 
         .equip-tooltip-card.tooltip-rarity-rare .tooltip-header::before {
-            background: #70a1ff;
+            background: #2ecc71;
         }
 
         .equip-tooltip-card.tooltip-rarity-common {
@@ -3749,6 +3749,36 @@
             /* 限制高度，避免超出視窗 */
         }
 
+        /* 懸停 tooltip 品階邊框色 */
+        .equip-tooltip.tooltip-rarity-myth {
+            border-color: rgba(230, 126, 34, 0.4);
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9), 0 0 15px rgba(230, 126, 34, 0.15);
+        }
+
+        .equip-tooltip.tooltip-rarity-unique {
+            border-color: rgba(241, 196, 15, 0.4);
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9), 0 0 15px rgba(241, 196, 15, 0.15);
+        }
+
+        .equip-tooltip.tooltip-rarity-legend {
+            border-color: rgba(52, 152, 219, 0.4);
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9), 0 0 15px rgba(52, 152, 219, 0.15);
+        }
+
+        .equip-tooltip.tooltip-rarity-special {
+            border-color: rgba(0, 255, 204, 0.35);
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9), 0 0 15px rgba(0, 255, 204, 0.15);
+        }
+
+        .equip-tooltip.tooltip-rarity-rare {
+            border-color: rgba(46, 204, 113, 0.4);
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9), 0 0 15px rgba(46, 204, 113, 0.15);
+        }
+
+        .equip-tooltip.tooltip-rarity-common {
+            border-color: rgba(206, 212, 218, 0.2);
+        }
+
         .tooltip-header {
             padding: 12px 15px;
             display: flex;
@@ -3769,23 +3799,23 @@
         }
 
         .tooltip-rarity-myth .tooltip-header::before {
-            background: #ff4757;
+            background: #e67e22;
         }
 
         .tooltip-rarity-unique .tooltip-header::before {
-            background: #ffa502;
+            background: #f1c40f;
         }
 
         .tooltip-rarity-legend .tooltip-header::before {
-            background: #7bed9f;
+            background: #3498db;
         }
 
         .tooltip-rarity-special .tooltip-header::before {
-            background: #2ed573;
+            background: #00ffcc;
         }
 
         .tooltip-rarity-rare .tooltip-header::before {
-            background: #70a1ff;
+            background: #2ecc71;
         }
 
         .tooltip-rarity-common .tooltip-header::before {
@@ -3834,15 +3864,15 @@
         }
 
         .tooltip-rarity-myth .tooltip-grade-label {
-            color: #ff4757;
+            color: #e67e22;
         }
 
         .tooltip-rarity-unique .tooltip-grade-label {
-            color: #ffa502;
+            color: #f1c40f;
         }
 
         .tooltip-rarity-legend .tooltip-grade-label {
-            color: #7bed9f;
+            color: #3498db;
         }
 
         .tooltip-body {
@@ -4499,6 +4529,35 @@
             text-align: center;
             color: #64748b;
             font-size: 12px;
+        }
+
+        .btn-screenshot {
+            background: rgba(0, 212, 255, 0.1);
+            color: var(--primary);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            padding: 6px 16px;
+            font-size: 13px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin: 0;
+            box-shadow: 0 0 10px rgba(0, 212, 255, 0.1);
+        }
+
+        .btn-screenshot:hover {
+            background: rgba(0, 212, 255, 0.2);
+            border-color: var(--primary);
+            box-shadow: 0 0 15px var(--primary-glow);
+            transform: translateY(-2px);
+            color: #fff;
+        }
+
+        .btn-screenshot:active {
+            transform: translateY(0);
         }
 
         /* 當螢幕寬度小於或等於 768px 時（通常是手機） */

@@ -124,10 +124,27 @@ async function fetchItemDetailsFromQuestLog() {
 
 // 取得單件裝備的品階資訊 (供外部調用)
 function getEquipmentRarityInfo(item) {
-    if (!item || !item.detail) return null;
+    if (!item) return null;
 
-    const d = item.detail;
+    // 支援傳入包裝物件 {detail: ...} 或直接傳入 detail 資料本身
+    const d = item.detail || item;
     const name = d.name || '';
+    const lowerName = name.toLowerCase();
+
+    // 0. 強制關鍵字判定 (古代/神話優先權最高，確保古代系列顯示為橙色)
+    if (lowerName.includes('神話') || lowerName.includes('古代') || lowerName.includes('ancient') || lowerName.includes('mythic')) {
+        const config = RARITY_CONFIG['mythic'];
+        const isShining = name.includes('閃耀');
+        return {
+            rarityKey: 'mythic',
+            name: config.name,
+            baseScore: config.score,
+            color: config.color,
+            isShining: isShining,
+            source: 'keyword'
+        };
+    }
+
     const rawGrade = (d.quality || d.grade || '').toLowerCase();
 
     // 決定正規化品階 Key
@@ -137,18 +154,35 @@ function getEquipmentRarityInfo(item) {
     // 0. 優先檢查外部資料庫 (QuestLog)
     if (EXTERNAL_ITEM_DB[name]) {
         const dbItem = EXTERNAL_ITEM_DB[name];
-        const dbQuality = (dbItem.quality || dbItem.grade || '').toLowerCase();
+        const dbGradeNum = parseInt(dbItem.grade || dbItem.quality || 0);
+        const dbQuality = String(dbItem.quality || dbItem.grade || '').toLowerCase();
 
-        if (dbQuality.includes('mythic') || dbQuality.includes('ancient') || dbQuality === '神話' || dbQuality === '古代') {
+        // 優先使用數字 grade 判斷 (QuestLog API: 51/41/31/21/11)
+        if (dbGradeNum >= 51) {
             rarityKey = 'mythic';
-        } else if (dbQuality.includes('unique') || dbQuality === '唯一' || dbQuality === '獨特') {
-            rarityKey = 'legendary'; // 使用者要求：Unique -> 金色
-        } else if (dbQuality.includes('legend') || dbQuality.includes('eternal') || dbQuality === '傳說' || dbQuality === '傳承' || dbQuality === '史詩' || dbQuality.includes('epic')) {
-            rarityKey = 'epic'; // 使用者要求：Legend -> 藍色
-        } else if (dbQuality.includes('rare') || dbQuality === '稀有') {
+        } else if (dbGradeNum >= 41) {
+            rarityKey = 'legendary';
+        } else if (dbGradeNum >= 31) {
+            rarityKey = 'epic';
+        } else if (dbGradeNum >= 21) {
             rarityKey = 'rare';
-        } else if (dbQuality.includes('special') || dbQuality === '特殊') {
-            rarityKey = 'special';
+        } else if (dbGradeNum >= 11) {
+            rarityKey = 'common';
+        }
+
+        // 備用：字串判斷 (若數字判斷無法判定)
+        if (rarityKey === 'common' && dbGradeNum === 0) {
+            if (dbQuality.includes('mythic') || dbQuality.includes('ancient') || dbQuality === '神話' || dbQuality === '古代') {
+                rarityKey = 'mythic';
+            } else if (dbQuality.includes('unique') || dbQuality === '唯一' || dbQuality === '獨特') {
+                rarityKey = 'legendary';
+            } else if (dbQuality.includes('legend') || dbQuality.includes('eternal') || dbQuality === '傳說' || dbQuality === '傳承' || dbQuality === '史詩' || dbQuality.includes('epic')) {
+                rarityKey = 'epic';
+            } else if (dbQuality.includes('rare') || dbQuality === '稀有') {
+                rarityKey = 'rare';
+            } else if (dbQuality.includes('special') || dbQuality === '特殊') {
+                rarityKey = 'special';
+            }
         }
 
         if (rarityKey !== 'common') source = 'db';
@@ -158,14 +192,19 @@ function getEquipmentRarityInfo(item) {
     if (rarityKey === 'common') {
         const lowerName = name.toLowerCase();
 
-        // 數值 Grade 判斷 (QuestLog ID 系統)
+        // 數值 Grade 判斷 (QuestLog API 數值系統)
+        // API 實際回傳: 51=神話/古代, 41=唯一/獨特, 31=傳說, 21=稀有, 11=普通
         const gradeNum = parseInt(d.grade || d.quality || 0);
         if (gradeNum >= 51) {
-            rarityKey = 'mythic'; // grade 51+ = Ancient/Mythic
-        } else if (gradeNum >= 50) {
-            rarityKey = 'legendary'; // grade 50 = Legendary
-        } else if (gradeNum >= 40) {
-            rarityKey = 'epic'; // grade 40+ = Epic/Unique
+            rarityKey = 'mythic';     // grade 51 = 神話/古代 (橙)
+        } else if (gradeNum >= 41) {
+            rarityKey = 'legendary';  // grade 41 = 唯一/獨特 (金)
+        } else if (gradeNum >= 31) {
+            rarityKey = 'epic';       // grade 31 = 傳說 (藍)
+        } else if (gradeNum >= 21) {
+            rarityKey = 'rare';       // grade 21 = 稀有 (綠)
+        } else if (gradeNum >= 11) {
+            rarityKey = 'common';     // grade 11 = 普通 (白)
         }
 
         // 1. 優先檢查 API grade (字串判斷)

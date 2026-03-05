@@ -1041,15 +1041,26 @@ function updatePassiveSkills(data) {
 // Helper to get wing grade color (Corrected for Aion Standards)
 function getWingGradeColor(grade) {
     if (!grade) return '#ffffff';
+
+    // 優先處理數字 grade (QuestLog API: 51/41/31/21/11)
+    const gradeNum = parseInt(grade);
+    if (!isNaN(gradeNum) && gradeNum >= 11) {
+        if (gradeNum >= 51) return '#e67e22';
+        if (gradeNum >= 41) return '#f1c40f';
+        if (gradeNum >= 31) return '#3498db';
+        if (gradeNum >= 21) return '#2ecc71';
+        return '#ffffff';
+    }
+
     const g = String(grade).toLowerCase();
     switch (g) {
-        case 'myth': case '神話': case 'ancient': case '古代': return '#e67e22'; // 神話/古代 (橙)
-        case 'unique': case '唯一': case '獨特': return '#f1c40f';              // 唯一/獨特 (金)
-        case 'special': return '#00ffcc';                                        // 特殊 (青)
-        case 'legend': case '傳說': case '傳承': case 'epic': case '史詩': return '#3498db'; // 傳說/史詩 (藍)
-        case 'heroic': return '#3498db';                                         // 英雄 (藍)
-        case 'rare': case '稀有': return '#2ecc71';                              // 稀有 (綠)
-        case 'common': case '一般': case 'normal': case '普通': return '#ffffff'; // 普通 (白)
+        case 'myth': case '神話': case 'ancient': case '古代': return '#e67e22';
+        case 'unique': case '唯一': case '獨特': return '#f1c40f';
+        case 'special': return '#00ffcc';
+        case 'legend': case '傳說': case '傳承': case 'epic': case '史詩': return '#3498db';
+        case 'heroic': return '#3498db';
+        case 'rare': case '稀有': return '#2ecc71';
+        case 'common': case '一般': case 'normal': case '普通': return '#ffffff';
         default: return '#ffffff';
     }
 }
@@ -1712,14 +1723,26 @@ function renderHealthCheckUI(analysis) {
 
 function getGradeColor(grade) {
     if (!grade) return '#ffffff';
+
+    // 優先處理數字 grade (QuestLog API: 51/41/31/21/11)
+    const gradeNum = parseInt(grade);
+    if (!isNaN(gradeNum) && gradeNum >= 11) {
+        if (gradeNum >= 51) return '#e67e22'; // 神話/古代 (橙)
+        if (gradeNum >= 41) return '#f1c40f'; // 唯一/獨特 (金)
+        if (gradeNum >= 31) return '#3498db'; // 傳說 (藍)
+        if (gradeNum >= 21) return '#2ecc71'; // 稀有 (綠)
+        return '#ffffff';                      // 普通 (白)
+    }
+
+    // 字串 grade 判斷 (角色 API)
     const g = String(grade).toLowerCase();
     switch (g) {
-        case 'myth': case '神話': case 'ancient': case '古代': return '#e67e22'; // 神話/古代 (橙)
-        case 'unique': case '唯一': case '獨特': return '#f1c40f'; // 唯一/獨特/傳說 (金)
-        case 'special': return '#00ffcc';             // 特殊 (青)
-        case 'legend': case '傳說': case '傳承': case 'epic': case '史詩': return '#3498db'; // 史詩/傳承 (藍)
-        case 'rare': case '稀有': return '#2ecc71';    // 稀有 (綠)
-        case 'common': case '一般': case 'normal': case '普通': return '#ffffff'; // 一般/普通 (白)
+        case 'myth': case '神話': case 'ancient': case '古代': return '#e67e22';
+        case 'unique': case '唯一': case '獨特': return '#f1c40f';
+        case 'special': return '#00ffcc';
+        case 'legend': case '傳說': case '傳承': case 'epic': case '史詩': return '#3498db';
+        case 'rare': case '稀有': return '#2ecc71';
+        case 'common': case '一般': case 'normal': case '普通': return '#ffffff';
         default: return '#ffffff';
     }
 }
@@ -2001,9 +2024,9 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                                 </div>
                                 ${(ratingsData && ratingsData.PVE) ? (() => {
                     const pveVal = Math.floor(ratingsData.PVE.score);
-                    // 顏色判斷：50000+ 紫，40000+ 紅，30000+ 金，其餘白
-                    const pveColor = pveVal >= 50000 ? '#a855f7' : pveVal >= 40000 ? '#ef4444' : pveVal >= 30000 ? '#ffd700' : '#ffffff';
-                    const pveBorderColor = pveVal >= 50000 ? '#a855f7' : pveVal >= 40000 ? '#ef4444' : pveVal >= 30000 ? '#f39c12' : '#555';
+                    // 顏色判斷：50000+ 紫, 40000+ 紅, 30000+ 金, 20000+ 藍, 10000+ 綠, 其餘白
+                    const pveColor = pveVal >= 50000 ? '#a855f7' : pveVal >= 40000 ? '#ef4444' : pveVal >= 30000 ? '#ffd700' : pveVal >= 20000 ? '#3498db' : pveVal >= 10000 ? '#2ecc71' : '#ffffff';
+                    const pveBorderColor = pveVal >= 50000 ? '#a855f7' : pveVal >= 40000 ? '#ef4444' : pveVal >= 30000 ? '#f39c12' : pveVal >= 20000 ? '#3498db' : pveVal >= 10000 ? '#2ecc71' : '#555';
                     return `
                                 <div class="item-score-card" style="background:linear-gradient(135deg, rgba(243,156,18,0.08), rgba(0,0,0,0)); border-color:${pveBorderColor}44; border-left-color:${pveBorderColor};">
                                     <div class="score-header"><span class="score-icon">🐲</span> PVE 裝分</div>
@@ -2013,10 +2036,14 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                                 ${(ratingsData && ratingsData.PVP) ? (() => {
                     const pvpVal = Math.floor(ratingsData.PVP.score);
                     const pvpIsEmpty = pvpVal <= 0;
+                    // PVP 顏色判斷 (比照 PVE)
+                    const pvpColor = pvpVal >= 50000 ? '#a855f7' : pvpVal >= 40000 ? '#ef4444' : pvpVal >= 30000 ? '#ffd700' : pvpVal >= 20000 ? '#3498db' : pvpVal >= 10000 ? '#2ecc71' : '#a855f7';
+                    const pvpBorderColor = pvpVal >= 50000 ? '#a855f7' : pvpVal >= 40000 ? '#ef4444' : pvpVal >= 30000 ? '#f39c12' : pvpVal >= 20000 ? '#3498db' : pvpVal >= 10000 ? '#2ecc71' : '#a855f7';
+
                     return `
-                                <div class="item-score-card" style="background:linear-gradient(135deg, rgba(168,85,247,0.08), rgba(0,0,0,0)); border-color:${pvpIsEmpty ? 'rgba(255,255,255,0.08)' : 'rgba(168,85,247,0.4)'}; border-left-color:${pvpIsEmpty ? '#444' : '#a855f7'};">
+                                <div class="item-score-card" style="background:linear-gradient(135deg, rgba(168,85,247,0.08), rgba(0,0,0,0)); border-color:${pvpIsEmpty ? 'rgba(255,255,255,0.08)' : pvpBorderColor + '44'}; border-left-color:${pvpIsEmpty ? '#444' : pvpBorderColor};">
                                     <div class="score-header"><span class="score-icon">⚔️</span> PVP 裝分</div>
-                                    <div class="score-value-container"><div class="score-value pvp-score" style="color:${pvpIsEmpty ? '#555' : '#a855f7'}; text-shadow:${pvpIsEmpty ? 'none' : '0 0 10px #a855f766'}; font-size:${pvpIsEmpty ? '14px' : 'inherit'}; font-style:${pvpIsEmpty ? 'italic' : 'normal'}">${pvpIsEmpty ? '尚未有紀錄資料' : pvpVal.toLocaleString()}</div></div>
+                                    <div class="score-value-container"><div class="score-value pvp-score" style="color:${pvpIsEmpty ? '#555' : pvpColor}; text-shadow:${pvpIsEmpty ? 'none' : '0 0 10px ' + pvpColor + '66'}; font-size:${pvpIsEmpty ? '14px' : 'inherit'}; font-style:${pvpIsEmpty ? 'italic' : 'normal'}">${pvpIsEmpty ? '尚未有紀錄資料' : pvpVal.toLocaleString()}</div></div>
                                 </div>`;
                 })() : ''}
                             </div>
@@ -2974,16 +3001,27 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                 <div class="tooltip-section">
                     <div class="tooltip-section-title">主要能力值</div>
                     ${(d.mainStats).map(s => {
-                const extraVal = s.extra && s.extra !== '0' ? String(s.extra).replace('+', '') : null;
+                const extraVal = (s.extra && parseFloat(s.extra) !== 0) ? String(s.extra).replace('+', '') : null;
                 const minVal = s.minValue ? parseFloat(s.minValue) : null;
+                const baseValNum = parseFloat(s.value) || 0;
                 const baseDisplay = (minVal && minVal > 0)
                     ? `<span class="val-base">${minVal}</span><span style="color:#555;"> ~ </span><span class="val-base">${s.value}</span>`
                     : `<span class="val-base">${s.value}</span>`;
+
+                if (baseValNum === 0 && !minVal && extraVal) {
+                    return `<div class="stat-row">
+                                <span class="stat-label ${s.exceed ? 'val-exceed' : ''}">${s.name}</span>
+                                <span class="stat-value">
+                                    <span class="${s.exceed ? 'val-exceed' : 'val-enchant'}">+${extraVal}</span>
+                                </span>
+                            </div>`;
+                }
+
                 return `<div class="stat-row">
-                            <span class="stat-label">${s.name}</span>
+                            <span class="stat-label ${s.exceed ? 'val-exceed' : ''}">${s.name}</span>
                             <span class="stat-value">
                                 ${baseDisplay}
-                                ${extraVal ? `<span class="val-enchant"> (+${extraVal})</span>` : ''}
+                                ${extraVal ? `<span class="${s.exceed ? 'val-exceed' : 'val-enchant'}"> (+${extraVal})</span>` : ''}
                             </span>
                         </div>`;
             }).join('')}
@@ -2995,8 +3033,8 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                 <div class="tooltip-section">
                     <div class="tooltip-section-title">隨機能力值</div>
                     ${(d.subStats).map(s => `<div class="stat-row">
-                        <span class="stat-label">${s.name}</span>
-                        <span class="stat-value bonus">+${s.value}</span>
+                        <span class="stat-label ${s.exceed ? 'val-exceed' : ''}">${s.name}</span>
+                        <span class="stat-value bonus ${s.exceed ? 'val-exceed' : ''}">+${s.value}</span>
                     </div>`).join('')}
                 </div>` : '';
 
@@ -3034,16 +3072,14 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
             const sbText = d.soulBindRate !== undefined
                 ? `<span style="color:#8b949e; font-size:11px; margin-left:auto;">靈魂 ${d.soulBindRate}%</span>` : '';
 
+            // 使用 getEquipmentRarityInfo 統一判斷品階（包含名稱關鍵字修正） - 沿用上方 2981 行已宣告過的 rarityInfo
+            const rarityKeyToCssClass = { 'mythic': 'myth', 'legendary': 'unique', 'epic': 'legend', 'special': 'special', 'rare': 'rare', 'common': 'common' };
+            const detailRarityClass = rarityInfo ? (rarityKeyToCssClass[rarityInfo.rarityKey] || 'common') : 'common';
+            // 完整分頁頂部邊框線色直接取自 rarityInfo.color
+            const detailBorderColor = rarityInfo ? rarityInfo.color : '#555';
+
             let cardHtml = `
-            <div class="equip-tooltip-card tooltip-rarity-${(() => {
-                    const g = (d.grade || originalItem.grade || '').toLowerCase();
-                    if (g.includes('myth') || g.includes('ancient') || g.includes('神話') || g.includes('古代')) return 'myth';
-                    if (g.includes('unique') || g.includes('唯一') || g.includes('獨特')) return 'unique';
-                    if (g.includes('special') || g.includes('特殊')) return 'special';
-                    if (g.includes('legend') || g.includes('傳說') || g.includes('epic') || g.includes('史詩')) return 'legend';
-                    if (g.includes('rare') || g.includes('稀有')) return 'rare';
-                    return 'common';
-                })()}" onclick="window.handleSlotClick(event, ${slot})" style="cursor:pointer;">
+            <div class="equip-tooltip-card tooltip-rarity-${detailRarityClass}" onclick="window.handleSlotClick(event, ${slot})" style="cursor:pointer; border-top-color: ${detailBorderColor};">
                 <div class="tooltip-header">
                     <img class="tooltip-item-icon" src="${finalIcon}" onerror="this.src='https://questlog.gg/assets/Game/UI/Resource/Texture/Common/Icon/Icon_Default.png'">
                     <div class="tooltip-item-info">
@@ -3061,9 +3097,11 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                 ${godStoneSectionHtml}
             </div>`;
 
-            let gradeNameMap = { 'Myth': '神話', 'Unique': '唯一', 'Legend': '傳說', 'Epic': '史詩', 'Rare': '稀有', 'Ancient': '古代' };
+            let gradeNameMap = { 'Myth': '神話', 'Unique': '唯一', 'Legend': '傳說', 'Epic': '史詩', 'Rare': '稀有', 'Ancient': '古代', 'myth': '神話', 'unique': '唯一', 'legend': '傳說', 'epic': '史詩', 'rare': '稀有', 'ancient': '古代', 'special': '特殊', 'common': '普通' };
             let rawGrade = d.gradeName || originalItem.gradeName || d.grade || originalItem.grade || '';
-            let locGrade = gradeNameMap[rawGrade] || rawGrade || '特殊';
+            // 數字 grade 轉換
+            const gradeNumMap = { 51: '神話', 41: '唯一', 31: '傳說', 21: '稀有', 11: '普通' };
+            let locGrade = gradeNumMap[parseInt(rawGrade)] || gradeNameMap[rawGrade] || rawGrade || '特殊';
             let cat = d.category || originalItem.category || '';
             let iLv = originalItem.itemLevel || d.itemLevel || 0;
             let elv = i.enchantLevel || 0;
@@ -3076,10 +3114,11 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
 
             // 1. 左邊：隨機屬性 (白色) + 技能 (白色)
             (d.subStats || []).forEach(s => {
+                const excClass = s.exceed ? 'val-exceed' : '';
                 statsLeftHtml += `
                     <div class="simple-stat-row random">
-                        <span class="simple-stat-label">${s.name}</span>
-                        <span class="simple-stat-value">+${s.value}</span>
+                        <span class="simple-stat-label ${excClass}">${s.name}</span>
+                        <span class="simple-stat-value ${excClass}">+${s.value}</span>
                     </div>`;
             });
             // 加上裝備內建技能
@@ -6147,11 +6186,11 @@ window.renderLayoutTab = function (json) {
             <div class="ranking-summary-box" style="width: 100%; margin-top: auto; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05);">
                 <div class="ranking-item" style="border:none; padding: 5px 0;">
                     <span class="label">PVE</span>
-                    <span class="value" style="font-family: monospace; font-size: 16px; color: ${pveScore >= 50000 ? '#a855f7' : pveScore >= 40000 ? '#ef4444' : pveScore >= 30000 ? '#ffd700' : '#f8f9fa'}; text-shadow: 0 0 8px ${pveScore >= 50000 ? '#a855f755' : pveScore >= 40000 ? '#ef444455' : pveScore >= 30000 ? '#ffd70055' : 'none'}; font-weight: ${pveScore >= 30000 ? '900' : '400'};">${Math.floor(pveScore).toLocaleString()}</span>
+                    <span class="value" style="font-family: monospace; font-size: 16px; color: ${pveScore >= 50000 ? '#a855f7' : pveScore >= 40000 ? '#ef4444' : pveScore >= 30000 ? '#ffd700' : pveScore >= 20000 ? '#3498db' : pveScore >= 10000 ? '#2ecc71' : '#f8f9fa'}; text-shadow: 0 0 8px ${pveScore >= 30000 ? (pveScore >= 50000 ? '#a855f755' : pveScore >= 40000 ? '#ef444455' : '#ffd70055') : (pveScore >= 20000 ? '#3498db55' : (pveScore >= 10000 ? '#2ecc7155' : 'none'))}; font-weight: ${pveScore >= 10000 ? '900' : '400'};">${Math.floor(pveScore).toLocaleString()}</span>
                 </div>
                 <div class="ranking-item" style="border:none; padding: 5px 0;">
                     <span class="label">PVP</span>
-                    <span class="value" style="font-family: monospace; font-size: ${pvpScore > 0 ? '16px' : '12px'}; color: ${pvpScore > 0 ? '#a855f7' : '#555'}; text-shadow: ${pvpScore > 0 ? '0 0 8px #a855f755' : 'none'}; font-weight: ${pvpScore > 0 ? '900' : '400'}; font-style: ${pvpScore > 0 ? 'normal' : 'italic'}">${pvpScore > 0 ? Math.floor(pvpScore).toLocaleString() : '尚未有紀錄資料'}</span>
+                    <span class="value" style="font-family: monospace; font-size: ${pvpScore > 0 ? '16px' : '12px'}; color: ${pvpScore >= 50000 ? '#a855f7' : pvpScore >= 40000 ? '#ef4444' : pvpScore >= 30000 ? '#ffd700' : pvpScore >= 20000 ? '#3498db' : pvpScore >= 10000 ? '#2ecc71' : (pvpScore > 0 ? '#a855f7' : '#555')}; text-shadow: ${pvpScore >= 10000 ? '0 0 8px currentColor' : 'none'}; font-weight: ${pvpScore >= 10000 ? '900' : '400'}; font-style: ${pvpScore > 0 ? 'normal' : 'italic'}">${pvpScore > 0 ? Math.floor(pvpScore).toLocaleString() : '尚未有紀錄資料'}</span>
                 </div>
             </div>
         `;
@@ -6257,13 +6296,10 @@ window.renderLayoutTab = function (json) {
                 ? `<div class="slot-exceed">+${exceedLv}</div>`
                 : "";
 
-            const rawG = (d.grade || item.grade || 'common').toLowerCase();
-            let rc = 'common';
-            if (rawG.includes('myth') || rawG.includes('神話') || rawG.includes('ancient') || rawG.includes('古代')) rc = 'myth';
-            else if (rawG.includes('unique') || rawG.includes('唯一') || rawG.includes('獨特')) rc = 'unique';
-            else if (rawG.includes('special') || rawG.includes('特殊')) rc = 'special';
-            else if (rawG.includes('legend') || rawG.includes('傳說') || rawG.includes('epic') || rc.includes('史詩')) rc = 'legend';
-            else if (rawG.includes('rare') || rawG.includes('稀有')) rc = 'rare';
+            // 使用 getEquipmentRarityInfo 統一判斷品階（包含名稱關鍵字修正）
+            const slotRarityKeyMap = { 'mythic': 'myth', 'legendary': 'unique', 'epic': 'legend', 'special': 'special', 'rare': 'rare', 'common': 'common' };
+            const slotRarityInfo = (typeof getEquipmentRarityInfo === 'function') ? getEquipmentRarityInfo(item) : null;
+            let rc = slotRarityInfo ? (slotRarityKeyMap[slotRarityInfo.rarityKey] || 'common') : 'common';
 
             // 有突破加上 slot-item-exceeded class，套用紅色外框光暈
             return `<div class="slot-item slot-rarity-${rc}${hasExceed ? ' slot-item-exceeded' : ''}" onclick="window.handleSlotClick(event, ${slotId})" onmouseenter="window.handleSlotHover(event, ${slotId})" onmouseleave="window.handleSlotLeave()">
@@ -6319,17 +6355,20 @@ window.renderLayoutTab = function (json) {
 
 
 // --- 📸 截圖保存功能 ---
-window.downloadEquipScreenshot = function () {
+window.downloadEquipScreenshot = function (mode = 'simple') {
     const tabArea = document.getElementById('integrated-tab-content-area');
     if (!tabArea || !window.html2canvas) {
         alert("截圖組件尚未載入，請稍候再試。");
         return;
     }
 
-    const btn = document.getElementById('btn-equip-screenshot');
-    const originalText = btn.innerHTML;
-    btn.innerHTML = "⏳ 正在製作截圖...";
-    btn.style.pointerEvents = "none";
+    const btnId = mode === 'simple' ? 'btn-equip-screenshot-simple' : 'btn-equip-screenshot-detail';
+    const btn = document.getElementById(btnId) || document.getElementById('btn-equip-screenshot');
+    const originalText = btn ? btn.innerHTML : "📸 一鍵截圖";
+    if (btn) {
+        btn.innerHTML = "⏳ 正在製作截圖...";
+        btn.style.pointerEvents = "none";
+    }
 
     const charName = document.getElementById('stat-header-char-id')?.innerText || 'AionPlayer';
     const activeTab = document.querySelector('.integrated-tabs .stat-tab-btn.active')?.innerText || '裝備資料';
@@ -6358,11 +6397,23 @@ window.downloadEquipScreenshot = function () {
                     clonedArea.style.background = '#0f172a';
                     clonedArea.style.display = 'block';
 
+                    const screenshotBtn1 = clonedDoc.getElementById('btn-equip-screenshot-simple');
+                    if (screenshotBtn1) screenshotBtn1.style.display = 'none';
+                    const screenshotBtn2 = clonedDoc.getElementById('btn-equip-screenshot-detail');
+                    if (screenshotBtn2) screenshotBtn2.style.display = 'none';
                     const screenshotBtn = clonedDoc.getElementById('btn-equip-screenshot');
                     if (screenshotBtn) screenshotBtn.style.display = 'none';
 
                     const simpleTab = clonedDoc.getElementById('equip-tab-simple');
-                    if (simpleTab) simpleTab.style.display = 'block';
+                    const detailTab = clonedDoc.getElementById('equip-tab-detail');
+
+                    if (mode === 'simple') {
+                        if (simpleTab) simpleTab.style.display = 'block';
+                        if (detailTab) detailTab.style.display = 'none';
+                    } else if (mode === 'detail') {
+                        if (simpleTab) simpleTab.style.display = 'none';
+                        if (detailTab) detailTab.style.display = 'block';
+                    }
 
                     const banner = clonedDoc.createElement('div');
                     const json = window.__LAST_DATA_JSON__ || {};
@@ -6426,14 +6477,18 @@ window.downloadEquipScreenshot = function () {
         }).then(canvas => {
             const fileName = `Aion2_${charName}_${activeTab}_${new Date().toLocaleDateString()}.jpg`;
             window.showScreenshotResult(canvas, fileName);
-            btn.innerHTML = originalText;
-            btn.style.pointerEvents = "auto";
-        }).catch(err => {
-            console.error("Screenshot failed:", err);
-            btn.innerHTML = "❌ 截圖失敗";
-            setTimeout(() => {
+            if (btn) {
                 btn.innerHTML = originalText;
                 btn.style.pointerEvents = "auto";
+            }
+        }).catch(err => {
+            console.error("Screenshot failed:", err);
+            if (btn) btn.innerHTML = "❌ 截圖失敗";
+            setTimeout(() => {
+                if (btn) {
+                    btn.innerHTML = originalText;
+                    btn.style.pointerEvents = "auto";
+                }
             }, 2000);
             const msg = (err && err.message) ? err.message : err;
             alert("截圖失敗: " + msg + "\\n(可能是頁面過大或圖片載入問題)");
@@ -6611,15 +6666,13 @@ window.showEquipTooltip = function (slotId, mode = 'modal', event = null) {
     const name = d.name || '未知裝備';
     const icon = getCorrectIcon(item.icon || d.icon);
 
-    // 判斷品階
-    const rawGrade = (d.grade || item.grade || 'common').toLowerCase();
-    let rarityClass = 'common';
-    let gradeName = '一般';
-    if (rawGrade.includes('myth') || rawGrade.includes('神話') || rawGrade.includes('ancient') || rawGrade.includes('古代')) { rarityClass = 'myth'; gradeName = '神話'; }
-    else if (rawGrade.includes('unique') || rawGrade.includes('唯一') || rawGrade.includes('獨特')) { rarityClass = 'unique'; gradeName = '獨特'; }
-    else if (rawGrade.includes('special') || rawGrade.includes('特殊')) { rarityClass = 'special'; gradeName = '特殊'; }
-    else if (rawGrade.includes('legend') || rawGrade.includes('傳說') || rawGrade.includes('epic') || rawGrade.includes('史詩')) { rarityClass = 'legend'; gradeName = '傳說'; }
-    else if (rawGrade.includes('rare') || rawGrade.includes('稀有')) { rarityClass = 'rare'; gradeName = '稀有'; }
+    // 判斷品階 - 使用 getEquipmentRarityInfo 統一判斷（包含名稱關鍵字修正）
+    // 判斷品階 - 使用 getEquipmentRarityInfo 統一判斷（包含名稱關鍵字修正）
+    const tooltipRarityKeyMap = { 'mythic': 'myth', 'legendary': 'unique', 'epic': 'legend', 'special': 'special', 'rare': 'rare', 'common': 'common' };
+    const tooltipRarityInfo = (typeof getEquipmentRarityInfo === 'function') ? getEquipmentRarityInfo(item) : null;
+    let rarityClass = tooltipRarityInfo ? (tooltipRarityKeyMap[tooltipRarityInfo.rarityKey] || 'common') : 'common';
+    let gradeName = tooltipRarityInfo ? tooltipRarityInfo.name : '一般';
+    let gradeColor = tooltipRarityInfo ? tooltipRarityInfo.color : '#ffffff';
 
     let mainStatsHtml = '';
     if (d.mainStats && d.mainStats.length > 0) {
@@ -6627,7 +6680,7 @@ window.showEquipTooltip = function (slotId, mode = 'modal', event = null) {
         <div class="tooltip-section">
         <div class="tooltip-section-title">主要能力值</div>
                 ${d.mainStats.map(s => {
-            const extraVal = s.extra && s.extra !== '0' ? s.extra.toString().replace('+', '') : null;
+            const extraVal = (s.extra && parseFloat(s.extra) !== 0) ? s.extra.toString().replace('+', '') : null;
             const baseValNum = parseFloat(s.value) || 0;
             const minVal = s.minValue ? parseFloat(s.minValue) : null;
 
@@ -6639,7 +6692,7 @@ window.showEquipTooltip = function (slotId, mode = 'modal', event = null) {
             if (baseValNum === 0 && !minVal && extraVal) {
                 return `
                             <div class="stat-row">
-                                <span class="stat-label">${s.name}</span>
+                                <span class="stat-label ${s.exceed ? 'val-exceed' : ''}">${s.name}</span>
                                 <span class="stat-value">
                                     <span class="${s.exceed ? 'val-exceed' : 'val-enchant'}">+${extraVal}</span>
                                 </span>
@@ -6649,7 +6702,7 @@ window.showEquipTooltip = function (slotId, mode = 'modal', event = null) {
 
             return `
                         <div class="stat-row">
-                            <span class="stat-label">${s.name}</span>
+                            <span class="stat-label ${s.exceed ? 'val-exceed' : ''}">${s.name}</span>
                             <span class="stat-value">
                                 ${baseDisplay}
                                 ${extraVal ? `<span class="${s.exceed ? 'val-exceed' : 'val-enchant'}"> (+${extraVal})</span>` : ''}
