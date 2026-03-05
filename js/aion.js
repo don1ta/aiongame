@@ -3086,6 +3086,7 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                         <div class="tooltip-item-name">${d.name}</div>
                         <div style="display:flex; align-items:center; gap:6px; margin-top:4px;">
                             <span style="font-size:13px; color:#8b949e;">+${i.enchantLevel}</span>
+                            ${d.level ? `<span style="font-size:12px; color:#bdc3c7; background:rgba(255,255,255,0.1); padding:1px 4px; border-radius:3px; margin-left:4px;">Lv.${d.level}${d.levelValue ? ` (+${d.levelValue})` : ''}</span>` : ''}
                             ${exceedText}
                             ${sbText}
                         </div>
@@ -3145,6 +3146,7 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                 <div class="simple-card-header">
                     <div class="simple-card-title">
                         <span class="simple-card-name">${d.name}</span>
+                        ${d.level ? `<span style="font-size:11px; color:#8b949e; margin-left:5px;">Lv.${d.level}${d.levelValue ? ` (+${d.levelValue})` : ''}</span>` : ''}
                         <span class="simple-card-enchant"> (+${elv})</span>
                         ${exceedLv > 0 ? `<span class="simple-card-breakthrough">突破+${exceedLv}</span>` : ""}
                     </div>
@@ -3241,6 +3243,24 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                         minBaseAtkLinked = curMin;
                         bestWeaponName = d.name;
                     }
+                }
+            });
+
+            // 3. 處理魔石屬性 (magicStoneStat)
+            (d.magicStoneStat || []).forEach(ms => {
+                const msName = ms.name;
+                const msValueStr = String(ms.id === 'DamageRatio' ? ms.value : (ms.value || '0')).replace('+', '');
+                const msValue = parseFloat(msValueStr) || 0;
+                if (msValue !== 0) {
+                    const isPerc = msValueStr.includes('%');
+                    const key = normalizeKey(msName, isPerc);
+                    let e = getEntry(key);
+                    e.equipMain += msValue;
+
+                    if (!mainStatAcc[key]) mainStatAcc[key] = { total: 0, base: 0, enchant: 0, exceed: 0, soul: 0, isPerc: isPerc };
+                    mainStatAcc[key].total += msValue;
+                    // 魔石數值計入 base 欄位以顯示在明細中
+                    mainStatAcc[key].base += msValue;
                 }
             });
 
@@ -6798,7 +6818,7 @@ window.showEquipTooltip = function (slotId, mode = 'modal', event = null) {
                 <div class="tooltip-sub-info">
                     <span class="tooltip-grade-label">${gradeName}</span>
                     ${d.categoryName ? `<span>${d.categoryName}</span>` : ''}
-                    ${d.equipLevel ? `<span>Lv.${d.equipLevel}</span>` : ''}
+                    ${d.level ? `<span>Lv.${d.level}${d.levelValue ? ` (+${d.levelValue})` : ''}</span>` : (d.equipLevel ? `<span>Lv.${d.equipLevel}</span>` : '')}
                 </div>
             </div>
         </div>
@@ -6857,25 +6877,249 @@ window.closeEquipTooltip = function (e) {
     }
 };
 
+window.renderStatsTab = function (json) {
+    if (!json) return;
+    const data = json.queryResult ? json.queryResult.data : (json.data ? json.data : json);
+    const container = document.getElementById('equip-tab-stats');
+    if (!data || !container) return;
+
+    // 🛡️ 數據預處理
+    const seenSlots = new Set();
+    const items = (data.itemDetails || []).filter(i => {
+        const slot = parseInt(i.slotPos);
+        if (seenSlots.has(slot) || slot < 1 || slot > 60) return false;
+        seenSlots.add(slot);
+        return true;
+    });
+
+    let totalItemsCount = 0;
+    let totalStrengthScore = 0;
+    let levelGroups = {};
+    let stoneGrades = {};
+    let filledCount = 0;
+    let lowGradeStoneItems = [];
+
+    items.forEach(i => {
+        const d = i.detail || i;
+        const lv = d.level || 0;
+        if (lv > 0) {
+            if (!levelGroups[lv]) levelGroups[lv] = [];
+            levelGroups[lv].push(i);
+            totalItemsCount++;
+            totalStrengthScore += lv;
+        }
+
+        if (d.magicStoneStat) {
+            filledCount += d.magicStoneStat.length;
+            d.magicStoneStat.forEach(ms => {
+                const gradeKey = (ms.grade || 'common').toLowerCase();
+                const gradeNameMap = { 'myth': '神話', 'unique': '唯一', 'legend': '傳說', 'epic': '史詩', 'rare': '稀有', 'common': '一般' };
+                const gradeName = gradeNameMap[gradeKey] || gradeKey;
+
+                if (!stoneGrades[gradeName]) stoneGrades[gradeName] = { count: 0, list: [], gradeKey: gradeKey };
+                stoneGrades[gradeName].count++;
+                stoneGrades[gradeName].list.push({
+                    itemName: d.name,
+                    slotName: d.categoryName || '--',
+                    stoneName: ms.name
+                });
+
+                if (gradeKey === 'common' || gradeKey === 'rare') {
+                    lowGradeStoneItems.push({
+                        itemName: d.name,
+                        itemLevel: d.level || 0,
+                        itemObj: i,
+                        slotName: d.categoryName || '--',
+                        stoneName: ms.name,
+                        gradeName: gradeName,
+                        gradeKey: gradeKey
+                    });
+                }
+            });
+        }
+    });
+
+    // 水分分析
+    const excludedCategories = ['古文石', '腰帶', '護身符', '手鐲'];
+    const filteredGear = items.filter(i => {
+        const d = i.detail || i;
+        const cat = d.categoryName || '';
+        return (d.level || 0) > 0 && !excludedCategories.some(exc => cat.includes(exc));
+    });
+    const bottomByLevel = [...filteredGear].sort((a, b) => (a.detail?.level || 0) - (b.detail?.level || 0)).slice(0, 5);
+    const uniqueLowStoneList = [];
+    const lowStoneSeen = new Set();
+    lowGradeStoneItems.forEach(s => {
+        const key = `${s.slotName}-${s.stoneName}`;
+        if (!lowStoneSeen.has(key)) {
+            uniqueLowStoneList.push(s);
+            lowStoneSeen.add(key);
+        }
+    });
+    const stoneOrder = { 'common': 1, 'rare': 2 };
+    uniqueLowStoneList.sort((a, b) => (stoneOrder[a.gradeKey] || 99) - (stoneOrder[b.gradeKey] || 99));
+    const worstStoneSuggestions = uniqueLowStoneList.slice(0, 5);
+
+    // 子分頁切換
+    window.switchStatsSubTab = function (subTab) {
+        const lvArea = document.getElementById('stats-area-level');
+        const stArea = document.getElementById('stats-area-stone');
+        const btnLv = document.getElementById('stats-btn-lv');
+        const btnSt = document.getElementById('stats-btn-st');
+        if (subTab === 'level') {
+            lvArea.style.display = 'block';
+            stArea.style.display = 'none';
+            btnLv.classList.add('active');
+            btnSt.classList.remove('active');
+        } else {
+            lvArea.style.display = 'none';
+            stArea.style.display = 'block';
+            btnLv.classList.remove('active');
+            btnSt.classList.add('active');
+        }
+    };
+
+    let html = `
+        <div class="stats-outer-wrapper" style="padding: 10px; height: 100%; display: flex; flex-direction: column; overflow: hidden;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; flex: 1; min-height: 0;">
+                <!-- 左側：詳情分頁 -->
+                <div class="stats-card" style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; display: flex; flex-direction: column; overflow: hidden;">
+                    <div style="display: flex; background: rgba(255,255,255,0.02); border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <button id="stats-btn-lv" class="stats-sub-tab-btn active" onclick="switchStatsSubTab('level')" style="flex:1; padding: 12px; border:none; background:none; color:#8b949e; cursor:pointer; font-size:14px; font-weight:800; border-right:1px solid rgba(255,255,255,0.05); transition:0.3s;">🛡️ 等級組</button>
+                        <button id="stats-btn-st" class="stats-sub-tab-btn" onclick="switchStatsSubTab('stone')" style="flex:1; padding: 12px; border:none; background:none; color:#8b949e; cursor:pointer; font-size:14px; font-weight:800; transition:0.3s;">💎 磨石分布</button>
+                    </div>
+
+                    <!-- 數據概覽 (移至分頁下方) -->
+                    <div style="padding: 10px 15px; display: flex; gap: 12px; background: rgba(255,255,255,0.02); border-bottom: 1px solid rgba(255,255,255,0.05); flex-wrap: wrap;">
+                        <span style="font-size: 16px; color: #3498db;">裝備數量：<b style="color:#fff;">${totalItemsCount}</b></span>
+                        <span style="font-size: 16px; color: #2ecc71;">鑲嵌數量：<b style="color:#fff;">${filledCount}</b></span>
+                        <span style="font-size: 16px; color: #ffa500;">裝備分數：<b style="color:#fff;">${totalStrengthScore}</b></span>
+                    </div>
+                    
+                    <div style="padding: 8px 15px; font-size: 12px; color: #777; background: rgba(0,0,0,0.1); border-bottom: 1px solid rgba(255,255,255,0.03); font-style: italic;">
+                        ※ 等級最低前五名不列入：古文石、腰帶、護身符、手鐲。
+                    </div>
+
+                    <style>
+                        .stats-sub-tab-btn.active { color: var(--gold-bright) !important; background: rgba(255,215,0,0.05); box-shadow: inset 0 -2px 0 var(--gold-bright); }
+                    </style>
+                    <div style="flex: 1; overflow-y: auto; padding: 15px; scrollbar-width: thin;">
+                        <div id="stats-area-level">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                                ${Object.keys(levelGroups).sort((a, b) => b - a).map(lv => {
+        const count = levelGroups[lv].length;
+        return `
+                                        <details style="background: rgba(255,255,255,0.02); border-radius: 8px; border: 1px solid rgba(255,255,255,0.04); overflow:hidden;">
+                                            <summary style="padding: 12px; cursor:pointer; font-size:14px; color:#fff; display:flex; justify-content:space-between; list-style:none;">
+                                                <span style="font-weight:800;">LV.${lv}</span>
+                                                <span style="color:#8b949e;">${count}件</span>
+                                            </summary>
+                                            <div style="padding: 10px; font-size: 12px; color:#999; border-top: 1px solid rgba(255,255,255,0.02); background:rgba(0,0,0,0.2);">
+                                                ${levelGroups[lv].map(i => `<div style="margin-bottom:2px;">[${(i.detail || i).categoryName || '--'}] ${(i.detail || i).name}</div>`).join('')}
+                                            </div>
+                                        </details>
+                                    `;
+    }).join('')}
+                            </div>
+                        </div>
+                        <div id="stats-area-stone" style="display:none;">
+                            <div style="display:flex; flex-direction:column; gap:8px;">
+                                ${Object.entries(stoneGrades).sort((a, b) => {
+        const o = { '神話': 6, '唯一': 5, '傳說': 4, '史詩': 3, '稀有': 2, '一般': 1 };
+        return (o[b[0]] || 0) - (o[a[0]] || 0);
+    }).map(([grade, d]) => {
+        const color = typeof getGradeColor === 'function' ? getGradeColor(d.gradeKey) : '#fff';
+        return `
+                                        <details style="background: rgba(255,255,255,0.02); border-radius:8px; border:1px solid rgba(255,255,255,0.04); overflow:hidden;">
+                                            <summary style="padding: 12px; cursor:pointer; font-size:14px; display:flex; justify-content:space-between; list-style:none;">
+                                                <span style="color:${color}; font-weight:800;">${grade}</span>
+                                                <span style="color:#8b949e;">${d.count} 顆</span>
+                                            </summary>
+                                            <div style="padding: 10px; font-size: 12px; color:#ccc; border-top: 1px solid rgba(255,255,255,0.02); background:rgba(0,0,0,0.2);">
+                                                ${d.list.map(s => `<div style="margin-bottom:3px;">[${s.slotName}] ${s.itemName} - <span style="color:${color}">${s.stoneName}</span></div>`).join('')}
+                                            </div>
+                                        </details>
+                                    `;
+    }).join('')}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 右側：水分名單 -->
+                <div class="stats-card" style="background: rgba(255,0,0,0.02); border: 1px solid rgba(255,60,60,0.15); border-radius: 12px; padding: 20px; display: flex; flex-direction: column;">
+                    <h4 style="color: #ff6b6b; margin: 0 0 20px 0; font-size: 16px; font-weight: 800; display:flex; align-items:center; gap:8px;">
+                        <span style="font-size:20px;">⚠️</span> 水分名單
+                    </h4>
+                    <div style="flex:1; display:flex; flex-direction:column; gap:15px; overflow-y:auto; scrollbar-width:thin;">
+                        <div style="background: rgba(0,0,0,0.2); border-radius: 10px; padding: 15px; border:1px solid rgba(255,255,255,0.03);">
+                            <div style="color: #ff6b6b; font-size: 13px; font-weight: 800; border-bottom: 1px solid rgba(255,107,107,0.2); padding-bottom: 8px; margin-bottom: 10px; display:flex; justify-content:space-between; align-items:center;">
+                                <span>📉 等級最低前五名</span>
+                            </div>
+                            <div style="display: flex; flex-direction: column; gap: 8px;">
+                                ${bottomByLevel.map(i => {
+        const d = i.detail || i;
+        const r = typeof getEquipmentRarityInfo === 'function' ? getEquipmentRarityInfo(i) : { color: '#fff' };
+        return `<div style="display:flex; justify-content:space-between; font-size:13px; align-items:center;">
+                                        <span style="color:#8b949e; width:45px;">LV.${d.level}</span>
+                                        <span style="color:${r.color}; font-weight:800; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${d.name}</span>
+                                        <span style="color:#555; font-size:11px; margin-left:6px;">[${d.categoryName}]</span>
+                                    </div>`;
+    }).join('') || '<div style="color:#555; font-size:13px; font-style:italic; text-align:center;">暫無符合條件裝備</div>'}
+                            </div>
+                        </div>
+                        <div style="background: rgba(0,0,0,0.2); border-radius: 10px; padding: 15px; border:1px solid rgba(255,255,255,0.03);">
+                            <div style="color: #ff6b6b; font-size: 13px; font-weight: 800; border-bottom: 1px solid rgba(255,107,107,0.2); padding-bottom: 8px; margin-bottom: 10px;">
+                                📉 低品階磨石 (優先洗掉)
+                            </div>
+                            <div style="display: flex; flex-direction: column; gap: 6px;">
+                                ${worstStoneSuggestions.map(s => {
+        const stoneColor = typeof getGradeColor === 'function' ? getGradeColor(s.gradeKey) : '#fff';
+        const itemRInfo = typeof getEquipmentRarityInfo === 'function' ? getEquipmentRarityInfo(s.itemObj) : { color: '#fff' };
+        return `<div style="display:flex; justify-content:space-between; font-size:13px; align-items:center;">
+                                        <div style="display:flex; align-items:center; flex:1; overflow:hidden;">
+                                            <span style="color:#8b949e; width:45px; flex-shrink:0;">LV.${s.itemLevel}</span>
+                                            <span style="color:${itemRInfo.color}; font-weight:800; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-right:8px;">${s.itemName}</span>
+                                            <span style="color:${stoneColor}; font-weight:800; flex-shrink:0; margin-right:8px;">${s.gradeName}</span>
+                                            <span style="color:#ccc; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${s.stoneName}</span>
+                                        </div>
+                                        <span style="color:#555; font-size:11px; margin-left:6px; flex-shrink:0;">[${s.slotName}]</span>
+                                    </div>`;
+    }).join('') || '<div style="color:#555; font-size:13px; font-style:italic; text-align:center;">全身皆為高級磨石</div>'}
+                            </div>
+                        </div>
+                    </div>
+                   
+                </div>
+            </div>
+        </div>
+    `;
+    container.innerHTML = html;
+};
+
 window.switchEquipTab = function (tab) {
     const layoutTab = document.getElementById('equip-tab-layout');
     const detailTab = document.getElementById('equip-tab-detail');
     const simpleTab = document.getElementById('equip-tab-simple');
+    const statsTab = document.getElementById('equip-tab-stats');
 
     const btnLayout = document.getElementById('tab-btn-equip-layout');
     const btnDetail = document.getElementById('tab-btn-equip-detail');
     const btnSimple = document.getElementById('tab-btn-equip-simple');
+    const btnStats = document.getElementById('tab-btn-equip-stats');
 
-    if (!layoutTab || !detailTab || !simpleTab) return;
+    if (!layoutTab || !detailTab || !simpleTab || !statsTab) return;
 
     // Hide all tab contents
     layoutTab.style.display = 'none';
     detailTab.style.display = 'none';
     simpleTab.style.display = 'none';
+    statsTab.style.display = 'none';
 
     if (btnLayout) btnLayout.classList.remove('active');
     if (btnDetail) btnDetail.classList.remove('active');
     if (btnSimple) btnSimple.classList.remove('active');
+    if (btnStats) btnStats.classList.remove('active');
 
     if (tab === 'detail') {
         detailTab.style.display = 'block';
@@ -6886,6 +7130,12 @@ window.switchEquipTab = function (tab) {
         // Render layout if not already rendered or always for fresh data
         if (window.__LAST_DATA_JSON__ && typeof window.renderLayoutTab === 'function') {
             window.renderLayoutTab(window.__LAST_DATA_JSON__);
+        }
+    } else if (tab === 'stats') {
+        statsTab.style.display = 'block';
+        if (btnStats) btnStats.classList.add('active');
+        if (window.__LAST_DATA_JSON__ && typeof window.renderStatsTab === 'function') {
+            window.renderStatsTab(window.__LAST_DATA_JSON__);
         }
     } else {
         simpleTab.style.display = 'block';
