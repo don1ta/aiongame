@@ -278,7 +278,7 @@ const WING_DATABASE = {
     '惡夢翅膀': {
         grade: 'unique',
         icon: 'https://questlog.gg/assets/Game/UI/Resource/Texture/Item/Wing/Icon_WingA_005.Icon_WingA_005.png',
-        equip: { '額外攻擊力': 60, '傷害增幅': 0.035, '暴擊': 35, '首領傷害增幅': 0.035 },
+        equip: { '額外攻擊力': 60, '額外命中': 35, '暴擊': 35, '首領傷害增幅': 0.035 },
         hold: { '飛行力': 200, '首領攻擊力': 30, '首領防禦力': 250 }
     },
     '鬥士翅膀': {
@@ -1091,10 +1091,18 @@ function initGainControls() {
             let totalStats = {};
             saved.forEach(wName => {
                 const w = WING_DATABASE[wName];
-                if (w && w.hold) {
-                    for (let s in w.hold) {
-                        if (!totalStats[s]) totalStats[s] = 0;
-                        totalStats[s] += w.hold[s];
+                if (w) {
+                    if (w.hold) {
+                        for (let s in w.hold) {
+                            if (!totalStats[s]) totalStats[s] = 0;
+                            totalStats[s] += w.hold[s];
+                        }
+                    }
+                    if (w.equip) {
+                        for (let s in w.equip) {
+                            if (!totalStats[s]) totalStats[s] = 0;
+                            totalStats[s] += w.equip[s];
+                        }
                     }
                 }
             });
@@ -1299,7 +1307,7 @@ function initGainControls() {
                                     ${optionsHtml}
                                 </div>
                             </div>
-                            <span style="font-size:11px; color:#58a6ff;">${wingItem.selectedWings.length > 0 ? wingItem.selectedWings.map(wName => { const w = WING_DATABASE[wName]; const c = w ? getWingGradeColor(w.grade) : '#ccc'; return `<span style="color:${c}">${wName}</span>`; }).join('<span style="color:#8b949e;">、</span>') : '尚未選擇'}</span>
+                            <span id="selected-wings-display" style="font-size:11px; color:#58a6ff;">${wingItem.selectedWings.length > 0 ? wingItem.selectedWings.map(wName => { const w = WING_DATABASE[wName]; const c = w ? getWingGradeColor(w.grade) : '#ccc'; return `<span style="color:${c}">${wName}</span>`; }).join('<span style="color:#8b949e;">、</span>') : '尚未選擇'}</span>
                         </div>
                     `;
         } else {
@@ -1400,10 +1408,18 @@ window.toggleWingItem = function (wingName, isAdded) {
         let totalStats = {};
         item.selectedWings.forEach(wName => {
             const w = WING_DATABASE[wName];
-            if (w && w.hold) {
-                for (let s in w.hold) {
-                    if (!totalStats[s]) totalStats[s] = 0;
-                    totalStats[s] += w.hold[s];
+            if (w) {
+                if (w.hold) {
+                    for (let s in w.hold) {
+                        if (!totalStats[s]) totalStats[s] = 0;
+                        totalStats[s] += w.hold[s];
+                    }
+                }
+                if (w.equip) {
+                    for (let s in w.equip) {
+                        if (!totalStats[s]) totalStats[s] = 0;
+                        totalStats[s] += w.equip[s];
+                    }
                 }
             }
         });
@@ -1481,20 +1497,16 @@ window.toggleWingItem = function (wingName, isAdded) {
             finalBtn.innerHTML = `選擇翅膀 (${item.selectedWings.length}) ▼`;
         }
         // Update selected wings display text in wing-selection-row
-        const wingRow = document.getElementById('wing-selection-row');
-        if (wingRow) {
-            const spans = wingRow.querySelectorAll('span');
-            const lastSpan = spans[spans.length - 1];
-            if (lastSpan) {
-                if (item.selectedWings.length > 0) {
-                    lastSpan.innerHTML = item.selectedWings.map(wName => {
-                        const w = WING_DATABASE[wName];
-                        const c = w ? getWingGradeColor(w.grade) : '#ccc';
-                        return `<span style="color:${c}">${wName}</span>`;
-                    }).join('<span style="color:#8b949e;">、</span>');
-                } else {
-                    lastSpan.textContent = '尚未選擇';
-                }
+        const wingDisplaySpan = document.getElementById('selected-wings-display');
+        if (wingDisplaySpan) {
+            if (item.selectedWings.length > 0) {
+                wingDisplaySpan.innerHTML = item.selectedWings.map(wName => {
+                    const w = WING_DATABASE[wName];
+                    const c = w ? getWingGradeColor(w.grade) : '#ccc';
+                    return `<span style="color:${c}">${wName}</span>`;
+                }).join('<span style="color:#8b949e;">、</span>');
+            } else {
+                wingDisplaySpan.textContent = '尚未選擇';
             }
         }
     }
@@ -2797,33 +2809,40 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
     const ownedWings = JSON.parse(localStorage.getItem('ownedWings') || '[]');
     ownedWings.forEach(wingName => {
         const wing = WING_DATABASE[wingName];
-        if (wing && wing.hold) {
-            for (let statName in wing.hold) {
-                let val = wing.hold[statName];
-                let absVal = Math.abs(val);
-                let isDecimal = (absVal > 0 && absVal < 1);
+        if (wing) {
+            // Helper to process both hold and equip stats
+            const processWingStats = (statsObj, sourceType) => {
+                if (!statsObj) return;
+                for (let statName in statsObj) {
+                    let val = statsObj[statName];
+                    let absVal = Math.abs(val);
+                    let isDecimal = (absVal > 0 && absVal < 1);
 
-                // 根據關鍵字強制視為百分比 (除了小數判定外)
-                const percentKeywords = ['增幅', '增加', '減少', '率', '耐性'];
-                const matchesKeyword = percentKeywords.some(k => statName.includes(k));
+                    // 根據關鍵字強制視為百分比 (除了小數判定外)
+                    const percentKeywords = ['增幅', '增加', '減少', '率', '耐性'];
+                    const matchesKeyword = percentKeywords.some(k => statName.includes(k));
 
-                if (isDecimal) val = val * 100;
+                    if (isDecimal) val = val * 100;
 
-                // 標準化屬性名稱 (不再去除 "額外" 前綴，以便使用者能看到獨立項目)
-                let normName = statName;
+                    // 標準化屬性名稱 (不再去除 "額外" 前綴，以便使用者能看到獨立項目)
+                    let normName = statName;
 
-                // 若是小數轉換而來，或名稱包含百分比關鍵字，則確保名稱有 %
-                if ((isDecimal || matchesKeyword) && !normName.includes('%')) {
-                    normName += '%';
+                    // 若是小數轉換而來，或名稱包含百分比關鍵字，則確保名稱有 %
+                    if ((isDecimal || matchesKeyword) && !normName.includes('%')) {
+                        normName += '%';
+                    }
+
+                    let entry = getEntry(normName);
+                    entry.other += val;
+                    entry.subtotals.wingHold += val;
+
+                    const unit = normName.includes('%') ? '%' : '';
+                    entry.detailGroups.wingHold.push(`[${wingName} ${sourceType}]: +${parseFloat(val.toFixed(2))}${unit}`);
                 }
+            };
 
-                let entry = getEntry(normName);
-                entry.other += val;
-                entry.subtotals.wingHold += val;
-
-                const unit = normName.includes('%') ? '%' : '';
-                entry.detailGroups.wingHold.push(`[${wingName} 持有]: +${parseFloat(val.toFixed(2))}${unit}`);
-            }
+            processWingStats(wing.hold, '持有');
+            processWingStats(wing.equip, '裝備');
         }
     });
 
@@ -3394,19 +3413,37 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
         [];
     const petInsightData = petInsight; // 寵物洞察力數據
     // 嘗試從多個來源獲取烙印技能數據
-    let stigmaList = (data.skill ? data.skill.skillList : []) ||
-        (data.skills ? (Array.isArray(data.skills) ? data.skills : data.skills.skillList) : []) ||
-        data.stigma || data.stigmaList || data.specialSkill || data.abyssSkill || [];
+    const hasItems = (list) => list && (Array.isArray(list) ? list.length > 0 : (typeof list === 'object' ? Object.keys(list).length > 0 : false));
+
+    let stigmaList = [];
+    let pot_stigma1 = data.skill ? (Array.isArray(data.skill) ? data.skill : data.skill.skillList) : null;
+    let pot_stigma2 = data.skills ? (Array.isArray(data.skills) ? data.skills : data.skills.skillList) : null;
+    let pot_stigma3 = data.stigma || data.stigmaList || data.specialSkill || data.abyssSkill || [];
+
+    if (hasItems(pot_stigma1)) stigmaList = pot_stigma1;
+    else if (hasItems(pot_stigma2)) stigmaList = pot_stigma2;
+    else stigmaList = pot_stigma3;
 
 
     // 如果是在 equipment 下
-    if (stigmaList.length === 0 && data.equipment && data.equipment.stigmaList) {
+    if (!hasItems(stigmaList) && data.equipment && data.equipment.stigmaList) {
         stigmaList = data.equipment.stigmaList;
     }
     // 部分 API 可能回傳 object 而非 array
     if (typeof stigmaList === 'object' && !Array.isArray(stigmaList)) {
         stigmaList = Object.values(stigmaList);
     }
+
+    console.log("DEBUG: Original data.skill:", data.skill);
+    console.log("DEBUG: Original data.stigmaList:", data.stigmaList);
+
+    // 如果從全體技能抓來的，要先主動過濾掉非烙印技能
+    if (Array.isArray(stigmaList)) {
+        stigmaList = stigmaList.filter(s => s.category !== 'Active' && s.category !== 'Passive');
+    }
+
+    console.log("DEBUG: Final stigmaList for scoring:", stigmaList);
+
     const skillData = { stigma: stigmaList }; // 技能烙印數據
     const titleData = data.title || {}; // 稱號數據
 
@@ -4812,7 +4849,16 @@ function renderSkills(data, boardSkillMap, cardSkillMap, stats) {
         return false;
     };
 
-    const rawSkillList = (data.skill ? data.skill.skillList : []) || (data.skills ? (Array.isArray(data.skills) ? data.skills : data.skills.skillList) : []) || [];
+    const hasItems = (list) => list && (Array.isArray(list) ? list.length > 0 : (typeof list === 'object' ? Object.keys(list).length > 0 : false));
+
+    let rawSkillList = [];
+    let pot_skill1 = data.skill ? (Array.isArray(data.skill) ? data.skill : data.skill.skillList) : null;
+    let pot_skill2 = data.skills ? (Array.isArray(data.skills) ? data.skills : data.skills.skillList) : null;
+    let pot_skill3 = data.stigma || data.stigmaList || data.specialSkill || data.abyssSkill || [];
+
+    if (hasItems(pot_skill1)) rawSkillList = pot_skill1;
+    else if (hasItems(pot_skill2)) rawSkillList = pot_skill2;
+    else rawSkillList = pot_skill3;
     const skillList = Array.isArray(rawSkillList) ? rawSkillList : Object.values(rawSkillList);
 
     skillList.forEach(s => {
@@ -5148,6 +5194,7 @@ function renderCombatAnalysis(stats, data) {
         html += renderCategory('skill', '⚡', '#fd79a8', '技能', entry.subtotals?.skill);
         html += renderCategory('title', '🎖️', '#ffd700', '稱號', entry.subtotals?.title);
         html += renderCategory('wing', '🪽', '#81ecec', '翅膀', entry.subtotals?.wing);
+        html += renderCategory('wingHold', '🪽', '#81ecec', '翅膀收藏', entry.subtotals?.wingHold);
         html += renderCategory('arcana', '🎴', '#ff7675', '聖物', entry.subtotals?.arcana);
         html += renderCategory('gainEffect', '💊', '#fdcb6e', '增益', entry.subtotals?.gainEffect);
         html += renderCategory('mainStat', '📊', '#74b9ff', '轉化', entry.subtotals?.mainStat);
