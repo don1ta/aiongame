@@ -81,8 +81,10 @@
         if (SKILL_NAME_CACHE[id]) return SKILL_NAME_CACHE[id];
         if (SKILL_NAMES_DB[id]) return SKILL_NAMES_DB[id];
         if (window.SKILL_DATABASE && window.SKILL_DATABASE[id]) return window.SKILL_DATABASE[id].name;
+        if (window.SKILL_DATA_STATIC && window.SKILL_DATA_STATIC[id]) return window.SKILL_DATA_STATIC[id].name;
         return `Skill ${id}`;
     }
+    window.getSkillName = getSkillName;
 
     function getProxyUrl(url) {
         return `https://proxy.kk69347321.workers.dev/?url=${encodeURIComponent(url)}`;

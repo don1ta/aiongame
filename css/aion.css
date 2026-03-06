@@ -2354,20 +2354,28 @@
         /* 4. Meta Badge Grid */
         .profile-meta-grid {
             display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            margin-top: 5px;
+            flex-direction: column;
+            /* 改為垂直排列 */
+            gap: 8px;
+            margin-top: 10px;
+            width: 100%;
+            /* 確保容器撐滿 */
         }
 
         .meta-item {
             display: flex;
             align-items: center;
-            gap: 6px;
+            justify-content: center;
+            position: relative;
+            /* 加入相對定位 */
             background: rgba(255, 255, 255, 0.03);
             border: 1px solid rgba(255, 255, 255, 0.08);
-            padding: 6px 12px;
+            padding: 0 12px;
             border-radius: 8px;
             transition: all 0.2s ease;
+            height: 36px;
+            width: 100%;
+            box-sizing: border-box;
         }
 
         .meta-item:hover {
@@ -2377,7 +2385,13 @@
         }
 
         .meta-icon {
+            position: absolute;
+            /* 絕對定位 */
+            left: 12px;
+            /* 固定在左側 */
             font-size: 14px;
+            display: flex;
+            align-items: center;
         }
 
         .meta-text {
@@ -4560,11 +4574,215 @@
             transform: translateY(0);
         }
 
-        /* 當螢幕寬度小於或等於 768px 時（通常是手機） */
-        @media (max-width: 768px) {
-            #arcana-grid {
-                grid-template-columns: 1fr !important;
+        /* ============================================================
+           FINAL MASTER RWD & SECTION SEPARATION (2026 REFRESH)
+           ============================================================ */
 
+        /* 統一區塊間距與陰影基準 */
+        .card,
+        .input-area,
+        .profile-new-header,
+        .split-integrated-layout {
+            margin-bottom: 25px !important;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        }
+
+        /* 1. 平板與大型手機佈局 (1024px 以下) */
+        @media (max-width: 1024px) {
+            .main-layout-wrapper {
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 20px !important;
             }
 
+            .left-column,
+            .right-column {
+                width: 100% !important;
+                max-width: 100% !important;
+                padding: 0 !important;
+            }
+
+            .health-main-stats-wrapper {
+                flex-direction: column !important;
+                gap: 15px !important;
+            }
+        }
+
+        /* 2. 手機版核心修復 (768px 以下) */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px 8px !important;
+                background-attachment: scroll !important;
+                /* 修復背景造成的手機卡頓 */
+            }
+
+            /* --- 角色頭像卡片 RWD --- */
+            .profile-new-header {
+                flex-direction: column !important;
+                padding: 20px !important;
+                text-align: center !important;
+                gap: 25px !important;
+                background: linear-gradient(180deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95)) !important;
+            }
+
+            .profile-left {
+                flex-direction: column !important;
+                align-items: center !important;
+            }
+
+            .profile-right {
+                width: 100% !important;
+                align-items: center !important;
+                border-top: 1px solid rgba(255, 255, 255, 0.05);
+                padding-top: 15px;
+            }
+
+            .p-name-lg {
+                font-size: 24px !important;
+            }
+
+            .profile-meta-grid {
+                justify-content: center !important;
+                width: 100% !important;
+            }
+
+            .score-card-group {
+                display: grid !important;
+                grid-template-columns: repeat(2, 1fr) !important;
+                gap: 10px !important;
+                width: 100% !important;
+            }
+
+            .item-score-card {
+                margin: 0 !important;
+                width: 100% !important;
+                padding: 12px 5px !important;
+            }
+
+            /* --- 裝備系統 RWD --- */
+            .card {
+                overflow: hidden !important;
+                /* 確保內文不溢出 */
+            }
+
+            .split-integrated-layout {
+                flex-direction: column !important;
+                height: auto !important;
+            }
+
+            .equip-sidebar-profile {
+                width: 100% !important;
+                border-right: none !important;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+                padding: 20px 15px !important;
+                background: rgba(0, 0, 0, 0.3) !important;
+            }
+
+            .equip-main-content {
+                width: 100% !important;
+                padding: 15px !important;
+                height: auto !important;
+                /* 讓手機版自適應高度，不強制捲動 */
+                min-height: 400px;
+            }
+
+            #integrated-tab-content-area {
+                overflow-y: visible !important;
+                /* 手機版使用全頁捲動比較順手 */
+                padding-right: 0 !important;
+            }
+
+            .integrated-equip-header {
+                flex-direction: column !important;
+                align-items: center !important;
+                gap: 15px !important;
+            }
+
+            .stat-tabs-header.integrated-tabs {
+                width: 100% !important;
+                display: flex !important;
+                overflow-x: auto !important;
+                padding-bottom: 5px;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .integrated-tabs .stat-tab-btn {
+                flex: 0 0 auto !important;
+                padding: 8px 12px !important;
+                font-size: 13px !important;
+            }
+
+            /* --- 戰力指標與網格 RWD --- */
+            .grid-box-container,
+            #arcana-grid,
+            #petwing-grid,
+            .stat-grid-main,
+            #combat-stats-grid {
+                grid-template-columns: 1fr !important;
+                /* 全部強制單欄，解決擠在一起的問題 */
+                gap: 12px !important;
+            }
+
+            #combat-analysis-body {
+                flex-direction: column !important;
+            }
+
+            .mobile-vertical-title {
+                display: none !important;
+            }
+
+            /* --- 技能列表 RWD --- */
+            .skill-list {
+                grid-template-columns: repeat(3, 1fr) !important;
+                /* 手機版維持三欄小圖示 */
+                gap: 8px !important;
+            }
+
+            .skill-card {
+                padding: 6px !important;
+            }
+
+            .skill-card img {
+                width: 32px !important;
+                height: 32px !important;
+            }
+
+            .sk-name {
+                display: none;
+                /* 極小螢幕下隱藏名字只留圖示，或縮小字體 */
+            }
+        }
+
+        /* 3. 小手機加強 (480px 以下) */
+        @media (max-width: 480px) {
+            .p-name-lg {
+                font-size: 20px !important;
+            }
+
+            .score-value {
+                font-size: 24px !important;
+            }
+
+            .input-area h2 {
+                font-size: 18px !important;
+            }
+
+            /* 讓截圖按鈕置中且醒目 */
+            .btn-screenshot {
+                width: 100% !important;
+                display: flex !important;
+                justify-content: center !important;
+                margin-top: 15px !important;
+                padding: 10px !important;
+            }
+
+            /* 修正彈窗寬度防止爆開 */
+            .tooltip {
+                width: 90vw !important;
+                position: fixed !important;
+                left: 5vw !important;
+                bottom: 20px !important;
+                transform: none !important;
+            }
         }

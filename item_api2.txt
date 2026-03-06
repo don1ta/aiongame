@@ -1,0 +1,25 @@
+﻿HTTP/1.1 400 Bad Request
+Date: Fri, 06 Mar 2026 01:13:44 GMT
+Content-Type: application/json
+Content-Length: 64
+Connection: keep-alive
+access-control-allow-credentials: true
+access-control-allow-origin: *
+Cache-Control: no-store
+Server: cloudflare
+x-railway-edge: railway/asia-southeast1-eqsg3a
+x-railway-request-id: ZBks4O1XSc2DwHVDoB_USg
+x-tracking-id: 9d7d7fe2b9744aa2-HKG
+Accept-Ranges: bytes
+via: 1.1 varnish, 1.1 varnish
+x-cache: MISS, MISS
+x-cache-hits: 0, 0
+x-timer: S1772759624.237531,VS0,VE37
+vary: Origin
+x-railway-cdn-edge: fastly/cache-hkg17935-HKG
+Nel: {"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}
+cf-cache-status: BYPASS
+Report-To: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=2wHOgfwSwyBOeMNSzi4HnnH0BKrtt6U0uZ9pHn9OPU7IYxXrj53BAKfmopqj4IX3qenEu2fNpfa2RGteKzxtRF1ZN5WO2%2BwPgpBLhj6EDmAw"}]}
+CF-RAY: 9d7d7fe2b9744aa2-TPE
+
+{"error":"Invalid statType","trackingId":"9d7d7fe2b9744aa2-HKG"}

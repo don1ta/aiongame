@@ -3045,9 +3045,11 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                     <div class="magic-stone-list">
                         ${(d.magicStoneStat).map(ms => {
                 const sColor = getGradeColor(ms.grade || 'common');
+                const cleanName = (ms.name || "").split('+')[0].trim();
+                const displayVal = (ms.value || "").toString().startsWith('+') ? ms.value : `+${ms.value}`;
                 return `<div class="stone-item">
                                 <img class="stone-icon" src="${ms.icon || ''}">
-                                <div class="stone-text" style="color:${sColor}">${ms.name} ${ms.value}</div>
+                                <div class="stone-text" style="color:${sColor}">${cleanName} ${displayVal}</div>
                             </div>`;
             }).join('')}
                     </div>
@@ -3078,6 +3080,25 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
             // 完整分頁頂部邊框線色直接取自 rarityInfo.color
             const detailBorderColor = rarityInfo ? rarityInfo.color : '#555';
 
+            // 裝備技能
+            const itemSkills = [
+                ...(d.skills || []),
+                ...(d.subSkills || []),
+                ...(d.itemSkills || []),
+                ...(d.extraSkills || [])
+            ];
+            const skillsSectionHtml = (itemSkills.length > 0) ? `
+                <div class="tooltip-section">
+                    <div class="tooltip-section-title">裝備技能</div>
+                    ${itemSkills.map(s => {
+                const sName = s.name || (typeof window.getSkillName === 'function' ? window.getSkillName(s.id) : s.id);
+                return `<div class="stat-row">
+                            <span class="stat-label" style="color:#fff;">${sName}</span>
+                            <span class="stat-value bonus">${s.level ? `Lv.${s.level}` : ''}</span>
+                        </div>`;
+            }).join('')}
+                </div>` : '';
+
             let cardHtml = `
             <div class="equip-tooltip-card tooltip-rarity-${detailRarityClass}" onclick="window.handleSlotClick(event, ${slot})" style="cursor:pointer; border-top-color: ${detailBorderColor};">
                 <div class="tooltip-header">
@@ -3094,6 +3115,7 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                 </div>
                 ${mainStatsSectionHtml}
                 ${subStatsSectionHtml}
+                ${skillsSectionHtml}
                 ${stoneSectionHtml}
                 ${godStoneSectionHtml}
             </div>`;
@@ -6736,16 +6758,26 @@ window.showEquipTooltip = function (slotId, mode = 'modal', event = null) {
 
     // 副能力值
     let subStatsHtml = '';
+    const partKey = window.getPartKey ? window.getPartKey(item) : null;
     if (d.subStats && d.subStats.length > 0) {
         subStatsHtml = `
             <div class="tooltip-section">
             <div class="tooltip-section-title">隨機能力值</div>
-                ${d.subStats.map(s => `
+                ${d.subStats.map(s => {
+            const displayVal = (s.value || "").toString().startsWith('+') ? s.value : `+${s.value}`;
+            const topInfo = window.getTop10Info(false, s.name, s.value, partKey);
+            // 超越時不改色，只加 badge
+            const color = topInfo.color || '#fff';
+            const exceed = s.exceed || false;
+            const badge = exceed ? `<span style="background:#f1c40f; color:#000; padding:1px 3px; border-radius:2px; font-size:9px; font-weight:900; margin-left:4px; vertical-align:middle;">TOP級</span>` : (topInfo.badge ? `<span style="background:#f1c40f; color:#000; padding:1px 3px; border-radius:2px; font-size:9px; font-weight:900; margin-left:4px; vertical-align:middle;">${topInfo.badge}</span>` : '');
+
+            return `
                     <div class="stat-row">
-                        <span class="stat-label">${s.name}</span>
-                        <span class="stat-value bonus">+${s.value}</span>
+                        <span class="stat-label" style="color:${color}">${s.name}</span>
+                        <span class="stat-value bonus" style="color:${color}">${displayVal}${badge}</span>
                     </div>
-                `).join('')
+                `;
+        }).join('')
             }
             </div>`;
     }
@@ -6758,11 +6790,18 @@ window.showEquipTooltip = function (slotId, mode = 'modal', event = null) {
                 <div class="tooltip-section-title">魔石槽位</div>
                 <div class="magic-stone-list">
                     ${d.magicStoneStat.map(s => {
-            const sColor = getGradeColor(s.grade || 'common');
+            const cleanName = (s.name || "").split('+')[0].trim();
+            const displayVal = (s.value || "").toString().startsWith('+') ? s.value : `+${s.value}`;
+
+            // 品階色為基礎，匹配 TOP 時覆蓋成配對色
+            const topInfo = window.getTop10Info(true, s.name, s.value, partKey);
+            const gColor = getGradeColor(s.grade || 'common');
+            const color = topInfo.color || gColor;
+
             return `
                             <div class="stone-item">
                                 <img class="stone-icon" src="${s.icon}">
-                                <div class="stone-text" style="color: ${sColor}">${s.name} ${s.value}</div>
+                                <div class="stone-text" style="color: ${color}; font-weight: ${topInfo.color ? 'bold' : 'normal'}">${cleanName} ${displayVal}</div>
                             </div>
                         `;
         }).join('')}
@@ -6809,6 +6848,34 @@ window.showEquipTooltip = function (slotId, mode = 'modal', event = null) {
     const exceedLv = item.exceedLevel || d.exceedLevel || 0;
     const exceedHtml = exceedLv > 0 ? `<span class="val-exceed" style="font-size: 12px; margin-left: 5px;">突破 +${exceedLv}</span>` : "";
 
+    // 裝備技能
+    let skillsHtml = '';
+    const itemSkills = [
+        ...(d.skills || []),
+        ...(d.subSkills || []),
+        ...(d.itemSkills || []),
+        ...(d.extraSkills || [])
+    ];
+    if (itemSkills.length > 0) {
+        skillsHtml = `
+            <div class="tooltip-section">
+                <div class="tooltip-section-title">裝備技能</div>
+                ${itemSkills.map(s => {
+            const sName = s.name || (typeof window.getSkillName === 'function' ? window.getSkillName(s.id) : s.id);
+            const topInfo = window.getTop10Info(false, sName, s.level || "", partKey, [s]);
+            const color = topInfo.color || '#fff';
+            const badge = topInfo.badge ? `<span style="background:${topInfo.color}; color:#000; padding:1px 3px; border-radius:2px; font-size:9px; font-weight:900; margin-left:4px; vertical-align:middle;">${topInfo.badge}</span>` : '';
+
+            return `
+                        <div class="stat-row">
+                            <span class="stat-label" style="color: ${color};">${sName}</span>
+                            <span class="stat-value bonus" style="color: ${color};">${s.level ? `Lv.${s.level}` : ''}${badge}</span>
+                        </div>
+                    `;
+        }).join('')}
+            </div>`;
+    }
+
     content.innerHTML = `
         <div class="close-tooltip" onclick="window.closeEquipTooltip(event)">×</div>
         <div class="tooltip-header">
@@ -6825,6 +6892,7 @@ window.showEquipTooltip = function (slotId, mode = 'modal', event = null) {
         <div class="tooltip-body">
             ${mainStatsHtml}
             ${subStatsHtml}
+            ${skillsHtml}
             ${godStoneHtml}
             ${stonesHtml}
         </div>
@@ -6877,224 +6945,604 @@ window.closeEquipTooltip = function (e) {
     }
 };
 
-window.renderStatsTab = function (json) {
-    if (!json) return;
+window.soulbindNameMap = {
+    "STR": "威力", "CombatSpeed": "戰鬥速度", "AmplifyWeaponDamage": "武器傷害增幅",
+    "DEX": "敏捷", "AdditionalHitRate": "多段打擊擊中", "AmplifyAllDamage": "傷害增幅",
+    "WeaponFixingDamage": "攻擊力", "Critical": "暴擊", "WIS": "意志", "INT": "知識",
+    "Block": "格擋", "WeaponAccuracy": "命中", "AbnormalAccuracy": "異常狀態擊中",
+    "CriticalAddDamage": "暴擊攻擊力", "HPMax": "生命力", "BackAttackDamage": "後方攻擊力",
+    "CON": "體力", "AGI": "精確", "MPMax": "精神力", "Parry": "武器防禦", "Evasion": "迴避",
+    "DefenseRatio": "防禦力增加", "CriticalResist": "暴擊抵抗", "HPRegen": "生命力自然恢復",
+    "Restoration": "再生", "BackAttackDefense": "後方防禦力", "IronWall": "鐵壁",
+    "HardHitResist": "強擊抵抗", "AbnormalResistance": "異常狀態抵抗", "CriticalDamageDefense": "暴擊防禦力",
+    "ArmorDefense": "防禦力", "ArmorEvasion": "迴避", "ShockPropertyAccuracy": "衝擊系擊中",
+    "HardHit": "強擊", "AmplifyHpHealGet": "所受治癒量", "DamageRatio": "攻擊力增加", "MPRegen": "精神力自然恢復",
+    "AmplifyCriticalDamage": "暴擊傷害增幅", "DecreaseCriticalDamage": "暴擊傷害耐性", "DecreaseWeaponDamage": "武器傷害耐性", "IgnoreIronWall": "鐵壁貫穿", "DecreaseDamage": "傷害耐性", "MoveSpeed": "移動速度",
+    "AmplifyHpHealSend": "治療量增加", "AmplifySkillDamage": "技能傷害增加", "AmplifyShield": "護盾量增加",
+    "Destruction": "破壞[吉凱爾]", "Wisdom": "智慧[露梅爾]", "Time": "時間[希埃爾]",
+    "Death": "死亡[崔妮爾]", "Illusion": "幻象[凱西內爾]", "Freedom": "自由[白傑爾]",
+    "Life": "生命[尤斯迪埃]", "Space": "空間[伊斯拉佩爾]", "Destiny": "命運[瑪爾庫坦]", "Justice": "正義[奈薩肯]"
+};
+
+window.magicStoneMap = {
+    "WeaponFixingDamage": "攻擊力", "Accuracy": "額外命中", "Critical": "暴擊",
+    "HPMax": "生命力", "MPMax": "精神力", "ArmorDefense": "防禦力",
+    "Evasion": "額外迴避", "CriticalResist": "暴擊抵抗", "Block": "格擋",
+    "AmplifyWeaponDamage": "武器傷害增幅", "AmplifyAllDamage": "傷害增幅",
+    "AmplifyCriticalDamage": "暴擊傷害增幅", "AmplifyBackAttack": "後方傷害增幅",
+    "PvPAccuracy": "PVP命中", "PvPEvasion": "PVP迴避", "PvPAmplifyDamage": "PVP傷害增幅",
+    "PvPAddDamage": "PVP攻擊力", "PvPCriticalResist": "PVP暴擊抵抗", "PvPCritical": "PVP暴擊",
+    "PvPDamageDefense": "PVP防禦力",
+    "Destruction": "破壞[吉凱爾]", "Wisdom": "智慧[露梅爾]", "Time": "時間[希埃爾]",
+    "Death": "死亡[崔妮爾]", "Illusion": "幻象[凱西內爾]", "Freedom": "自由[白傑爾]",
+    "Life": "生命[尤斯迪埃]", "Space": "空間[伊斯拉佩爾]", "Destiny": "命運[瑪爾庫坦]", "Justice": "正義[奈薩肯]"
+};
+
+// 嚴謹的詞條/魔石名稱比對函數，避免如「暴擊」錯誤匹配「暴擊傷害增幅」
+window.isStatNameMatch = (statName, mappedName) => {
+    if (!statName || !mappedName) return false;
+    const simple = mappedName.replace('增加', '').replace('增幅', '').replace('力', '').replace('額外', '');
+
+    if (statName === mappedName || statName === simple) return true;
+
+    if (statName.includes(mappedName) || statName.includes(simple)) {
+        // 例外排除：避免包含字眼造成的誤判
+        if (mappedName === '暴擊' && statName !== '暴擊') return false;
+        if (mappedName === '攻擊力' && statName !== '攻擊力') return false;
+        if (['生命力', '精神力'].includes(mappedName) && statName !== mappedName) return false;
+        if (mappedName === '命中' && !['命中', '額外命中', '物理命中'].includes(statName)) return false;
+        if (mappedName === '迴避' && !['迴避', '額外迴避', '物理迴避'].includes(statName)) return false;
+
+        return true;
+    }
+
+    return false;
+};
+
+window.getPartKey = (i) => {
+    if (!i) return null;
+    const name = (i.detail?.name || i.name || "").toLowerCase();
+    const cat = (i.detail?.categoryName || i.categoryName || "").toLowerCase();
+    const s = String(i.slotPos);
+
+    if (['34', '35', '36', 'Bracelet', 'Bracelet1', 'Bracelet2'].includes(s) || cat.includes('手鐲') || name.includes('手鐲')) {
+        if (s === '35' || s === '36' || name.includes('手鐲2') || name.includes('深淵手鐲')) return 'Bracelet2';
+        return 'Bracelet';
+    }
+
+    if (cat.includes('武器') || name.includes('劍') || name.includes('弓') || name.includes('杖') || name.includes('書') || name.includes('珠')) return 'MainHand';
+    if (cat.includes('盾') || cat.includes('臂甲') || name.includes('臂甲') || name.includes('盾')) return 'SubHand';
+    if (cat.includes('頭盔') || cat.includes('頭飾') || name.includes('頭盔') || name.includes('頭飾')) return 'Helmet';
+    if (name.includes('肩') || cat.includes('肩')) return 'Shoulder';
+    if (name.includes('胸甲') || name.includes('上衣') || cat.includes('上衣')) return 'Torso';
+    if (name.includes('腿甲') || name.includes('下衣') || cat.includes('下衣')) return 'Pants';
+    if (name.includes('手套') || cat.includes('手套')) return 'Gloves';
+    if (name.includes('鞋') || cat.includes('鞋')) return 'Boots';
+    if (cat.includes('披風') || cat.includes('翅膀') || name.includes('披風') || name.includes('斗篷') || name.includes('翅')) return 'Cape';
+    if (name.includes('項鍊') || cat === '項鍊') return 'Necklace';
+
+    if (['11', 'Earring1'].includes(s)) return 'Earring1';
+    if (['12', 'Earring2'].includes(s)) return 'Earring2';
+    if (['14', 'Ring1'].includes(s)) return 'Ring1';
+    if (['16', '15', 'Ring2'].includes(s)) return 'Ring2';
+
+    if (cat === '耳環') return 'Earring';
+    if (cat === '戒指') return 'Ring';
+
+    // Slot ID Fallback
+    if (['0', 'MainHand'].includes(s)) return 'MainHand';
+    if (['1', 'SubHand'].includes(s)) return 'SubHand';
+    if (['2', 'Helmet'].includes(s)) return 'Helmet';
+    if (['3', 'Torso'].includes(s)) return 'Torso';
+    if (['4', 'Pants'].includes(s)) return 'Pants';
+    if (['5', 'Shoulder'].includes(s)) return 'Shoulder';
+    if (['6', 'Gloves'].includes(s)) return 'Gloves';
+    if (['7', 'Boots'].includes(s)) return 'Boots';
+    if (['10', 'Cape', 'Wings'].includes(s)) return 'Cape';
+    if (['13', 'Necklace'].includes(s)) return 'Necklace';
+
+    return null;
+};
+
+window.getTop10Info = (isStone, statName, statValue, partKey, skills = []) => {
+    if (typeof STATIC_STATS_DATA === 'undefined') return { color: null, badge: '' };
+    const mode = window.currentStatPlaystyle || 'PVE';
+
+    let distKey = partKey;
+    if (distKey?.startsWith('Earring')) distKey = 'Earring';
+    if (distKey?.startsWith('Ring')) distKey = 'Ring';
+    if (distKey?.startsWith('Bracelet')) distKey = 'Bracelet';
+
+    let top10List = [];
+    if (isStone) {
+        const isAccessory = ['Cape', 'Necklace', 'Earring1', 'Earring2', 'Ring1', 'Ring2', 'Bracelet', 'Bracelet2'].includes(partKey);
+        const groupKey = isAccessory ? 'accessory' : 'gear';
+        top10List = STATIC_STATS_DATA[`MagicStone_${mode}_${groupKey}`] || [];
+    } else {
+        top10List = STATIC_STATS_DATA[distKey + '_' + mode] || [];
+    }
+
+    let isMatch = false;
+    let isExceed = false;
+    const cleanUserVal = parseFloat(statValue) || 0;
+
+    const dictionary = isStone ? window.magicStoneMap : window.soulbindNameMap;
+
+    top10List.forEach(t => {
+        let mappedName = dictionary[t.statKey] || t.statKey;
+        if (!isStone && !dictionary[t.statKey] && /^\d+$/.test(t.statKey) && typeof window.getSkillName === 'function') {
+            mappedName = window.getSkillName(t.statKey);
+        }
+
+        const topVal = parseFloat(t.value) || 0;
+        const nameMatch = window.isStatNameMatch(statName, mappedName);
+
+        if (nameMatch) {
+            if (isStone) {
+                if (cleanUserVal === topVal) isMatch = true;
+                if (cleanUserVal > topVal) isExceed = true;
+            } else {
+                isMatch = true;
+            }
+        }
+    });
+
+    if (!isStone && skills.length > 0) {
+        skills.forEach(s => {
+            const sName = s.name || (typeof window.getSkillName === 'function' ? window.getSkillName(s.id) : s.id);
+            top10List.forEach(t => {
+                let mappedName = window.soulbindNameMap[t.statKey] || t.statKey;
+                if (window.isStatNameMatch(sName, mappedName)) isMatch = true;
+            });
+        });
+    }
+
+    if (isStone) {
+        // 魔石若有精準吻合，就不標記 UP!，保留給完全超越的顯示
+        if (isMatch) return { color: null, badge: '' };
+        if (isExceed) return { color: null, badge: 'UP!' };
+        return { color: null, badge: '' };
+    }
+
+    if (isMatch) return { color: '#2ecc71', badge: '' };
+    return { color: null, badge: '' };
+};
+window.renderStatsTab = async function (json, initialActiveKey = null) {
+    // Set final target key from: 1. provided 2. global state 3. first available
+    let activeKey = initialActiveKey || window.__CURRENT_STATS_TAB__;
     const data = json.queryResult ? json.queryResult.data : (json.data ? json.data : json);
     const container = document.getElementById('equip-tab-stats');
     if (!data || !container) return;
 
-    // 🛡️ 數據預處理
-    const seenSlots = new Set();
-    const items = (data.itemDetails || []).filter(i => {
-        const slot = parseInt(i.slotPos);
-        if (seenSlots.has(slot) || slot < 1 || slot > 60) return false;
-        seenSlots.add(slot);
-        return true;
-    });
+    if (typeof STATIC_STATS_DATA === 'undefined') {
+        container.innerHTML = `<div style="padding:40px; text-align:center; color:#ff6b6b; font-size:14px;">大數據排行榜尚未載入完成...</div>`;
+        return;
+    }
 
-    let totalItemsCount = 0;
-    let totalStrengthScore = 0;
-    let levelGroups = {};
-    let stoneGrades = {};
-    let filledCount = 0;
-    let lowGradeStoneItems = [];
+    const items = data.itemDetails || [];
 
-    items.forEach(i => {
-        const d = i.detail || i;
-        const lv = d.level || 0;
-        if (lv > 0) {
-            if (!levelGroups[lv]) levelGroups[lv] = [];
-            levelGroups[lv].push(i);
-            totalItemsCount++;
-            totalStrengthScore += lv;
-        }
+    const slotConfig = [
+        { title: '武器', key: 'MainHand', match: i => window.getPartKey(i) === 'MainHand' },
+        { title: '臂甲', key: 'SubHand', match: i => window.getPartKey(i) === 'SubHand' },
+        { title: '頭盔', key: 'Helmet', match: i => window.getPartKey(i) === 'Helmet' },
+        { title: '肩甲', key: 'Shoulder', match: i => window.getPartKey(i) === 'Shoulder' },
+        { title: '胸甲', key: 'Torso', match: i => window.getPartKey(i) === 'Torso' },
+        { title: '腿甲', key: 'Pants', match: i => window.getPartKey(i) === 'Pants' },
+        { title: '手套', key: 'Gloves', match: i => window.getPartKey(i) === 'Gloves' },
+        { title: '鞋子', key: 'Boots', match: i => window.getPartKey(i) === 'Boots' },
+        { title: '披風', key: 'Cape', match: i => window.getPartKey(i) === 'Cape' },
+        { title: '項鍊', key: 'Necklace', match: i => window.getPartKey(i) === 'Necklace' },
+        { title: '耳環', key: 'Earring1', match: i => window.getPartKey(i)?.includes('Earring') },
+        { title: '耳環2', key: 'Earring2', match: i => window.getPartKey(i)?.includes('Earring') },
+        { title: '戒指1', key: 'Ring1', match: i => window.getPartKey(i)?.includes('Ring') },
+        { title: '戒指2', key: 'Ring2', match: i => window.getPartKey(i)?.includes('Ring') },
+        { title: '手鐲1', key: 'Bracelet', match: i => window.getPartKey(i)?.includes('Bracelet') },
+        { title: '手鐲2', key: 'Bracelet2', match: i => window.getPartKey(i)?.includes('Bracelet') }
+    ];
 
-        if (d.magicStoneStat) {
-            filledCount += d.magicStoneStat.length;
-            d.magicStoneStat.forEach(ms => {
-                const gradeKey = (ms.grade || 'common').toLowerCase();
-                const gradeNameMap = { 'myth': '神話', 'unique': '唯一', 'legend': '傳說', 'epic': '史詩', 'rare': '稀有', 'common': '一般' };
-                const gradeName = gradeNameMap[gradeKey] || gradeKey;
+    const renderTop10List = (dist, dictionary, isStone, userItem) => {
+        if (!dist || dist.length === 0) return `<div style="color:#777; padding:10px;">無數據</div>`;
 
-                if (!stoneGrades[gradeName]) stoneGrades[gradeName] = { count: 0, list: [], gradeKey: gradeKey };
-                stoneGrades[gradeName].count++;
-                stoneGrades[gradeName].list.push({
-                    itemName: d.name,
-                    slotName: d.categoryName || '--',
-                    stoneName: ms.name
+        const d_user = (userItem && (userItem.detail || userItem)) || {};
+        const userSubStats = Array.isArray(d_user.subStats) ? d_user.subStats : [];
+        const userMagicStones = Array.isArray(d_user.magicStoneStat) ? d_user.magicStoneStat : [];
+
+        // ===== 魔石預處理：排序配對 =====
+        // topEntryResult[i] = { match: false, higher: false, gradeColor: null }
+        const topEntryResult = {};
+        if (isStone) {
+            // 1. 收集使用者各類型魔石 { value, grade }，按 value 降序
+            const userStonesByType = {}; // mappedName → [{ val, grade }, ...]
+            userMagicStones.forEach(s => {
+                if (!s || !s.name) return;
+                const cleanSN = (s.name).split('+')[0].trim();
+                const val = parseFloat(s.value) || 0;
+                if (val <= 0) return;
+                const grade = s.grade || 'common';
+                Object.values(dictionary || {}).forEach(mName => {
+                    if (!mName) return;
+                    if (window.isStatNameMatch(cleanSN, mName)) {
+                        if (!userStonesByType[mName]) userStonesByType[mName] = [];
+                        // 避免同一顆魔石重複加入
+                        if (!userStonesByType[mName].some(x => x.val === val && x.grade === grade)) {
+                            userStonesByType[mName].push({ val, grade });
+                        }
+                    }
                 });
+            });
+            // 排序：值高在前
+            Object.values(userStonesByType).forEach(arr => arr.sort((a, b) => b.val - a.val));
 
-                if (gradeKey === 'common' || gradeKey === 'rare') {
-                    lowGradeStoneItems.push({
-                        itemName: d.name,
-                        itemLevel: d.level || 0,
-                        itemObj: i,
-                        slotName: d.categoryName || '--',
-                        stoneName: ms.name,
-                        gradeName: gradeName,
-                        gradeKey: gradeKey
-                    });
+            // 2. 收集 TOP 各類型條目的索引，按 value 降序
+            const topEntriesByType = {}; // mappedName → [{ idx, val }, ...]
+            dist.forEach((d, idx) => {
+                if (!d) return;
+                const mName = dictionary[d.statKey] || d.statKey;
+                if (!topEntriesByType[mName]) topEntriesByType[mName] = [];
+                topEntriesByType[mName].push({ idx, val: parseFloat(d.value) || 0 });
+            });
+            Object.values(topEntriesByType).forEach(arr => arr.sort((a, b) => b.val - a.val));
+
+            // 3. 逐類型配對 (優先精確吻合，再判斷超越)
+            Object.keys(topEntriesByType).forEach(mName => {
+                const topArr = topEntriesByType[mName]; // TOP 條目（降序）
+                const userArr = [...(userStonesByType[mName] || [])]; // 使用者魔石（降序）
+
+                // 複製一份 TOP 等待配對，保留原始 idx
+                let topLeft = [...topArr];
+                let userLeft = [...userArr];
+
+                // Pass 1: 精確吻合
+                // 從高到低比對 TOP 項目，確認是否存在相同的 User 魔石
+                for (let i = topLeft.length - 1; i >= 0; i--) {
+                    const topEntry = topLeft[i];
+                    const uIdx = userLeft.findIndex(u => u.val === topEntry.val);
+                    if (uIdx !== -1) {
+                        const u = userLeft.splice(uIdx, 1)[0];
+                        const gc = (typeof getGradeColor === 'function') ? getGradeColor(u.grade) : '#fff';
+                        topEntryResult[topEntry.idx] = { match: true, higher: false, gradeColor: gc };
+                        topLeft.splice(i, 1);
+                    }
                 }
+
+                // Pass 2: 超越配對 (UP!)
+                // 從高到低檢查剩下未匹配的 TOP，找出可以「吃下(=大於)它」的最高 User 魔石
+                topLeft.forEach(topEntry => {
+                    const uIdx = userLeft.findIndex(u => u.val > topEntry.val);
+                    if (uIdx !== -1) {
+                        userLeft.splice(uIdx, 1);
+                        topEntryResult[topEntry.idx] = { match: false, higher: true, gradeColor: null };
+                    } else {
+                        topEntryResult[topEntry.idx] = { match: false, higher: false, gradeColor: null };
+                    }
+                });
             });
         }
-    });
 
-    // 水分分析
-    const excludedCategories = ['古文石', '腰帶', '護身符', '手鐲'];
-    const filteredGear = items.filter(i => {
-        const d = i.detail || i;
-        const cat = d.categoryName || '';
-        return (d.level || 0) > 0 && !excludedCategories.some(exc => cat.includes(exc));
-    });
-    const bottomByLevel = [...filteredGear].sort((a, b) => (a.detail?.level || 0) - (b.detail?.level || 0)).slice(0, 5);
-    const uniqueLowStoneList = [];
-    const lowStoneSeen = new Set();
-    lowGradeStoneItems.forEach(s => {
-        const key = `${s.slotName}-${s.stoneName}`;
-        if (!lowStoneSeen.has(key)) {
-            uniqueLowStoneList.push(s);
-            lowStoneSeen.add(key);
-        }
-    });
-    const stoneOrder = { 'common': 1, 'rare': 2 };
-    uniqueLowStoneList.sort((a, b) => (stoneOrder[a.gradeKey] || 99) - (stoneOrder[b.gradeKey] || 99));
-    const worstStoneSuggestions = uniqueLowStoneList.slice(0, 5);
+        return dist.map((d, i) => {
+            if (!d || !d.statKey) return '';
 
-    // 子分頁切換
-    window.switchStatsSubTab = function (subTab) {
-        const lvArea = document.getElementById('stats-area-level');
-        const stArea = document.getElementById('stats-area-stone');
-        const btnLv = document.getElementById('stats-btn-lv');
-        const btnSt = document.getElementById('stats-btn-st');
-        if (subTab === 'level') {
-            lvArea.style.display = 'block';
-            stArea.style.display = 'none';
-            btnLv.classList.add('active');
-            btnSt.classList.remove('active');
-        } else {
-            lvArea.style.display = 'none';
-            stArea.style.display = 'block';
-            btnLv.classList.remove('active');
-            btnSt.classList.add('active');
-        }
+            let mappedName = dictionary[d.statKey] || d.statKey;
+            if (!dictionary[d.statKey] && /^\d+$/.test(d.statKey) && typeof window.getSkillName === 'function') {
+                mappedName = window.getSkillName(d.statKey) || mappedName;
+            }
+
+            let isMatch = false;
+            let isHigher = false;
+            let matchGradeColor = null;
+
+            if (isStone) {
+                const result = topEntryResult[i];
+                if (result) {
+                    isMatch = result.match;
+                    isHigher = result.higher;
+                    matchGradeColor = result.gradeColor;
+                }
+            } else {
+                const itemSkills = d_user.skills || d_user.itemSkills || d_user.extraSkills || [];
+
+                isMatch = userSubStats.some(s => {
+                    if (!s || !s.name) return false;
+                    return window.isStatNameMatch(s.name, mappedName);
+                }) || itemSkills.some(s => {
+                    if (!s) return false;
+                    const sName = s.name || (typeof window.getSkillName === 'function' ? window.getSkillName(s.id) : (s.id || ''));
+                    return window.isStatNameMatch(sName, mappedName);
+                });
+
+                if (!isMatch) {
+                    isHigher = userSubStats.some(s => {
+                        if (!s || !s.name) return false;
+                        return window.isStatNameMatch(s.name, mappedName) && s.exceed;
+                    });
+                }
+            }
+
+            const displayName = isStone ? `${mappedName} +${d.value}` : mappedName;
+
+            // 魔石吻合→品階色；超越→UP!；詞條吻合→綠色
+            let textColor = '#fff';
+            let badgeHtml = '';
+
+            if (isStone && isMatch && matchGradeColor) { textColor = matchGradeColor; }
+            else if (!isStone && isMatch) { textColor = '#2ecc71'; }
+            if (isHigher) { badgeHtml = `<span style="background:#f1c40f; color:#000; padding:1px 4px; border-radius:3px; font-size:10px; font-weight:900; margin-left:6px;">UP!</span>`; }
+
+            const numColor = i < 3 ? '#ff9f43' : '#a4b0be';
+
+            return `
+                <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.2); padding:6px 10px; border-bottom:1px solid rgba(255,255,255,0.03); font-size:13px;">
+                    <div style="display:flex; align-items:center;">
+                        <div style="width:20px; color:${numColor}; font-weight:bold; font-style:italic;">${i + 1}</div>
+                        <div style="color:${textColor}; font-weight:${(isMatch || isHigher) ? 'bold' : 'normal'};">${displayName}${badgeHtml}</div>
+                    </div>
+                    <div style="color:${textColor}; font-size:11px; font-weight:bold;">${d.percent.toFixed(1)}%</div>
+                </div>
+            `;
+        }).join('');
     };
 
-    let html = `
-        <div class="stats-outer-wrapper" style="padding: 10px; height: 100%; display: flex; flex-direction: column; overflow: hidden;">
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; flex: 1; min-height: 0;">
-                <!-- 左側：詳情分頁 -->
-                <div class="stats-card" style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; display: flex; flex-direction: column; overflow: hidden;">
-                    <div style="display: flex; background: rgba(255,255,255,0.02); border-bottom: 1px solid rgba(255,255,255,0.05);">
-                        <button id="stats-btn-lv" class="stats-sub-tab-btn active" onclick="switchStatsSubTab('level')" style="flex:1; padding: 12px; border:none; background:none; color:#8b949e; cursor:pointer; font-size:14px; font-weight:800; border-right:1px solid rgba(255,255,255,0.05); transition:0.3s;">🛡️ 等級組</button>
-                        <button id="stats-btn-st" class="stats-sub-tab-btn" onclick="switchStatsSubTab('stone')" style="flex:1; padding: 12px; border:none; background:none; color:#8b949e; cursor:pointer; font-size:14px; font-weight:800; transition:0.3s;">💎 磨石分布</button>
-                    </div>
+    const renderUserItem = (item, sbTop10, msTop10, conf) => {
+        if (!item) return `<div style="padding:15px; color:#e74c3c;">未裝備物件</div>`;
+        const d = item.detail || item;
+        const msLabel = (conf.key.includes('Cape') || conf.key.includes('Necklace') || conf.key.includes('Earring') || conf.key.includes('Ring') || conf.key.includes('Bracelet')) ? '靈石' : '魔石';
 
-                    <!-- 數據概覽 (移至分頁下方) -->
-                    <div style="padding: 10px 15px; display: flex; gap: 12px; background: rgba(255,255,255,0.02); border-bottom: 1px solid rgba(255,255,255,0.05); flex-wrap: wrap;">
-                        <span style="font-size: 16px; color: #3498db;">裝備數量：<b style="color:#fff;">${totalItemsCount}</b></span>
-                        <span style="font-size: 16px; color: #2ecc71;">鑲嵌數量：<b style="color:#fff;">${filledCount}</b></span>
-                        <span style="font-size: 16px; color: #ffa500;">裝備分數：<b style="color:#fff;">${totalStrengthScore}</b></span>
-                    </div>
-                    
-                    <div style="padding: 8px 15px; font-size: 12px; color: #777; background: rgba(0,0,0,0.1); border-bottom: 1px solid rgba(255,255,255,0.03); font-style: italic;">
-                        ※ 等級最低前五名不列入：古文石、腰帶、護身符、手鐲。
-                    </div>
+        let sbHtml = '';
+        const itemSkills = [
+            ...(d.skills || []),
+            ...(d.subSkills || []),
+            ...(d.itemSkills || []),
+            ...(d.extraSkills || [])
+        ];
+        const hasSb = d.subStats && d.subStats.length > 0;
+        const hasSkills = itemSkills.length > 0;
 
-                    <style>
-                        .stats-sub-tab-btn.active { color: var(--gold-bright) !important; background: rgba(255,215,0,0.05); box-shadow: inset 0 -2px 0 var(--gold-bright); }
-                    </style>
-                    <div style="flex: 1; overflow-y: auto; padding: 15px; scrollbar-width: thin;">
-                        <div id="stats-area-level">
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                                ${Object.keys(levelGroups).sort((a, b) => b - a).map(lv => {
-        const count = levelGroups[lv].length;
+        if (hasSb || hasSkills) {
+            let sbLines = [];
+            if (hasSb) {
+                d.subStats.forEach(s => {
+                    const isMatch = (sbTop10 || []).some(top => {
+                        const mName = window.soulbindNameMap[top.statKey] || (typeof window.getSkillName === 'function' ? window.getSkillName(top.statKey) : top.statKey);
+                        return window.isStatNameMatch(s.name, mName);
+                    });
+                    const isExceed = s.exceed || false;
+                    // 超越時不改色，只加 badge
+                    const color = isMatch ? '#2ecc71' : '#fff';
+                    const badge = isExceed ? `<span style="background:#f1c40f; color:#000; padding:1px 3px; border-radius:2px; font-size:9px; font-weight:900; margin-left:4px;">TOP級</span>` : '';
+                    const displayVal = (s.value || "").toString().startsWith('+') ? s.value : `+${s.value}`;
+                    sbLines.push(`<div style="color:${color}; font-size:13px; margin-bottom:4px; font-weight:${isMatch ? 'bold' : 'normal'}">• ${s.name} <span style="font-weight:bold;">${displayVal}</span>${badge}</div>`);
+                });
+            }
+            if (hasSkills) {
+                itemSkills.forEach(s => {
+                    const sName = s.name || (typeof window.getSkillName === 'function' ? window.getSkillName(s.id) : s.id);
+                    const isMatch = (sbTop10 || []).some(top => {
+                        const mName = window.soulbindNameMap[top.statKey] || (typeof window.getSkillName === 'function' ? window.getSkillName(top.statKey) : top.statKey);
+                        return window.isStatNameMatch(sName, mName);
+                    });
+                    const color = isMatch ? '#2ecc71' : '#fff';
+                    sbLines.push(`<div style="color:${color}; font-size:13px; margin-bottom:4px; font-weight:${isMatch ? 'bold' : 'normal'}">• ${sName} ${s.level ? `Lv.${s.level}` : ''}</div>`);
+                });
+            }
+            sbHtml = sbLines.join('');
+        } else {
+            sbHtml = `<div style="color:#777; font-size:12px;">無詞條/技能</div>`;
+        }
+
+        let msHtml = '';
+        if (d.magicStoneStat && d.magicStoneStat.length > 0) {
+            msHtml = d.magicStoneStat.map(s => {
+                const topInfo = window.getTop10Info(true, s.name, s.value, conf.key);
+                // 使用品階色為基礎，匹配 TOP 時覆蓋成配對色
+                const gColor = (typeof getGradeColor === 'function') ? getGradeColor(s.grade || 'unique') : '#fff';
+                const color = topInfo.color || gColor;
+                const cleanStoneName = (s.name || "").split('+')[0].trim();
+                const displayVal = (s.value || "").toString().startsWith('+') ? s.value : `+${s.value}`;
+                return `
+                    <div style="color:${color}; font-size:13px; margin-bottom:4px; font-weight:${topInfo.color ? 'bold' : 'normal'}; display:flex; justify-content:space-between; align-items:center;">
+                        <span>• ${cleanStoneName}</span>
+                        <span style="font-weight:bold; margin-left:8px;">${displayVal}</span>
+                    </div>`;
+            }).join('');
+        } else {
+            msHtml = `<div style="color:#777; font-size:12px;">無${msLabel}</div>`;
+        }
+
         return `
-                                        <details style="background: rgba(255,255,255,0.02); border-radius: 8px; border: 1px solid rgba(255,255,255,0.04); overflow:hidden;">
-                                            <summary style="padding: 12px; cursor:pointer; font-size:14px; color:#fff; display:flex; justify-content:space-between; list-style:none;">
-                                                <span style="font-weight:800;">LV.${lv}</span>
-                                                <span style="color:#8b949e;">${count}件</span>
-                                            </summary>
-                                            <div style="padding: 10px; font-size: 12px; color:#999; border-top: 1px solid rgba(255,255,255,0.02); background:rgba(0,0,0,0.2);">
-                                                ${levelGroups[lv].map(i => `<div style="margin-bottom:2px;">[${(i.detail || i).categoryName || '--'}] ${(i.detail || i).name}</div>`).join('')}
-                                            </div>
-                                        </details>
-                                    `;
-    }).join('')}
-                            </div>
-                        </div>
-                        <div id="stats-area-stone" style="display:none;">
-                            <div style="display:flex; flex-direction:column; gap:8px;">
-                                ${Object.entries(stoneGrades).sort((a, b) => {
-        const o = { '神話': 6, '唯一': 5, '傳說': 4, '史詩': 3, '稀有': 2, '一般': 1 };
-        return (o[b[0]] || 0) - (o[a[0]] || 0);
-    }).map(([grade, d]) => {
-        const color = typeof getGradeColor === 'function' ? getGradeColor(d.gradeKey) : '#fff';
-        return `
-                                        <details style="background: rgba(255,255,255,0.02); border-radius:8px; border:1px solid rgba(255,255,255,0.04); overflow:hidden;">
-                                            <summary style="padding: 12px; cursor:pointer; font-size:14px; display:flex; justify-content:space-between; list-style:none;">
-                                                <span style="color:${color}; font-weight:800;">${grade}</span>
-                                                <span style="color:#8b949e;">${d.count} 顆</span>
-                                            </summary>
-                                            <div style="padding: 10px; font-size: 12px; color:#ccc; border-top: 1px solid rgba(255,255,255,0.02); background:rgba(0,0,0,0.2);">
-                                                ${d.list.map(s => `<div style="margin-bottom:3px;">[${s.slotName}] ${s.itemName} - <span style="color:${color}">${s.stoneName}</span></div>`).join('')}
-                                            </div>
-                                        </details>
-                                    `;
-    }).join('')}
-                            </div>
-                        </div>
+            <div style="background: rgba(15, 20, 30, 0.4); border: 1px solid rgba(255,255,255,0.05); border-radius: 8px; padding: 15px; height: 100%; display: flex; flex-direction: column;">
+                <h4 style="color:var(--gold); margin:0 0 15px 0; font-size:15px; font-weight:800; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:8px;">
+                    [${conf.title}] ${d.name}
+                </h4>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin-bottom: 20px; flex-grow: 1;">
+                    <div style="background:rgba(0,0,0,0.2); padding:10px; border-radius:6px; border:1px solid rgba(255,255,255,0.05);">
+                        <div style="color:#c8d6e5; font-size:12px; margin-bottom:6px; font-weight:bold; opacity:0.8;">✨ 現有詞條</div>
+                        ${sbHtml}
+                    </div>
+                    <div style="background:rgba(0,0,0,0.2); padding:10px; border-radius:6px; border:1px solid rgba(255,255,255,0.05);">
+                        <div style="color:#c8d6e5; font-size:12px; margin-bottom:6px; font-weight:bold; opacity:0.8;">💎 現有${msLabel}</div>
+                        ${msHtml}
                     </div>
                 </div>
-
-                <!-- 右側：水分名單 -->
-                <div class="stats-card" style="background: rgba(255,0,0,0.02); border: 1px solid rgba(255,60,60,0.15); border-radius: 12px; padding: 20px; display: flex; flex-direction: column;">
-                    <h4 style="color: #ff6b6b; margin: 0 0 20px 0; font-size: 16px; font-weight: 800; display:flex; align-items:center; gap:8px;">
-                        <span style="font-size:20px;">⚠️</span> 水分名單
-                    </h4>
-                    <div style="flex:1; display:flex; flex-direction:column; gap:15px; overflow-y:auto; scrollbar-width:thin;">
-                        <div style="background: rgba(0,0,0,0.2); border-radius: 10px; padding: 15px; border:1px solid rgba(255,255,255,0.03);">
-                            <div style="color: #ff6b6b; font-size: 13px; font-weight: 800; border-bottom: 1px solid rgba(255,107,107,0.2); padding-bottom: 8px; margin-bottom: 10px; display:flex; justify-content:space-between; align-items:center;">
-                                <span>📉 等級最低前五名</span>
-                            </div>
-                            <div style="display: flex; flex-direction: column; gap: 8px;">
-                                ${bottomByLevel.map(i => {
-        const d = i.detail || i;
-        const r = typeof getEquipmentRarityInfo === 'function' ? getEquipmentRarityInfo(i) : { color: '#fff' };
-        return `<div style="display:flex; justify-content:space-between; font-size:13px; align-items:center;">
-                                        <span style="color:#8b949e; width:45px;">LV.${d.level}</span>
-                                        <span style="color:${r.color}; font-weight:800; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${d.name}</span>
-                                        <span style="color:#555; font-size:11px; margin-left:6px;">[${d.categoryName}]</span>
-                                    </div>`;
-    }).join('') || '<div style="color:#555; font-size:13px; font-style:italic; text-align:center;">暫無符合條件裝備</div>'}
-                            </div>
-                        </div>
-                        <div style="background: rgba(0,0,0,0.2); border-radius: 10px; padding: 15px; border:1px solid rgba(255,255,255,0.03);">
-                            <div style="color: #ff6b6b; font-size: 13px; font-weight: 800; border-bottom: 1px solid rgba(255,107,107,0.2); padding-bottom: 8px; margin-bottom: 10px;">
-                                📉 低品階磨石 (優先洗掉)
-                            </div>
-                            <div style="display: flex; flex-direction: column; gap: 6px;">
-                                ${worstStoneSuggestions.map(s => {
-        const stoneColor = typeof getGradeColor === 'function' ? getGradeColor(s.gradeKey) : '#fff';
-        const itemRInfo = typeof getEquipmentRarityInfo === 'function' ? getEquipmentRarityInfo(s.itemObj) : { color: '#fff' };
-        return `<div style="display:flex; justify-content:space-between; font-size:13px; align-items:center;">
-                                        <div style="display:flex; align-items:center; flex:1; overflow:hidden;">
-                                            <span style="color:#8b949e; width:45px; flex-shrink:0;">LV.${s.itemLevel}</span>
-                                            <span style="color:${itemRInfo.color}; font-weight:800; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-right:8px;">${s.itemName}</span>
-                                            <span style="color:${stoneColor}; font-weight:800; flex-shrink:0; margin-right:8px;">${s.gradeName}</span>
-                                            <span style="color:#ccc; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${s.stoneName}</span>
-                                        </div>
-                                        <span style="color:#555; font-size:11px; margin-left:6px; flex-shrink:0;">[${s.slotName}]</span>
-                                    </div>`;
-    }).join('') || '<div style="color:#555; font-size:13px; font-style:italic; text-align:center;">全身皆為高級磨石</div>'}
-                            </div>
-                        </div>
-                    </div>
-                   
+                
+                <div style="font-size:12px; color:#94a3b8; line-height:1.5; background:rgba(0,0,0,0.3); padding:8px 12px; border-radius:6px; border-left:3px solid var(--gold); margin-top: auto;">
+                    *統計全職業最熱門的「各部位洗練」與「魔石鑲嵌」配置。<BR>手機板尚在調整中請用WEB瀏覽<br>
+                    將抓取您身上裝備，吻合詞條榜顯示為 <b style="color:#2ecc71;">亮綠色</b>，吻合魔石榜顯示為 <b>品階對應色</b>，數值超越TOP者標記 <b style="color:#f1c40f;">UP!</b>。
                 </div>
+            </div>
+        `;
+    };
+
+    window.currentStatPlaystyle = window.currentStatPlaystyle || 'PVE';
+
+    // Precise keyword-based part detection
+
+    const validSlots = [];
+    let itemsPool = [...items];
+
+    // Priority 1: Exact mapping by PartKey
+    // Priority 1: Exact mapping by Match Function or PartKey
+    slotConfig.forEach(conf => {
+        let bestIdx = itemsPool.findIndex(i => {
+            if (conf.match) return conf.match(i);
+            const pk = window.getPartKey(i);
+            return pk === conf.key || (conf.key.includes('Bracelet') && pk?.includes('Bracelet'));
+        });
+        if (bestIdx !== -1) {
+            validSlots.push({ conf, userItem: itemsPool[bestIdx] });
+            itemsPool.splice(bestIdx, 1);
+        }
+    });
+
+    if (validSlots.length === 0) {
+        container.innerHTML = `<div style="padding:40px; text-align:center; color:#ff6b6b; font-size:14px;">找不到可比對的穿戴裝備。</div>`;
+        return;
+    }
+
+    // Determine target active key: use provided key, then global state, then first available slot
+    if (!activeKey || !validSlots.some(s => s.conf.key === activeKey)) {
+        activeKey = validSlots.length > 0 ? validSlots[0].conf.key : null;
+    }
+
+    // Persistent tracking
+    window.__CURRENT_STATS_TAB__ = activeKey;
+
+    let subNavHtml = `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">`;
+    subNavHtml += `<div style="display:flex; flex-wrap:wrap; gap:8px;" id="stats-sub-nav">`;
+    validSlots.forEach((slot) => {
+        const isActive = slot.conf.key === window.__CURRENT_STATS_TAB__;
+        const activeClass = isActive ? "active" : "";
+
+        subNavHtml += `
+            <div 
+                onclick="window.switchStatSubTab('${slot.conf.key}')"
+                 class="stat-sub-tab-btn ${activeClass}" 
+                 data-target="stat-tab-${slot.conf.key}"
+                 style="cursor:pointer; padding:6px 12px; border-radius:6px; font-size:11px; font-weight:bold; transition:all 0.2s; border:1px solid rgba(255,255,255,0.1); background:rgba(0,0,0,0.2); color:#888;">
+                 ${slot.conf.title}
+             </div>
+        `;
+    });
+
+    subNavHtml += `</div></div>`;
+
+    let playstyleSwitchHtml = `
+        <div style="display:flex; background:rgba(0,0,0,0.3); border-radius:4px; overflow:hidden; border:1px solid rgba(255,255,255,0.1); margin:-6px -4px; transform: scale(0.9); transform-origin: right;">
+            <div onclick="window.switchStatPlaystyle('PVE')" 
+                 style="cursor:pointer; padding:4px 12px; font-size:12px; font-weight:bold; background:${window.currentStatPlaystyle === 'PVE' ? 'var(--gold)' : 'transparent'}; color:${window.currentStatPlaystyle === 'PVE' ? '#000' : '#888'}; transition:all 0.2s;">
+                 PVE
+            </div>
+            <div onclick="window.switchStatPlaystyle('PVP')" 
+                 style="cursor:pointer; padding:4px 12px; font-size:12px; font-weight:bold; background:${window.currentStatPlaystyle === 'PVP' ? 'var(--gold)' : 'transparent'}; color:${window.currentStatPlaystyle === 'PVP' ? '#000' : '#888'}; transition:all 0.2s;">
+                 PVP
             </div>
         </div>
     `;
+
+    // Global script for toggling tabs
+    window.switchStatSubTab = function (key) {
+        window.__CURRENT_STATS_TAB__ = key;
+        const btns = document.querySelectorAll('#stats-sub-nav .stat-sub-tab-btn');
+        const contents = document.querySelectorAll('.stat-sub-tab-content');
+
+        btns.forEach(b => {
+            if (b.dataset.target === `stat-tab-${key}`) {
+                b.classList.add('active');
+            } else {
+                b.classList.remove('active');
+            }
+        });
+
+        contents.forEach(c => {
+            c.style.display = (c.id === `stat-tab-${key}`) ? 'block' : 'none';
+        });
+    };
+
+    window.switchStatPlaystyle = function (mode) {
+        if (window.currentStatPlaystyle === mode) return;
+        window.currentStatPlaystyle = mode;
+        if (window.__LAST_DATA_JSON__) {
+            window.renderStatsTab(window.__LAST_DATA_JSON__, window.__CURRENT_STATS_TAB__);
+        }
+    };
+
+    // Build Content Areas
+    let blocksHtml = '';
+
+    validSlots.forEach((slot, idx) => {
+        let { conf, userItem } = slot;
+
+        // Data Mapping Normalization: Normalize keys for dual slots like Earrings and Rings
+        let dataKey = conf.key;
+        if (dataKey.startsWith('Earring')) dataKey = 'Earring';
+        if (dataKey.startsWith('Ring')) dataKey = 'Ring';
+        if (dataKey.startsWith('Bracelet')) dataKey = 'Bracelet';
+
+        let sbDist = STATIC_STATS_DATA[dataKey + '_' + window.currentStatPlaystyle] || [];
+
+        const isAccessory = ['Cape', 'Necklace', 'Earring1', 'Earring2', 'Ring1', 'Ring2', 'Bracelet', 'Bracelet2'].includes(conf.key);
+        const groupKey = isAccessory ? 'accessory' : 'gear';
+        const msLabel = isAccessory ? '靈石' : '魔石';
+
+        const msDistName = `MagicStone_${window.currentStatPlaystyle}_${groupKey}`;
+        let msDist = STATIC_STATS_DATA[msDistName] || [];
+
+        const isDisplay = (slot.conf.key === window.__CURRENT_STATS_TAB__) ? 'block' : 'none';
+
+        blocksHtml += `
+                <div id="stat-tab-${slot.conf.key}" class="stat-sub-tab-content" style="display:${isDisplay};">
+                    <div style="background: rgba(26, 35, 50, 0.4); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); margin-bottom: 20px;">
+                        <div style="display:grid; grid-template-columns: 1.15fr 0.85fr; gap: 20px;">
+
+                            <!-- 左半邊：排行榜 -->
+                            <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                                <div>
+                                    <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(100, 100, 255, 0.15); padding:8px 10px; font-weight:bold; font-size:13px; color:#c8d6e5; border-radius:4px 4px 0 0; border-bottom:1px solid rgba(100,100,255,0.2);">
+                                        <div>✨ 詞條榜 (Top 10)</div>
+                                        ${playstyleSwitchHtml}
+                                    </div>
+                                    <div style="padding:0;">
+                                        ${renderTop10List(sbDist, soulbindNameMap, false, userItem)}
+                                    </div>
+                                </div>
+                                <div>
+                                    <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255, 100, 100, 0.15); padding:8px 10px; font-weight:bold; font-size:13px; color:#c8d6e5; border-radius:4px 4px 0 0; border-bottom:1px solid rgba(255,100,100,0.2);">
+                                        <div>💎 ${msLabel}榜 (Top 10)</div>
+                                        ${playstyleSwitchHtml}
+                                    </div>
+                                    <div style="padding:0;">
+                                        ${renderTop10List(msDist, magicStoneMap, true, userItem)}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 右半邊：裝備明細 -->
+                            <div>
+                                ${renderUserItem(userItem, sbDist, msDist, conf)}
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+                `;
+    });
+
+    let html = `
+                <style>
+                #stats-sub-nav .stat-sub-tab-btn:hover { background: rgba(100, 100, 255, 0.2)!important; border-color: rgba(100, 100, 255, 0.5)!important; }
+            #stats-sub-nav .stat-sub-tab-btn.active { background: rgba(100, 100, 255, 0.4)!important; border-color: rgba(100, 100, 255, 0.8)!important; color: #fff!important; }
+        </style>
+                <div class="stats-outer-wrapper" style="padding: 10px; display: flex; flex-direction: column; gap: 10px;">
+                    ${subNavHtml}
+                    ${blocksHtml}
+                </div>
+            `;
+
     container.innerHTML = html;
+
+    // Immediately sync the UI to the correct active tab
+    if (activeKey) {
+        window.switchStatSubTab(activeKey);
+    }
 };
 
 window.switchEquipTab = function (tab) {
@@ -7127,7 +7575,6 @@ window.switchEquipTab = function (tab) {
     } else if (tab === 'layout') {
         layoutTab.style.display = 'block';
         if (btnLayout) btnLayout.classList.add('active');
-        // Render layout if not already rendered or always for fresh data
         if (window.__LAST_DATA_JSON__ && typeof window.renderLayoutTab === 'function') {
             window.renderLayoutTab(window.__LAST_DATA_JSON__);
         }
