@@ -16,7 +16,7 @@
     <meta property="og:url" content="https://don1ta.github.io/aiongame/aion.html">
     <meta property="og:site_name" content="Web design don1">
     <!-- 引入外部 CSS -->
-    <link rel="stylesheet" href="css/aion.css?v=tooltip_card_v1">
+    <link rel="stylesheet" href="css/aion.css?v=anti_shake_v1">
     <link rel="stylesheet" href="css/search.css?v=score_colors_v4">
 
     <!-- 引入共用配置與圖表庫 -->
@@ -62,7 +62,7 @@
             <!-- 裝備分析系統：整合式大型區塊 -->
             <!-- 裝備分析系統：整合式左資訊/右分頁佈局 -->
             <div class="card" style="margin-bottom: 30px; padding: 0; overflow: hidden;">
-                <div class="split-integrated-layout layout-fixed-height" style="display: flex; align-items: stretch;">
+                <div class="split-integrated-layout" style="display: flex; align-items: stretch;">
                     <!-- 左側固定欄：個人資訊 -->
                     <div class="equip-sidebar-profile" id="equip-sidebar-profile"
                         style="width: 280px; background: rgba(0,0,0,0.2); border-right: 1px solid var(--border); padding: 30px 20px; display: flex; flex-direction: column; align-items: center; gap: 20px;">
@@ -107,8 +107,9 @@
                                     style="display:flex; justify-content:space-between; align-items:center; padding:10px ;">
                                     <span>⚔️ 武器與防具</span>
                                     <!-- 📸 全能量門截圖按鈕 - 放在此處擷取整個簡易分頁 -->
-                                    <div id="btn-equip-screenshot-simple" class="btn-screenshot"
-                                        onclick="window.downloadEquipScreenshot('simple')">📸 一鍵截圖 </div>
+                                    <div id="btn-equip-screenshot" class="stat-tab-btn"
+                                        style="background: rgba(46, 204, 113, 0.2); color: #2ecc71; margin: 0; padding: 4px 15px; font-size: 12px; border: 1px solid rgba(46, 204, 113, 0.3);"
+                                        onclick="window.downloadEquipScreenshot()">📸 一鍵截圖 </div>
                                 </div>
                                 <div id="equip-armor-list-simple" class="grid-box-container"
                                     style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));"></div>
@@ -119,12 +120,7 @@
 
                             <!-- 完整細項 -->
                             <div id="equip-tab-detail" style="display:none;">
-                                <div class="mini-section-header"
-                                    style="display:flex; justify-content:space-between; align-items:center; padding:10px ;">
-                                    <span>⚔️ 武器與防具</span>
-                                    <div id="btn-equip-screenshot-detail" class="btn-screenshot"
-                                        onclick="window.downloadEquipScreenshot('detail')">📸 一鍵截圖 </div>
-                                </div>
+                                <div class="mini-section-header" style="padding:10px">⚔️ 武器與防具</div>
                                 <div id="equip-armor-list"></div>
                                 <div class="mini-section-header" style="padding:10px">📿 飾品與配件</div>
                                 <div id="equip-accessory-list"></div>
@@ -152,29 +148,77 @@
                     </div>
 
 
-                    <!-- 歷史趨勢圖表 -->
+                    <!-- Toggle Tabs for History vs Class Distribution -->
                     <div class="card">
-                        <div id="p-ranking-new" class="rank-grid-new" style="margin-top:0;"></div>
-                        <div id="trend-chart-container" style="position: relative; height: 350px; margin-top: 15px;">
-                            <canvas id="trend-chart"></canvas>
+                        <div class="card-header-tabs"
+                            style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:10px;">
+                            <div style="display:flex; gap:15px;">
+                                <div id="tab-btn-trend" class="stat-tab-btn active"
+                                    onclick="switchMainChartTab('trend')">📊
+                                    歷史趨勢</div>
+                                <div id="tab-btn-class" class="stat-tab-btn" onclick="switchMainChartTab('class')">
+                                    👥
+                                    職業分布</div>
+                                <div id="tab-btn-server" class="stat-tab-btn" onclick="switchMainChartTab('server')">🏢
+                                    全伺服器</div>
+                            </div>
                         </div>
-                        <div id="trend-info"
-                            style="margin-top: 15px; font-size: 13px; color: #8b949e; text-align: center;"></div>
+
+                        <div id="tab-content-trend" style="display:block;">
+                            <div id="p-ranking-new" class="rank-grid-new" style="margin-top:0;"></div>
+                            <div id="trend-chart-container"
+                                style="position: relative; height: 350px; margin-top: 15px;">
+                                <canvas id="trend-chart"></canvas>
+                            </div>
+                            <div id="trend-info"
+                                style="margin-top: 15px; font-size: 13px; color: #8b949e; text-align: center;">
+                            </div>
+                        </div>
+
+
+                        <div id="tab-content-class" style="display:none;">
+                            <div
+                                style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; padding:15px; border-bottom:1px solid rgba(255,255,255,0.05);">
+                                <div style="color:#8b949e; font-size:14px;">全服職業分布</div>
+                                <div id="region-toggle-container"
+                                    style="display:flex; gap:5px; background:rgba(0,0,0,0.3); padding:4px; border-radius:6px;">
+                                    <button id="region-btn-tw" onclick="switchClassRegion('tw')"
+                                        style="background:#3b82f6; color:white; border:none; padding:4px 10px; border-radius:4px; cursor:pointer; font-size:12px; font-weight:bold;">TW
+                                        (台灣)</button>
+                                    <button id="region-btn-ko" onclick="switchClassRegion('ko')"
+                                        style="background:transparent; color:#8b949e; border:none; padding:4px 10px; border-radius:4px; cursor:pointer; font-size:12px; font-weight:bold;">KO
+                                        (韓國)</button>
+                                </div>
+                            </div>
+                            <div id="class-dist-chart-container" style="position: relative; height: 450px;">
+                                <canvas id="class-dist-chart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Content 3: Server Distribution -->
+                        <div id="tab-content-server" style="display:none;">
+                            <div
+                                style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; padding:15px; border-bottom:1px solid rgba(255,255,255,0.05);">
+                                <div style="color:#8b949e; font-size:14px;">伺服器排行 (Server Distribution)</div>
+                                <div id="region-toggle-server-container"
+                                    style="display:flex; gap:5px; background:rgba(0,0,0,0.3); padding:4px; border-radius:6px;">
+                                    <button id="server-stats-region-btn-tw" onclick="switchServerRegion('tw')"
+                                        style="background:#3b82f6; color:white; border:none; padding:4px 10px; border-radius:4px; cursor:pointer; font-size:12px; font-weight:bold;">TW
+                                        (台灣)</button>
+                                    <button id="server-stats-region-btn-ko" onclick="switchServerRegion('ko')"
+                                        style="background:transparent; color:#8b949e; border:none; padding:4px 10px; border-radius:4px; cursor:pointer; font-size:12px; font-weight:bold;">KO
+                                        (韓國)</button>
+                                </div>
+                            </div>
+                            <!-- Will be rendered by JS -->
+                            <div id="race-dist-container" style="margin-bottom: 20px; padding: 0 15px;"></div>
+                            <div id="server-dist-chart-container" style="position: relative;  padding:15px;">
+                                <!-- Will be rendered by JS -->
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="card" style="margin-top: 20px;">
-                        <h3>🎖️ 稱號系統加成細項</h3>
-                        <div id="title-grid" class="title-grid"></div>
-                    </div>
-
-
-                    <div class="card" style="margin-top: 20px;">
-                        <h3>🐾 寵物與翅膀</h3>
-                        <div id="petwing-grid" class="grid-box-container"
-                            style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));"></div>
-                        <h3 id="pet-insight-header" style="margin-top: 25px;">🧠 寵物洞察力</h3>
-                        <div id="pet-insight-grid" class="grid-box-container"></div>
-                    </div>
+                    <!-- 原本這裡的稱號與寵物系統區塊已移動至底部全寬分頁區塊 -->
 
 
                 </div>
@@ -183,7 +227,7 @@
                         <!-- 機體健檢報告 -->
                         <div id="health-check-card" class="card" style="display:none; flex:1; margin-top:0;"></div>
 
-                        <!-- 主要能力值概覽 -->
+                        <!-- 主要能力值概覽 (已移動至此) -->
                         <div class="card" id="nav-target-stats" style="flex:1; margin-top:0;">
                             <div class="stat-card-header"
                                 style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:10px;">
@@ -268,175 +312,222 @@
                                     style="padding:5px 25px 25px 25px;">
                                 </div>
                             </div>
+                        </div> <!-- End combat-analysis-body -->
+                    </div> <!-- End nav-target-analysis card -->
+                </div> <!-- End right-column -->
+            </div> <!-- End main-layout-wrapper -->
+
+            <!-- ⚔️ 技能等級分解 (全寬區塊) -->
+            <div class="card full-width-card" id="nav-target-skill"
+                style="margin-top: 20px; padding:0; overflow:hidden;">
+                <div
+                    style="padding: 20px 25px; border-bottom: 1px solid rgba(255,255,255,0.05); background: rgba(0,0,0,0.2);">
+                    <h2 style="margin:0; color:var(--gold-bright); display:flex; align-items:center; gap:10px;">
+                        <span style="font-size:24px;">⚔️</span> 技能等級分解
+                    </h2>
+                </div>
+                <div style="padding: 25px;">
+                    <div class="sk-label">▶ 主動技能</div>
+                    <div id="sk-act" class="skill-list"
+                        style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));"></div>
+                    <div class="sk-label">▶ 被動技能</div>
+                    <div id="sk-pas" class="skill-list"
+                        style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));"></div>
+                    <div class="sk-label">▶ 特殊/烙印技能</div>
+                    <div id="sk-stigma" class="skill-list"
+                        style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));"></div>
+                </div>
+            </div>
+
+            <!-- 🌟 新增的附加與收集系統區塊 -->
+            <div class="card full-width-card" id="nav-target-collection"
+                style="margin-top: 20px; padding:0; overflow:hidden;">
+                <div
+                    style="padding: 20px 25px; border-bottom: 1px solid rgba(255,255,255,0.05); background: rgba(0,0,0,0.2);">
+                    <h2 style="margin:0; color:var(--gold-bright); display:flex; align-items:center; gap:10px;">
+                        <span style="font-size:24px;">🌟</span> 附加與收集系統
+                    </h2>
+                </div>
+
+                <div class="collection-tabs-container" style="display:flex; flex-direction:column;">
+                    <div class="stat-tabs-header collection-tabs integrated-tabs"
+                        style="margin: 0; padding: 10px 20px; background: rgba(0,0,0,0.3); overflow-x: auto; white-space: nowrap; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                        <div id="tab-btn-col-title" class="stat-tab-btn active" onclick="switchCollectionTab('title')">
+                            🎖️ 稱號系統</div>
+                        <div id="tab-btn-col-pet" class="stat-tab-btn" onclick="switchCollectionTab('pet')">🐾 寵物與翅膀
                         </div>
-
-
-
-                        <div class="card" id="nav-target-skill">
-                            <h3>⚔️ 技能等級分解</h3>
-                            <div class="sk-label">▶ 主動技能</div>
-                            <div id="sk-act" class="skill-list"></div>
-                            <div class="sk-label">▶ 被動技能</div>
-                            <div id="sk-pas" class="skill-list"></div>
-                            <div class="sk-label">▶ 特殊/烙印技能</div>
-                            <div id="sk-stigma" class="skill-list"></div>
+                        <div id="tab-btn-col-arcana" class="stat-tab-btn" onclick="switchCollectionTab('arcana')">
+                            🎴 魔力聖物</div>
+                        <div id="tab-btn-col-set" class="stat-tab-btn" onclick="switchCollectionTab('set')">🔱 套裝效果
                         </div>
-
-                        <div class="card">
-                            <h3>🎴 魔力聖物系統細項</h3>
+                    </div>
+                    <div class="collection-tabs-content" style="padding: 25px; min-height:300px;">
+                        <!-- 稱號 -->
+                        <div id="col-tab-title" class="col-tab-pane" style="display:block;">
+                            <div id="title-grid" class="title-grid"></div>
+                        </div>
+                        <!-- 寵物 -->
+                        <div id="col-tab-pet" class="col-tab-pane" style="display:none;">
+                            <div id="petwing-grid" class="grid-box-container"
+                                style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));"></div>
+                            <h3 id="pet-insight-header" style="margin-top: 25px;">🧠 寵物洞察力</h3>
+                            <div id="pet-insight-grid" class="grid-box-container"></div>
+                        </div>
+                        <!-- 聖物 -->
+                        <div id="col-tab-arcana" class="col-tab-pane" style="display:none;">
                             <div id="arcana-grid" class="grid-box-container"
                                 style="grid-template-columns: repeat(3, 1fr);">
                             </div>
-                            <h3>🔱 套裝效果全覽</h3>
+                        </div>
+                        <!-- 套裝 -->
+                        <div id="col-tab-set" class="col-tab-pane" style="display:none;">
                             <div id="set-bonus-grid" class="grid-box-container"
                                 style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));"></div>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <!-- 手機版快速導覽列 (因 CSS 已包含 #mobile-quick-nav 設定，所以會自動在手機版顯示並置底) -->
-                <div id="mobile-quick-nav">
-                    <a href="#nav-target-role" class="nav-btn">
+            <!-- 手機版快速導覽列 (因 CSS 已包含 #mobile-quick-nav 設定，所以會自動在手機版顯示並置底) -->
+            <div id="mobile-quick-nav">
+                <a href="#nav-target-role" class="nav-btn">
 
-                        <span>角色</span>
-                    </a>
-                    <a href="#nav-target-equip" class="nav-btn">
+                    <span>角色</span>
+                </a>
+                <a href="#nav-target-equip" class="nav-btn">
 
-                        <span>裝備</span>
-                    </a>
-                    <a href="#nav-target-index" class="nav-btn">
+                    <span>裝備</span>
+                </a>
+                <a href="#nav-target-index" class="nav-btn">
 
-                        <span>健檢</span>
-                    </a>
-                    <a href="#nav-target-stats" class="nav-btn">
+                    <span>健檢</span>
+                </a>
+                <a href="#nav-target-stats" class="nav-btn">
 
-                        <span>指標</span>
-                    </a>
-                    <a href="#nav-target-analysis" class="nav-btn">
+                    <span>指標</span>
+                </a>
+                <a href="#nav-target-analysis" class="nav-btn">
 
-                        <span>分析</span>
-                    </a>
-                    <a href="#nav-target-skill" class="nav-btn">
+                    <span>分析</span>
+                </a>
+                <a href="#nav-target-skill" class="nav-btn">
 
-                        <span>技能</span>
-                    </a>
-                </div>
-
+                    <span>技能</span>
+                </a>
             </div>
 
         </div>
 
-        <!-- 引入靜態資料庫 (原獨立 JSON 轉為 JS) -->
-        <script src="js/wings_data.js"></script>
-        <script src="js/stat_descriptions.js"></script>
-        <script src="js/passive_skills.js"></script>
-        <script src="js/skill-names.js"></script>
-        <script src="js/skill_data_static.js"></script>
-        <script src="js/stats_static_data.js"></script>
+    </div>
 
-        <!-- 引入核心功能腳本 -->
-        <script src="js/skill-api.js?v=99"></script>
-        <script src="js/equipment-score.js?v=v_stigma_fix"></script>
-        <script src="js/health_check.js"></script>
-        <script src="js/peek_score.js?v=score_colors_v5"></script>
-        <script src="js/aion.js?v=tooltip_card_v1"></script>
-
-        <!-- 裝備詳情彈窗 -->
-        <div id="equip-tooltip-overlay" class="tooltip-overlay" onclick="closeEquipTooltip(event)">
-            <div class="equip-tooltip" id="equip-tooltip-content" onclick="event.stopPropagation()">
-                <!-- 動態生成內容 -->
-            </div>
+    <!-- 引入核心功能腳本 -->
+    <script src="js/skill-api.js?v=99"></script>
+    <script src="js/equipment-score.js?v=UI_FIX_FINAL"></script>
+    <script src="js/health_check.js"></script>
+    <script src="js/peek_score.js?v=score_colors_v5"></script>
+    <script src="js/passive_skills.js"></script>
+    <script src="js/stat_descriptions.js"></script>
+    <script src="js/stats_static_data.js"></script>
+    <script src="js/aion.js?v=v_tooltip_godstone_v6"></script>
+    <script src="js/class_distribution.js"></script>
+    <script src="js/server_stats.js"></script>
+    <!-- 裝備詳情彈窗 -->
+    <div id="equip-tooltip-overlay" class="tooltip-overlay" onclick="closeEquipTooltip(event)">
+        <div class="equip-tooltip" id="equip-tooltip-content" onclick="event.stopPropagation()">
+            <!-- 動態生成內容 -->
         </div>
+    </div>
 
-        <!-- 📓 作者日記彈窗 -->
-        <div id="diary-overlay" class="diary-overlay" onclick="window.closeAuthorDiary()">
-            <div class="diary-modal" onclick="event.stopPropagation()">
-                <div class="diary-header">
-                    <div style="display:flex; align-items:center; gap:10px;">
-                        <span style="font-size:20px;">📓</span>
-                        <h3 style="margin:0; border:none; padding:0; color:var(--gold-bright);">作者開發日記 & 公告</h3>
-                    </div>
-                    <div class="diary-close" onclick="window.closeAuthorDiary()">×</div>
+    <!-- 📓 作者日記彈窗 -->
+    <div id="diary-overlay" class="diary-overlay" onclick="window.closeAuthorDiary()">
+        <div class="diary-modal" onclick="event.stopPropagation()">
+            <div class="diary-header">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <span style="font-size:20px;">📓</span>
+                    <h3 style="margin:0; border:none; padding:0; color:var(--gold-bright);">作者開發日記 & 公告</h3>
                 </div>
-                <div class="diary-body" style="scrollbar-width: none;">
-                    <!-- 日記條目 -->
-                    <div class="diary-item">
-                        <!--<div class="diary-date">2026-02-26</div>-->
-                        <div class="diary-title">⭐關於作者</div>
-                        <div class="diary-text">
-                            這是一個人的興趣，也是一群人的工具。<br>網站與官方無合作關係，don1 會持續更新，直到冒險結束的那一天。
-                        </div>
-                    </div>
-                    <div class="diary-item">
-                        <div class="diary-date">2026-03-06</div>
-                        <div class="diary-title">✨ 近期改動</div>
-                        <div class="diary-text">
-                            1.[新增]-統計前10 TOP詞條與磨石靈石--可試用、開發中。<br>
-                            2.[移除]-伺服器人數統計-太燒效能<br>
-                        </div>
-                    </div>
-                    <div class="diary-item">
-                        <!--<div class="diary-date">2026-02-24</div>-->
-                        <div class="diary-title">🛡️ 正在向作者許願.代辦</div>
-                        <div class="diary-text">
-                            ■ | 建置角色比較系統---沒空<br>
-                            ■ | 優化屬性到達靈界值提示色---預計。<br>
-                        </div>
+                <div class="diary-close" onclick="window.closeAuthorDiary()">×</div>
+            </div>
+            <div class="diary-body">
+                <!-- 日記條目 -->
+                <div class="diary-item">
+                    <!--<div class="diary-date">2026-02-26</div>-->
+                    <div class="diary-title">⭐關於作者</div>
+                    <div class="diary-text">
+                        這是一個人的興趣，也是一群人的工具。<br>網站與官方無合作關係，don1 會持續更新，直到冒險結束的那一天。
                     </div>
                 </div>
-                <div class="diary-footer">
-                    作者：don1 | 人類(⌓‿⌓)，有些功能不是做不到，是打太多資料會被鎖。
+                <div class="diary-item">
+                    <!--<div class="diary-date">2026-02-25</div>-->
+                    <div class="diary-title">✨ 近期改動內容</div>
+                    <div class="diary-text">
+                        1.調整了裝備品階顏色，並重新優化視覺層次。<br>
+                        2.新增預覽戰力指標功能，提高即時預覽效率。<br>
+                        3.修正基礎分析細項跑版問題。
+                    </div>
+                </div>
+                <div class="diary-item">
+                    <!--<div class="diary-date">2026-02-24</div>-->
+                    <div class="diary-title">🛡️ 正在向作者許願</div>
+                    <div class="diary-text">
+                        ■ | 建置角色比較系統<br>
+                        ■ | 增加防禦力%係數
+                    </div>
                 </div>
             </div>
-        </div>
-
-        <!-- 💡 計算說明彈窗 -->
-        <div id="guide-overlay" class="diary-overlay" onclick="window.closeCalculationGuide()">
-            <div class="diary-modal" onclick="event.stopPropagation()">
-                <div class="diary-header">
-                    <div style="display:flex; align-items:center; gap:10px;">
-                        <span style="font-size:20px;">💡</span>
-                        <h3 style="margin:0; border:none; padding:0; color:var(--gold-bright);">戰力指標與增益效果計算說明</h3>
-                    </div>
-                    <div class="diary-close" onclick="window.closeCalculationGuide()">×</div>
-                </div>
-                <div class="diary-body">
-                    <div class="diary-item">
-                        <div class="diary-title">1. 增益效果分類</div>
-                        <div class="diary-text">
-                            • <b>數值類</b>：基礎值、持有、石柱。勾選後數值會直接<b>累加</b>進戰力指標。<br>
-                            • <b>排除類</b>：如「排除 PVE」與「排除守護力」。勾選後會從總分中<b>扣除</b>指定來源。
-                        </div>
-                    </div>
-                    <div class="diary-item">
-                        <div class="diary-title">2. 戰力計算公式</div>
-                        <div class="diary-text">
-                            最終數字 = <b>板塊分</b> + <b>裝備分</b> + <b>強化分</b> + <b>其他分</b>。<br>
-                            <div style="margin-top:10px; color:#fff; font-weight:bold; font-size:13px;">
-                                收集來源：系統會把所有來源算出來：
-                            </div>
-                            <div
-                                style="margin-top:5px; padding-left:12px; border-left:2px solid rgba(255,215,0,0.3); font-size:13px; color:#cbd5e1; line-height:1.8;">
-                                • <b>板塊分 (boardVal)</b>：七大守護力板塊的總和。<br>
-                                • <b>裝備分 (equipVal)</b>：裝備/持有本身能力值 + 翅膀 + 套裝效果。<br>
-                                • <b>強化分 (stoneVal)</b>：裝分的磨石與隨機屬性。<br>
-                                • <b>其他分 (otherVal)</b>：稱號 + 被動技能 + 您勾選的「數值類」增益。
-                            </div>
-                        </div>
-                    </div>
-                    <div class="diary-item">
-                        <div class="diary-title">3. 明細與 UI 連動</div>
-                        <div class="diary-text">
-                            • <b>增益明細</b>： <b>ⓘ</b> 符號可查看各板塊具體增加與扣除數值。<br>
-                            • <b>過濾清單</b>：開啟排除功能後，下方屬性明細清單會自動隱藏相關項目行。
-                        </div>
-                    </div>
-                </div>
-                <div class="diary-footer">
-                    *資料依官方回傳 API 基礎數據進行即時計算
-                </div>
+            <div class="diary-footer">
+                作者：don1 | 本專案非商業用途，資料僅供查詢與健檢參考
             </div>
         </div>
+    </div>
+
+    <!-- 💡 計算說明彈窗 -->
+    <div id="guide-overlay" class="diary-overlay" onclick="window.closeCalculationGuide()">
+        <div class="diary-modal" onclick="event.stopPropagation()">
+            <div class="diary-header">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <span style="font-size:20px;">💡</span>
+                    <h3 style="margin:0; border:none; padding:0; color:var(--gold-bright);">戰力指標與增益效果計算說明</h3>
+                </div>
+                <div class="diary-close" onclick="window.closeCalculationGuide()">×</div>
+            </div>
+            <div class="diary-body">
+                <div class="diary-item">
+                    <div class="diary-title">1. 增益效果分類</div>
+                    <div class="diary-text">
+                        • <b>數值類</b>：基礎值、持有、石柱。勾選後數值會直接<b>累加</b>進戰力指標。<br>
+                        • <b>排除類</b>：如「排除 PVE」與「排除守護力」。勾選後會從總分中<b>扣除</b>指定來源。
+                    </div>
+                </div>
+                <div class="diary-item">
+                    <div class="diary-title">2. 戰力計算公式</div>
+                    <div class="diary-text">
+                        最終數字 = <b>板塊分</b> + <b>裝備分</b> + <b>強化分</b> + <b>其他分</b>。<br>
+                        <div style="margin-top:10px; color:#fff; font-weight:bold; font-size:13px;">
+                            收集來源：系統會把所有來源算出來：
+                        </div>
+                        <div
+                            style="margin-top:5px; padding-left:12px; border-left:2px solid rgba(255,215,0,0.3); font-size:13px; color:#cbd5e1; line-height:1.8;">
+                            • <b>板塊分 (boardVal)</b>：七大守護力板塊的總和。<br>
+                            • <b>裝備分 (equipVal)</b>：裝備/持有本身能力值 + 翅膀 + 套裝效果。<br>
+                            • <b>強化分 (stoneVal)</b>：裝分的磨石與隨機屬性。<br>
+                            • <b>其他分 (otherVal)</b>：稱號 + 被動技能 + 您勾選的「數值類」增益。
+                        </div>
+                    </div>
+                </div>
+                <div class="diary-item">
+                    <div class="diary-title">3. 明細與 UI 連動</div>
+                    <div class="diary-text">
+                        • <b>增益明細</b>： <b>ⓘ</b> 符號可查看各板塊具體增加與扣除數值。<br>
+                        • <b>過濾清單</b>：開啟排除功能後，下方屬性明細清單會自動隱藏相關項目行。
+                    </div>
+                </div>
+            </div>
+            <div class="diary-footer">
+                *資料依官方回傳 API 基礎數據進行即時計算
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>

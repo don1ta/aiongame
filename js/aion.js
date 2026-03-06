@@ -3634,9 +3634,9 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                 
                 <!-- 分頁按鈕列 -->
                 <div style="display: flex; border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2);">
-                    <button id="btn-tab-score-1" class="score-tab-btn" onclick="switchScoreTab('tab-score-1')" style="flex: 1; padding: 10px 2px; border: none; background: transparent; color: var(--gold); border-bottom: 2px solid var(--gold); cursor: pointer; font-weight: bold; font-size: 12px; white-space: nowrap;">📊 綜合評分</button>
-                    <button id="btn-tab-score-2" class="score-tab-btn" onclick="switchScoreTab('tab-score-2')" style="flex: 1; padding: 10px 2px; border: none; background: transparent; color: #8b949e; border-bottom: 2px solid transparent; cursor: pointer; font-weight: bold; font-size: 12px; white-space: nowrap;">📝 計算明細</button>
-                    <button id="btn-tab-score-3" class="score-tab-btn" onclick="switchScoreTab('tab-score-3-new')" style="flex: 1; padding: 10px 2px; border: none; background: transparent; color: #8b949e; border-bottom: 2px solid transparent; cursor: pointer; font-weight: bold; font-size: 12px; white-space: nowrap;">💡 健檢分析</button>
+                    <button id="btn-tab-score-1" class="score-tab-btn" onclick="switchScoreTab('tab-score-1')" style="flex: 1; padding: 10px 2px; border: none; background: transparent; color: var(--gold); border-bottom: 2px solid var(--gold); cursor: pointer; font-weight: bold; font-size: 12px; white-space: nowrap;"> 綜合評分</button>
+                    <button id="btn-tab-score-2" class="score-tab-btn" onclick="switchScoreTab('tab-score-2')" style="flex: 1; padding: 10px 2px; border: none; background: transparent; color: #8b949e; border-bottom: 2px solid transparent; cursor: pointer; font-weight: bold; font-size: 12px; white-space: nowrap;"> 計算明細</button>
+                    <button id="btn-tab-score-3" class="score-tab-btn" onclick="switchScoreTab('tab-score-3-new')" style="flex: 1; padding: 10px 2px; border: none; background: transparent; color: #8b949e; border-bottom: 2px solid transparent; cursor: pointer; font-weight: bold; font-size: 12px; white-space: nowrap;"> 健檢分析</button>
                 </div>
 
                 <!-- 分頁 1: 個人裝備成型度 (保持原樣，僅替換列表) -->
@@ -5079,8 +5079,23 @@ function renderSkills(data, boardSkillMap, cardSkillMap, stats) {
             if (filename.includes('.')) filename = filename.split('.')[0];
             iconUrl = 'https://assets.playnccdn.com/static-aion2-gamedata/resources/' + filename + '.png';
         }
-        let tip = `<div class="tooltip"><button class="tooltip-close-btn">✕</button><b>${s.name}</b><br>基礎: Lv.${Math.max(0, s.skillLevel - bLv - cLv)}<br>板塊: +${bLv}<br>卡片: +${cLv}${effectsHtml}</div>`;
-        let h = `<div class="skill-card"><img src="${iconUrl}"><div><span class="sk-name">${s.name}</span><span style="color:var(--blue);font-size:14px">Lv.${s.skillLevel}</span></div>${tip}</div>`;
+        let h = `<div class="skill-card" onmouseover="window.handleSkillHover(this, event)" onmouseout="window.handleSkillLeave(event)" onclick="window.handleSkillClick(this, event)">
+                    <img src="${iconUrl}">
+                    <div style="display:flex; flex-direction:column; justify-content:center; gap:2px;">
+                        <span class="sk-name">${s.name}</span>
+                        <span style="color:#94a3b8; font-size:11px; font-weight:600;">Lv.${s.skillLevel}</span>
+                    </div>
+                    <div class="skill-tip-data" style="display:none;" 
+                         data-icon="${iconUrl}" 
+                         data-name="${s.name}" 
+                         data-category="${s.category}"
+                         data-level="${s.skillLevel}"
+                         data-base="${Math.max(0, s.skillLevel - bLv - cLv)}"
+                         data-plate="${bLv}"
+                         data-card="${cLv}">
+                         ${effectsHtml}
+                    </div>
+                 </div>`;
 
         if (s.category === "Active") act += h;
         else if (s.category === "Passive") {
@@ -6638,14 +6653,19 @@ window.showScreenshotResult = function (canvas, fileName) {
 // --- Tooltip Functions ---
 let tooltipHideTimer = null;
 
+const getIsMobile = () => /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 1024;
+
 window.handleSlotClick = function (e, slotId) {
+    if (e) {
+        if (typeof e.preventDefault === 'function') e.preventDefault();
+        if (typeof e.stopPropagation === 'function') e.stopPropagation();
+    }
     //不分手機或網頁，點擊都顯示固定式彈窗（Modal）以便閱讀長資訊
-    window.showEquipTooltip(slotId, 'modal');
+    window.showEquipTooltip(slotId, 'modal', e);
 };
 
 window.handleSlotHover = function (e, slotId) {
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 1024;
-    if (!isMobile) {
+    if (!getIsMobile()) {
         if (tooltipHideTimer) {
             clearTimeout(tooltipHideTimer);
             tooltipHideTimer = null;
@@ -6655,8 +6675,7 @@ window.handleSlotHover = function (e, slotId) {
 };
 
 window.handleSlotLeave = function () {
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 1024;
-    if (!isMobile) {
+    if (!getIsMobile()) {
         // 增加 200ms 延遲，讓滑鼠有機會移入 Tooltip 內而不消失
         tooltipHideTimer = setTimeout(() => {
             const overlay = document.getElementById('equip-tooltip-overlay');
@@ -6668,65 +6687,63 @@ window.handleSlotLeave = function () {
     }
 };
 
-window.showEquipTooltip = function (slotId, mode = 'modal', event = null) {
-    // [Tooltip] SlotId log 已移除
+window.handleSkillHover = function (el, e) {
+    if (!getIsMobile()) {
+        window.showSkillHoverTooltip(el, e, 'hover');
+    }
+};
 
-    // 切換模式或顯示時，先清除定時器
+window.handleSkillLeave = function (e) {
+    if (!getIsMobile()) {
+        window.closeEquipTooltip(e);
+    }
+};
+
+window.handleSkillClick = function (el, e) {
+    if (e) {
+        if (typeof e.preventDefault === 'function') e.preventDefault();
+        if (typeof e.stopPropagation === 'function') e.stopPropagation();
+    }
+    window.showSkillHoverTooltip(el, e, 'modal');
+};
+
+window.showEquipTooltip = function (slotId, mode = 'modal', event = null) {
     if (tooltipHideTimer) {
         clearTimeout(tooltipHideTimer);
         tooltipHideTimer = null;
     }
 
     const item = (window.__EQUIP_MAP__ || {})[slotId];
-    if (!item) {
-        console.warn("[Tooltip] No item found for slot:", slotId);
-        return;
-    }
+    if (!item) return;
 
     const overlay = document.getElementById('equip-tooltip-overlay');
     const content = document.getElementById('equip-tooltip-content');
     if (!overlay || !content) return;
 
-    // 清除舊的事件監聽，避免重複
-    content.onmouseenter = null;
-    content.onmouseleave = null;
-
-    // 如果懸停模式，監聽 Tooltip 進入/離開
     if (mode === 'hover') {
-        content.onmouseenter = () => {
-            if (tooltipHideTimer) {
-                clearTimeout(tooltipHideTimer);
-                tooltipHideTimer = null;
-            }
-        };
-        content.onmouseleave = () => {
-            window.handleSlotLeave();
-        };
+        content.onmouseenter = () => { if (tooltipHideTimer) { clearTimeout(tooltipHideTimer); tooltipHideTimer = null; } };
+        content.onmouseleave = () => { window.handleSlotLeave(); };
     }
 
     const d = item.detail || item;
     const name = d.name || '未知裝備';
     const icon = getCorrectIcon(item.icon || d.icon);
 
-    // 判斷品階 - 使用 getEquipmentRarityInfo 統一判斷（包含名稱關鍵字修正）
-    // 判斷品階 - 使用 getEquipmentRarityInfo 統一判斷（包含名稱關鍵字修正）
     const tooltipRarityKeyMap = { 'mythic': 'myth', 'legendary': 'unique', 'epic': 'legend', 'special': 'special', 'rare': 'rare', 'common': 'common' };
     const tooltipRarityInfo = (typeof getEquipmentRarityInfo === 'function') ? getEquipmentRarityInfo(item) : null;
     let rarityClass = tooltipRarityInfo ? (tooltipRarityKeyMap[tooltipRarityInfo.rarityKey] || 'common') : 'common';
     let gradeName = tooltipRarityInfo ? tooltipRarityInfo.name : '一般';
-    let gradeColor = tooltipRarityInfo ? tooltipRarityInfo.color : '#ffffff';
+    let gradeColor = tooltipRarityInfo ? tooltipRarityInfo.color : '#fff';
 
     let mainStatsHtml = '';
     if (d.mainStats && d.mainStats.length > 0) {
         mainStatsHtml = `
-        <div class="tooltip-section">
-        <div class="tooltip-section-title">主要能力值</div>
+            <div class="tooltip-section">
+                <div class="tooltip-section-title">主要能力值</div>
                 ${d.mainStats.map(s => {
             const extraVal = (s.extra && parseFloat(s.extra) !== 0) ? s.extra.toString().replace('+', '') : null;
             const baseValNum = parseFloat(s.value) || 0;
             const minVal = s.minValue ? parseFloat(s.minValue) : null;
-
-            // 有 minValue 時顯示範圍（如攻擊力 392 ~ 617）
             const baseDisplay = (minVal && minVal > 0)
                 ? `<span class="val-base">${minVal}</span><span style="color:#555;"> ~ </span><span class="val-base">${s.value}</span>`
                 : `<span class="val-base">${s.value}</span>`;
@@ -6734,55 +6751,48 @@ window.showEquipTooltip = function (slotId, mode = 'modal', event = null) {
             if (baseValNum === 0 && !minVal && extraVal) {
                 return `
                             <div class="stat-row">
-                                <span class="stat-label ${s.exceed ? 'val-exceed' : ''}">${s.name}</span>
-                                <span class="stat-value">
-                                    <span class="${s.exceed ? 'val-exceed' : 'val-enchant'}">+${extraVal}</span>
-                                </span>
+                                <span class="stat-label ${s.exceed ? 'val-orange' : ''}">${s.name}</span>
+                                <div class="stat-leader"></div>
+                                <span class="stat-value ${s.exceed ? 'val-orange' : 'val-bonus'}">+${extraVal}</span>
                             </div>
                         `;
             }
-
             return `
                         <div class="stat-row">
-                            <span class="stat-label ${s.exceed ? 'val-exceed' : ''}">${s.name}</span>
+                            <span class="stat-label ${s.exceed ? 'val-orange' : ''}">${s.name}</span>
+                            <div class="stat-leader"></div>
                             <span class="stat-value">
                                 ${baseDisplay}
-                                ${extraVal ? `<span class="${s.exceed ? 'val-exceed' : 'val-enchant'}"> (+${extraVal})</span>` : ''}
+                                ${extraVal ? `<span class="${s.exceed ? 'val-orange' : 'val-bonus'}"> (+${extraVal})</span>` : ''}
                             </span>
                         </div>
                     `;
-        }).join('')
-            }
+        }).join('')}
             </div>`;
     }
 
-    // 副能力值
     let subStatsHtml = '';
     const partKey = window.getPartKey ? window.getPartKey(item) : null;
     if (d.subStats && d.subStats.length > 0) {
         subStatsHtml = `
             <div class="tooltip-section">
-            <div class="tooltip-section-title">隨機能力值</div>
+                <div class="tooltip-section-title">隨機能力值</div>
                 ${d.subStats.map(s => {
             const displayVal = (s.value || "").toString().startsWith('+') ? s.value : `+${s.value}`;
             const topInfo = window.getTop10Info(false, s.name, s.value, partKey);
-            // 超越時不改色，只加 badge
-            const color = topInfo.color || '#fff';
             const exceed = s.exceed || false;
-            const badge = exceed ? `<span style="background:#f1c40f; color:#000; padding:1px 3px; border-radius:2px; font-size:9px; font-weight:900; margin-left:4px; vertical-align:middle;">TOP級</span>` : (topInfo.badge ? `<span style="background:#f1c40f; color:#000; padding:1px 3px; border-radius:2px; font-size:9px; font-weight:900; margin-left:4px; vertical-align:middle;">${topInfo.badge}</span>` : '');
-
+            const badge = exceed ? `<span style="background:#f1c40f; color:#000; padding:1px 3px; border-radius:3px; font-size:9px; font-weight:900; margin-left:4px;">TOP</span>` : '';
             return `
-                    <div class="stat-row">
-                        <span class="stat-label" style="color:${color}">${s.name}</span>
-                        <span class="stat-value bonus" style="color:${color}">${displayVal}${badge}</span>
-                    </div>
-                `;
-        }).join('')
-            }
+                        <div class="stat-row">
+                            <span class="stat-label val-green">${s.name}</span>
+                            <div class="stat-leader"></div>
+                            <span class="stat-value val-green">${displayVal}${badge}</span>
+                        </div>
+                    `;
+        }).join('')}
             </div>`;
     }
 
-    // 魔石相嵌
     let stonesHtml = '';
     if (d.magicStoneStat && d.magicStoneStat.length > 0) {
         stonesHtml = `
@@ -6792,16 +6802,13 @@ window.showEquipTooltip = function (slotId, mode = 'modal', event = null) {
                     ${d.magicStoneStat.map(s => {
             const cleanName = (s.name || "").split('+')[0].trim();
             const displayVal = (s.value || "").toString().startsWith('+') ? s.value : `+${s.value}`;
-
-            // 品階色為基礎，匹配 TOP 時覆蓋成配對色
             const topInfo = window.getTop10Info(true, s.name, s.value, partKey);
             const gColor = getGradeColor(s.grade || 'common');
             const color = topInfo.color || gColor;
-
             return `
                             <div class="stone-item">
                                 <img class="stone-icon" src="${s.icon}">
-                                <div class="stone-text" style="color: ${color}; font-weight: ${topInfo.color ? 'bold' : 'normal'}">${cleanName} ${displayVal}</div>
+                                <div class="stone-text" style="color: ${color};">${cleanName} ${displayVal}</div>
                             </div>
                         `;
         }).join('')}
@@ -6809,83 +6816,58 @@ window.showEquipTooltip = function (slotId, mode = 'modal', event = null) {
             </div>`;
     }
 
-    // 神石資訊
     let godStoneHtml = '';
     if (d.godStoneStat && d.godStoneStat.length > 0) {
-        godStoneHtml = `
-            <div class="tooltip-section">
-            <div class="tooltip-section-title">神石</div>
-                ${d.godStoneStat.map(gs => {
+        godStoneHtml = `<div class="tooltip-section"><div class="tooltip-section-title">神石</div>${d.godStoneStat.map(gs => {
             const gsColor = getGradeColor(gs.grade || 'unique');
-            return `
-                        <div style="border: 1px dashed ${gsColor}; padding: 8px; font-size: 12px; border-radius: 6px; background: rgba(0,0,0,0.2); margin-top: 5px;">
-                            <b style="color:${gsColor}">${gs.name}</b>
-                            <div style="color: #adb5bd; margin-top: 4px; line-height: 1.4;">${gs.desc}</div>
-                        </div>
-                    `;
-        }).join('')
-            }
-            </div>`;
+            return `<div style="border: 1px dashed ${gsColor}; padding:8px; font-size:12px; border-radius:6px; background:rgba(0,0,0,0.2); margin-top:5px;"><b style="color:${gsColor}">${gs.name}</b><div style="color:#adb5bd; margin-top:4px;">${gs.desc}</div></div>`;
+        }).join('')}</div>`;
     }
 
-    // 物品來源
-    const sourceHtml = d.sources ? `<div class="tooltip-footer">來源: ${d.sources.join(', ')}</div>` : '';
+    let skillsHtml = '';
+    const itemSkills = [...(d.skills || []), ...(d.itemSkills || []), ...(d.extraSkills || [])];
+    if (itemSkills.length > 0) {
+        skillsHtml = `<div class="tooltip-section"><div class="tooltip-section-title">裝備技能</div>${itemSkills.map(s => {
+            const sName = s.name || (typeof window.getSkillName === 'function' ? window.getSkillName(s.id) : s.id);
+            return `<div class="stat-row"><span class="stat-label val-bonus">${sName}</span><div class="stat-leader"></div><span class="stat-value val-bonus">${s.level ? `Lv.${s.level}` : ''}</span></div>`;
+        }).join('')}</div>`;
+    }
 
+    const sourceHtml = d.sources ? `<div class="tooltip-footer">來源: ${d.sources.join(', ')}</div>` : '';
+    const exceedLv = item.exceedLevel || d.exceedLevel || 0;
+    const exceedHtml = exceedLv > 0 ? `<span class="breakthrough-label">突破 +${exceedLv}</span>` : "";
+
+    const isMobile = getIsMobile();
     content.className = `equip-tooltip tooltip-rarity-${rarityClass}`;
-    if (mode === 'hover') {
+
+    // 只有在非移動端的 hover 模式下才讓 overlay 穿透
+    if (mode === 'hover' && !isMobile) {
         content.classList.add('is-hover');
         overlay.style.background = 'transparent';
         overlay.style.backdropFilter = 'none';
-        overlay.style.pointerEvents = 'none'; // Overlay 不阻礙點擊，但子元素（Tooltip）會在 CSS 設回 auto
+        overlay.style.pointerEvents = 'none';
         overlay.style.display = 'block';
-    } else {
+        // Modal 模式或行動端：強制顯示遮罩
         overlay.style.background = 'rgba(0, 0, 0, 0.75)';
         overlay.style.backdropFilter = 'blur(8px)';
-        overlay.style.pointerEvents = 'auto'; // Modal 模式阻礙點擊背景
+        overlay.style.pointerEvents = 'auto'; // 必須為 auto 才能點擊
         overlay.style.display = 'flex';
-    }
-
-    const exceedLv = item.exceedLevel || d.exceedLevel || 0;
-    const exceedHtml = exceedLv > 0 ? `<span class="val-exceed" style="font-size: 12px; margin-left: 5px;">突破 +${exceedLv}</span>` : "";
-
-    // 裝備技能
-    let skillsHtml = '';
-    const itemSkills = [
-        ...(d.skills || []),
-        ...(d.subSkills || []),
-        ...(d.itemSkills || []),
-        ...(d.extraSkills || [])
-    ];
-    if (itemSkills.length > 0) {
-        skillsHtml = `
-            <div class="tooltip-section">
-                <div class="tooltip-section-title">裝備技能</div>
-                ${itemSkills.map(s => {
-            const sName = s.name || (typeof window.getSkillName === 'function' ? window.getSkillName(s.id) : s.id);
-            const topInfo = window.getTop10Info(false, sName, s.level || "", partKey, [s]);
-            const color = topInfo.color || '#fff';
-            const badge = topInfo.badge ? `<span style="background:${topInfo.color}; color:#000; padding:1px 3px; border-radius:2px; font-size:9px; font-weight:900; margin-left:4px; vertical-align:middle;">${topInfo.badge}</span>` : '';
-
-            return `
-                        <div class="stat-row">
-                            <span class="stat-label" style="color: ${color};">${sName}</span>
-                            <span class="stat-value bonus" style="color: ${color};">${s.level ? `Lv.${s.level}` : ''}${badge}</span>
-                        </div>
-                    `;
-        }).join('')}
-            </div>`;
+        overlay.style.alignItems = 'flex-start'; // 靠上對齊
+        overlay.style.justifyContent = 'center';
+        overlay.style.padding = '60px 20px 20px 20px'; // 頂部留一點空間避開邊緣
+        overlay.onclick = function (e) { if (e.target === overlay) window.closeEquipTooltip(); };
     }
 
     content.innerHTML = `
-        <div class="close-tooltip" onclick="window.closeEquipTooltip(event)">×</div>
+        <div class="close-tooltip-circle" onclick="window.closeEquipTooltip(event)">×</div>
         <div class="tooltip-header">
             <div class="tooltip-icon-frame"><img src="${icon}"></div>
             <div class="tooltip-title-area">
                 <div class="tooltip-name">${item.enchantLevel > 0 ? `+${item.enchantLevel} ` : ''}${name}${exceedHtml}</div>
                 <div class="tooltip-sub-info">
-                    <span class="tooltip-grade-label">${gradeName}</span>
+                    <span class="tooltip-grade-label" style="color:${gradeColor}">${gradeName}</span>
                     ${d.categoryName ? `<span>${d.categoryName}</span>` : ''}
-                    ${d.level ? `<span>Lv.${d.level}${d.levelValue ? ` (+${d.levelValue})` : ''}</span>` : (d.equipLevel ? `<span>Lv.${d.equipLevel}</span>` : '')}
+                    <span>Lv.${d.level || d.equipLevel || 1}${d.levelValue ? ` (+${d.levelValue})` : ''}</span>
                 </div>
             </div>
         </div>
@@ -6897,39 +6879,38 @@ window.showEquipTooltip = function (slotId, mode = 'modal', event = null) {
             ${stonesHtml}
         </div>
         ${sourceHtml}
-            `;
+    `;
 
-    if (mode === 'hover' && event) {
-        let x = event.clientX + 30;
-        let y = event.clientY - 50;
+    const isMobileUI = (mode === 'modal' || isMobile);
 
-        // 防止超出右邊
-        if (x + 350 > window.innerWidth) {
-            x = event.clientX - 360;
-        }
-
-        content.style.position = 'fixed';
-        content.style.left = x + 'px';
-        content.style.top = y + 'px';
-
-        // 視窗邊緣校正
+    if (mode === 'hover' && event && !isMobile) {
+        let x = event.clientX + 30, y = event.clientY - 50;
+        if (x + 350 > window.innerWidth) x = event.clientX - 360;
+        content.style.position = 'fixed'; content.style.left = x + 'px'; content.style.top = y + 'px';
+        content.style.transform = '';
         setTimeout(() => {
             const rect = content.getBoundingClientRect();
-            if (rect.bottom > window.innerHeight) {
-                content.style.top = (window.innerHeight - rect.height - 20) + 'px';
-            }
-            if (rect.top < 0) {
-                content.style.top = '10px';
-            }
+            if (rect.bottom > window.innerHeight) content.style.top = (window.innerHeight - rect.height - 20) + 'px';
+            if (rect.top < 0) content.style.top = '10px';
         }, 0);
     } else {
-        content.style.position = 'relative';
-        content.style.left = 'auto';
-        content.style.top = 'auto';
+        // Modal 模式：重置所有定位樣式，交給 Overlay (Flexbox) 處理
+        content.style.position = '';
+        content.style.left = '';
+        content.style.top = '';
+        content.style.transform = '';
     }
 };
 
 window.closeEquipTooltip = function (e) {
+    if (e && e.type === 'mouseout') {
+        const content = document.getElementById('equip-tooltip-content');
+        if (content && !content.classList.contains('is-hover')) {
+            // 在 Modal 模式下忽略 mouseout
+            return;
+        }
+    }
+
     if (e && typeof e.stopPropagation === 'function') {
         e.preventDefault();
         e.stopPropagation();
@@ -7416,8 +7397,7 @@ window.renderStatsTab = async function (json, initialActiveKey = null) {
             <div 
                 onclick="window.switchStatSubTab('${slot.conf.key}')"
                  class="stat-sub-tab-btn ${activeClass}" 
-                 data-target="stat-tab-${slot.conf.key}"
-                 style="cursor:pointer; padding:6px 12px; border-radius:6px; font-size:11px; font-weight:bold; transition:all 0.2s; border:1px solid rgba(255,255,255,0.1); background:rgba(0,0,0,0.2); color:#888;">
+                 data-target="stat-tab-${slot.conf.key}">
                  ${slot.conf.title}
              </div>
         `;
@@ -7490,11 +7470,11 @@ window.renderStatsTab = async function (json, initialActiveKey = null) {
 
         blocksHtml += `
                 <div id="stat-tab-${slot.conf.key}" class="stat-sub-tab-content" style="display:${isDisplay};">
-                    <div style="background: rgba(26, 35, 50, 0.4); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); margin-bottom: 20px;">
-                        <div style="display:grid; grid-template-columns: 1.15fr 0.85fr; gap: 20px;">
+                    <div class="stats-inner-card" style="background: rgba(26, 35, 50, 0.4); border-radius: 12px; padding: 15px;">
+                        <div class="stat-comparison-grid">
 
                             <!-- 左半邊：排行榜 -->
-                            <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                            <div class="stat-ranking-grid">
                                 <div>
                                     <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(100, 100, 255, 0.15); padding:8px 10px; font-weight:bold; font-size:13px; color:#c8d6e5; border-radius:4px 4px 0 0; border-bottom:1px solid rgba(100,100,255,0.2);">
                                         <div>✨ 詞條榜 (Top 10)</div>
@@ -7527,10 +7507,6 @@ window.renderStatsTab = async function (json, initialActiveKey = null) {
     });
 
     let html = `
-                <style>
-                #stats-sub-nav .stat-sub-tab-btn:hover { background: rgba(100, 100, 255, 0.2)!important; border-color: rgba(100, 100, 255, 0.5)!important; }
-            #stats-sub-nav .stat-sub-tab-btn.active { background: rgba(100, 100, 255, 0.4)!important; border-color: rgba(100, 100, 255, 0.8)!important; color: #fff!important; }
-        </style>
                 <div class="stats-outer-wrapper" style="padding: 10px; display: flex; flex-direction: column; gap: 10px;">
                     ${subNavHtml}
                     ${blocksHtml}
@@ -7622,4 +7598,116 @@ window.closeAuthorDiary = function () {
     }
 };
 
+window.switchCollectionTab = function (tab) {
+    const tabs = ['title', 'pet', 'arcana', 'set'];
+    tabs.forEach(t => {
+        const pane = document.getElementById('col-tab-' + t);
+        const btn = document.getElementById('tab-btn-col-' + t);
+        if (pane) pane.style.display = (t === tab) ? 'block' : 'none';
+        if (btn) {
+            if (t === tab) btn.classList.add('active');
+            else btn.classList.remove('active');
+        }
+    });
+};
 
+window.showSkillHoverTooltip = function (el, event, mode = 'hover') {
+    if (event) {
+        if (typeof event.stopPropagation === 'function') event.stopPropagation();
+    }
+    if (window.tooltipHideTimer) {
+        clearTimeout(window.tooltipHideTimer);
+        window.tooltipHideTimer = null;
+    }
+    const tipData = el.querySelector('.skill-tip-data');
+    if (!tipData) return;
+
+    const overlay = document.getElementById('equip-tooltip-overlay');
+    const content = document.getElementById('equip-tooltip-content');
+    if (!overlay || !content) return;
+
+    const isMobile = getIsMobile();
+    const finalMode = isMobile ? 'modal' : mode;
+
+    const name = tipData.getAttribute('data-name');
+    const iconUrl = tipData.getAttribute('data-icon');
+    const categoryName = tipData.getAttribute('data-category') === 'Passive' ? '被動技能' : (tipData.getAttribute('data-category') === 'Active' ? '主動技能' : '技能');
+    const level = parseInt(tipData.getAttribute('data-level')) || 0;
+    const baseLv = parseInt(tipData.getAttribute('data-base')) || 0;
+    const plateLv = parseInt(tipData.getAttribute('data-plate')) || 0;
+    const cardLv = parseInt(tipData.getAttribute('data-card')) || 0;
+    const effHtml = tipData.innerHTML;
+
+    let subHtml = ``;
+    if (plateLv > 0 || cardLv > 0) {
+        subHtml += `<div class="stat-row"><span class="stat-label">基礎等級</span><div class="stat-leader"></div><span class="stat-value">Lv.${baseLv}</span></div>`;
+        if (plateLv > 0) subHtml += `<div class="stat-row"><span class="stat-label val-bonus">板塊加成</span><div class="stat-leader"></div><span class="stat-value val-bonus">+${plateLv}</span></div>`;
+        if (cardLv > 0) subHtml += `<div class="stat-row"><span class="stat-label" style="color:#f1c40f;">卡片加成</span><div class="stat-leader"></div><span class="stat-value" style="color:#f1c40f;">+${cardLv}</span></div>`;
+        subHtml += `<div class="stat-row" style="margin-top:5px; border-top:1px solid rgba(255,255,255,0.05); padding-top:5px;"><span class="stat-label val-orange">總等級</span><div class="stat-leader"></div><span class="stat-value val-orange">Lv.${level}</span></div>`;
+    } else {
+        subHtml += `<div class="stat-row"><span class="stat-label">技能等級</span><div class="stat-leader"></div><span class="stat-value val-orange">Lv.${level}</span></div>`;
+    }
+
+    content.className = `equip-tooltip tooltip-rarity-normal`;
+    if (isMobile || finalMode === 'modal') {
+        overlay.style.background = 'rgba(0, 0, 0, 0.75)'; overlay.style.backdropFilter = 'blur(8px)';
+        overlay.style.pointerEvents = 'auto'; overlay.style.display = 'flex';
+        overlay.style.alignItems = 'flex-start';
+        overlay.style.justifyContent = 'center';
+        overlay.style.padding = '60px 20px 20px 20px';
+        overlay.onclick = function (e) { if (e.target === overlay) window.closeEquipTooltip(); };
+    } else {
+        content.classList.add('is-hover');
+        overlay.style.background = 'transparent'; overlay.style.backdropFilter = 'none';
+        overlay.style.pointerEvents = 'none'; overlay.style.display = 'block';
+        overlay.onclick = null;
+    }
+
+    content.innerHTML = `
+        <div class="close-tooltip-circle" onclick="window.closeEquipTooltip(event)">×</div>
+        <div class="tooltip-header">
+            <div class="tooltip-icon-frame"><img src="${iconUrl}"></div>
+            <div class="tooltip-title-area">
+                <div class="tooltip-name">${name}</div>
+                <div class="tooltip-sub-info">
+                    <span class="tooltip-grade-label val-bonus">${categoryName}</span>
+                </div>
+            </div>
+        </div>
+        <div class="tooltip-body">
+            <div class="tooltip-section">
+                ${subHtml}
+            </div>
+            ${(() => {
+            const cleaned = effHtml.replace(/^(?:\s|<br\s*\/?>|&nbsp;)+/gi, '').replace(/(?:\s|<br\s*\/?>|&nbsp;)+$/gi, '');
+            if (cleaned.indexOf('⏳ 載入中...') === -1 && cleaned.indexOf('💡 數據未收錄') === -1) {
+                return `
+                    <div class="tooltip-section" style="margin-top:2px; border-top:none; padding-top:0;">
+                        <div style="background:rgba(255,255,255,0.03); padding:8px 12px; border-radius:6px; border:1px solid rgba(255,255,255,0.05); font-size:13px; line-height:1.6;">
+                            ${cleaned}
+                        </div>
+                    </div>`;
+            }
+            return `<div style="margin-top:5px; padding:0 5px; font-size:12px; color:#636e72;">${cleaned}</div>`;
+        })()}
+        </div>
+    `;
+
+    if (finalMode === 'hover' && event && !isMobile) {
+        let x = event.clientX + 30, y = event.clientY - 50;
+        if (x + 350 > window.innerWidth) x = event.clientX - 360;
+        content.style.position = 'fixed'; content.style.left = x + 'px'; content.style.top = y + 'px';
+        content.style.transform = '';
+        setTimeout(() => {
+            const rect = content.getBoundingClientRect();
+            if (rect.bottom > window.innerHeight) content.style.top = (window.innerHeight - rect.height - 20) + 'px';
+            if (rect.top < 0) content.style.top = '10px';
+        }, 0);
+    } else {
+        // Modal 模式：重置所有定位樣式
+        content.style.position = '';
+        content.style.left = '';
+        content.style.top = '';
+        content.style.transform = '';
+    }
+};
