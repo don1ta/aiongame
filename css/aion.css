@@ -2301,12 +2301,91 @@
             }
 
             #pinned-stats-panel {
-                display: none !important;
+                display: none;
+                /* 預設隱藏，由 JS 控制 */
             }
 
-            #btn-pin-stats,
-            #btn-pin-stats+div {
-                display: none !important;
+            .combat-analysis-flex-container {
+                display: flex;
+                flex-direction: row;
+                align-items: flex-start;
+                width: 100%;
+            }
+
+            .pinned-stats-panel {
+                width: 200px;
+                flex-shrink: 0;
+                border-right: 1px solid rgba(255, 255, 255, 0.08);
+                background: rgba(0, 0, 0, 0.2);
+                padding: 12px;
+                position: sticky;
+                top: 80px;
+                /* 避開標頭 */
+                align-self: flex-start;
+                max-height: calc(100vh - 100px);
+                overflow-y: auto;
+                transition: all 0.3s ease;
+                margin-right: 0;
+            }
+
+            .combat-main-content-area {
+                flex: 1;
+                min-width: 0;
+            }
+
+            /* 手機版：釘選區與內容上下排列 */
+            @media (max-width: 1024px) {
+                .combat-analysis-flex-container {
+                    flex-direction: column !important;
+                }
+
+                .pinned-stats-panel {
+                    width: 100% !important;
+                    border-right: none !important;
+                    border-bottom: 2px solid var(--gold);
+                    position: relative !important;
+                    top: auto !important;
+                    max-height: 150px !important;
+                    display: grid !important;
+                    grid-template-columns: repeat(2, 1fr) !important;
+                    gap: 6px !important;
+                    padding: 8px 12px !important;
+                    margin-bottom: 5px !important;
+                    background: rgba(0, 0, 0, 0.4) !important;
+                }
+
+                .pinned-stats-panel div {
+                    font-size: 10px !important;
+                }
+
+                .pinned-stats-panel>div:first-child,
+                .pinned-stats-panel div:first-child {
+                    grid-column: 1 / -1 !important;
+                    margin-bottom: 4px !important;
+                    font-size: 11px !important;
+                    text-align: center !important;
+                }
+
+                /* 修正按鈕在手機上佔位過大的問題 */
+                #combat-analysis-global-controls {
+                    display: flex !important;
+                    flex-direction: row !important;
+                    flex-wrap: nowrap !important;
+                    gap: 3px !important;
+                    justify-content: flex-start !important;
+                }
+
+                #combat-analysis-global-controls button {
+                    font-size: 10px !important;
+                    padding: 4px 8px !important;
+                    margin: 0 !important;
+                    flex: 1 !important;
+                    text-align: center !important;
+                }
+
+                .btn-mobile-hide {
+                    display: none !important;
+                }
             }
 
             /* 手機版明細行：左右屬性改上下堆疊，並顯示屬性名稱標籤 */
@@ -2405,13 +2484,12 @@
                 width: 100% !important;
                 padding: 15px !important;
                 box-sizing: border-box !important;
-                height: 480px !important;
-                /* 固定高度，觸發分頁內容捲軸 */
+                height: 100% !important;
+                /* 改為充滿高度 */
                 display: flex !important;
                 flex-direction: column !important;
                 min-height: 0 !important;
-                overflow: visible !important;
-                /* 不裁切子元素的捲軸条 */
+                overflow: hidden !important;
             }
 
             #integrated-tab-content-area {
@@ -2460,7 +2538,7 @@
 
         /* 只讓需要 sticky header 的卡片設 overflow: visible，避免全局污染 */
         #nav-target-analysis {
-            overflow: visible !important;
+            overflow: hidden !important;
         }
 
         /* 確保裝備卡片不橫向/縱向溢出，防止裝備圖片蓋到其他卡片 */
@@ -2507,7 +2585,7 @@
             box-shadow: none !important;
             backdrop-filter: none !important;
             margin: 0 !important;
-            padding: 15px 25px !important;
+            padding: 1px 10px 2px 25px !important;
         }
 
         /* 恢復全域滾動的預設行為及平滑滾動 */
@@ -4338,11 +4416,58 @@
             .equip-tooltip.is-hover {
                 position: fixed !important;
                 left: 2.5vw !important;
-                bottom: 80px !important;
+                bottom: 90px !important;
+                /* 避開底部導覽列 */
             }
 
             #mobile-quick-nav {
-                width: 92% !important;
+                width: 94% !important;
+                bottom: 12px !important;
+                height: 60px !important;
+            }
+
+            /* 針對 390x840 解析度深度優化：全量區塊化佈局 */
+            .card,
+            #nav-target-role,
+            #nav-target-equip,
+            #nav-target-analysis,
+            #nav-target-skill,
+            .full-width-card {
+                width: 390px !important;
+                height: 840px !important;
+                margin: 0 auto 40px auto !important;
+                overflow-y: auto !important;
+                overflow-x: hidden !important;
+                position: relative;
+                padding: 12px 14px 85px 14px !important;
+                /* 底部內邊距避開導覽列 */
+                scrollbar-width: thin;
+                scrollbar-color: rgba(255, 217, 61, 0.3) transparent;
+                scroll-margin-top: 45px;
+                border-radius: 16px !important;
+                box-shadow: 0 15px 50px rgba(0, 0, 0, 0.6);
+            }
+
+            /* 內部捲動區域也要確保到底 */
+            .equip-main-content {
+                height: 100% !important;
+                overflow-y: auto !important;
+                padding-bottom: 85px !important;
+            }
+
+            /* 特殊處理：帶有固定標頭的區塊 */
+            .card[style*="padding:0"],
+            .card[style*="padding: 0"] {
+                padding: 0 !important;
+            }
+
+            .card::-webkit-scrollbar {
+                width: 4px;
+            }
+
+            .card::-webkit-scrollbar-thumb {
+                background: rgba(255, 217, 61, 0.2);
+                border-radius: 4px;
             }
         }
 
@@ -4370,4 +4495,15 @@
             .profile-meta-grid {
                 grid-template-columns: 1fr !important;
             }
+
+            .card {
+                width: 100% !important;
+                height: 840px !important;
+            }
+
+            .input-area {
+                padding: 15px !important;
+                margin-bottom: 15px !important;
+            }
+        }
         }

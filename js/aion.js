@@ -5599,7 +5599,7 @@ function renderCombatAnalysis(stats, data) {
         }
 
         activeHeaderControls.innerHTML = `
-            <button onclick="window.openCalculationGuide()" 
+            <button onclick="window.openCalculationGuide()" class="btn-mobile-hide"
                 style="background:rgba(255,215,0,0.1); border:1px solid rgba(255,215,0,0.3); color:#ffd700; cursor:pointer; font-size:11px; padding:4px 10px; border-radius:4px; transition:all 0.2s; white-space:nowrap; margin-right:5px;"
                 onmouseover="this.style.background='rgba(255,215,0,0.2)';"
                 onmouseout="this.style.background='rgba(255,215,0,0.1)';" title="查看戰力指標計算說明">
@@ -5611,8 +5611,6 @@ function renderCombatAnalysis(stats, data) {
                 onmouseout="this.style.borderColor='rgba(255,255,255,0.1)'; this.style.color='#8b949e';">
                 ${isStickyDisabled ? '📌 釘選標頭' : '🔓 取消固定'}
             </button>
-            <div style="width:1px; height:15px; background:rgba(255,255,255,0.1); margin:0 5px;"></div>
-            <div class="mobile-ctrl-break" style="flex-basis:0; height:0;"></div>
             <button onclick="(function(){
                 for(let i=0;i<${totalSections};i++){
                     const c=document.getElementById('combat-section-'+i);
@@ -5629,8 +5627,7 @@ function renderCombatAnalysis(stats, data) {
                     if(ic){ic.style.transform='rotate(-90deg)';}
                 }
             })()" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#8b949e; cursor:pointer; font-size:11px; padding:4px 12px; border-radius:4px; transition:all 0.2s; white-space:nowrap;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">全部收合 ▲</button>
-            <div style="width:1px; height:15px; background:rgba(255,255,255,0.1); margin:0 5px;"></div>
-            <button id="btn-pin-stats" onclick="window.togglePinStats()" 
+            <button id="btn-pin-stats" onclick="window.togglePinStats()" class="btn-mobile-hide"
                 style="background:${window._statsPinned ? 'rgba(255,215,0,0.2)' : 'rgba(255,255,255,0.05)'}; border:1px solid ${window._statsPinned ? 'rgba(255,215,0,0.4)' : 'rgba(255,255,255,0.1)'}; color:${window._statsPinned ? '#ffd700' : '#8b949e'}; cursor:pointer; font-size:11px; padding:4px 12px; border-radius:4px; transition:all 0.2s; white-space:nowrap;"
                 onmouseover="this.style.borderColor='var(--gold)'; this.style.color='#ffd700';"
                 onmouseout="if(!window._statsPinned){this.style.borderColor='rgba(255,255,255,0.1)'; this.style.color='#8b949e';}">
@@ -6847,7 +6844,9 @@ window.showEquipTooltip = function (slotId, mode = 'modal', event = null) {
         overlay.style.backdropFilter = 'none';
         overlay.style.pointerEvents = 'none';
         overlay.style.display = 'block';
+    } else {
         // Modal 模式或行動端：強制顯示遮罩
+        content.classList.remove('is-hover');
         overlay.style.background = 'rgba(0, 0, 0, 0.75)';
         overlay.style.backdropFilter = 'blur(8px)';
         overlay.style.pointerEvents = 'auto'; // 必須為 auto 才能點擊
