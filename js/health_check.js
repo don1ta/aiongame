@@ -166,7 +166,7 @@
                 .skill-row { margin-bottom: 10px; padding: 0 15px; }
                 .skill-bar { width: 80px; height: 8px; background: #2a2a2a; border-radius: 4px; position: relative; overflow: hidden; flex-shrink: 0; }
                 .skill-name { font-size: 14px; width: 100%; }
-                @media (max-width: 768px) {
+                @media (max-width: 1024px) {
                     .hc-title { font-size: 14px; }
                     .hc-score-select { font-size: 12px; padding: 4px 8px; }
                     .hc-tab-btn { font-size: 13px; padding: 8px 0; }

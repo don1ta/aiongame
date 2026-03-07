@@ -261,29 +261,7 @@
                 </div> <!-- End right-column -->
             </div> <!-- End main-layout-wrapper -->
 
-            <!-- ⚔️ 技能等級分解 (全寬區塊) -->
-            <div class="card full-width-card"
-                style="margin-top: 20px; padding:0; overflow:hidden; scroll-margin-top: 25px; display: none;">
-                <div id="nav-target-skill"
-                    style="padding: 20px 25px; border-bottom: 1px solid rgba(255,255,255,0.05); background: rgba(0,0,0,0.2); scroll-margin-top: 25px;">
-                    <h2 style="margin:0; color:var(--gold-bright); display:flex; align-items:center; gap:10px;">
-                        <span style="font-size:24px;">⚔️</span> 技能等級分解
-                    </h2>
-                </div>
-                <div class="card-content-padding">
-                    <div class="sk-label">▶ 主動技能</div>
-                    <div id="sk-act" class="skill-list"
-                        style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));"></div>
-                    <div class="sk-label">▶ 被動技能</div>
-                    <div id="sk-pas" class="skill-list"
-                        style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));"></div>
-                    <div class="sk-label">▶ 特殊/烙印技能</div>
-                    <div id="sk-stigma" class="skill-list"
-                        style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));"></div>
-                </div>
-            </div>
-
-            <!-- 🌟 新增的附加與收集系統區塊 -->
+            <!-- 🌟 附加與收集系統區塊 (整合技能、稱號、寵物、聖物、套裝) -->
             <div class="card full-width-card" id="nav-target-collection"
                 style="margin-top: 20px; padding:0; overflow:hidden; display: none;">
                 <div
@@ -296,7 +274,9 @@
                 <div class="collection-tabs-container" style="display:flex; flex-direction:column;">
                     <div class="stat-tabs-header collection-tabs integrated-tabs"
                         style="margin: 0; padding: 10px 20px; background: rgba(0,0,0,0.3); overflow-x: auto; white-space: nowrap; border-bottom: 1px solid rgba(255,255,255,0.1);">
-                        <div id="tab-btn-col-title" class="stat-tab-btn active" onclick="switchCollectionTab('title')">
+                        <div id="tab-btn-col-skill" class="stat-tab-btn active" onclick="switchCollectionTab('skill')">
+                            ⚔️ 技能等級</div>
+                        <div id="tab-btn-col-title" class="stat-tab-btn" onclick="switchCollectionTab('title')">
                             🎖️ 稱號系統</div>
                         <div id="tab-btn-col-pet" class="stat-tab-btn" onclick="switchCollectionTab('pet')">🐾 寵物與翅膀
                         </div>
@@ -306,8 +286,21 @@
                         </div>
                     </div>
                     <div class="collection-tabs-content" style="padding: 25px; min-height:300px;">
+                        <!-- 技能等級 -->
+                        <div id="col-tab-skill" class="col-tab-pane" style="display:block;">
+                            <div id="nav-target-skill" style="scroll-margin-top: 150px;"></div>
+                            <div class="sk-label">▶ 主動技能</div>
+                            <div id="sk-act" class="skill-list"
+                                style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));"></div>
+                            <div class="sk-label">▶ 被動技能</div>
+                            <div id="sk-pas" class="skill-list"
+                                style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));"></div>
+                            <div class="sk-label">▶ 特殊/烙印技能</div>
+                            <div id="sk-stigma" class="skill-list"
+                                style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));"></div>
+                        </div>
                         <!-- 稱號 -->
-                        <div id="col-tab-title" class="col-tab-pane" style="display:block;">
+                        <div id="col-tab-title" class="col-tab-pane" style="display:none;">
                             <div id="title-grid" class="title-grid"></div>
                         </div>
                         <!-- 寵物 -->
@@ -349,7 +342,7 @@
                 <a href="#nav-target-analysis" class="nav-btn">
                     <span>分析</span>
                 </a>
-                <a href="#nav-target-skill" class="nav-btn">
+                <a href="#nav-target-skill" class="nav-btn" onclick="switchCollectionTab('skill')">
                     <span>技能</span>
                 </a>
             </div>

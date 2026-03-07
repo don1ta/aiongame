@@ -547,7 +547,6 @@ async function searchCharacters(keyword) {
         // 如果先前已經有過載入成功的數據，則恢復顯示看板與下方區塊
         if (window.__LAST_DATA_JSON__) {
             if (mainContent) mainContent.style.display = 'block';
-            if (skillContent) skillContent.style.display = 'block';
             if (collectionContent) collectionContent.style.display = 'block';
         }
         return;
@@ -555,7 +554,6 @@ async function searchCharacters(keyword) {
 
     // --- 🔍 搜尋行為立即反應：隱藏看板、下方區塊與舊結果 ---
     if (mainContent) mainContent.style.display = 'none';
-    if (skillContent) skillContent.style.display = 'none';
     if (collectionContent) collectionContent.style.display = 'none';
     if (resultsContainer) resultsContainer.innerHTML = '';
 
@@ -573,11 +571,7 @@ async function executeSearch(keyword) {
     document.getElementById('loading').style.display = 'flex';
     document.getElementById('main-content').style.display = 'none';
 
-    // ⚔️ 搜尋時隱藏下方區塊
-    const skillHeader = document.getElementById('nav-target-skill');
-    const skillContent = skillHeader ? skillHeader.parentElement : null;
     const collectionContent = document.getElementById('nav-target-collection');
-    if (skillContent) skillContent.style.display = 'none';
     if (collectionContent) collectionContent.style.display = 'none';
 
     const resultsContainer = document.getElementById('search-results');
@@ -1966,10 +1960,7 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
     document.getElementById('main-content').style.display = 'flex';
 
     // ⚔️ 載入數據後顯示下方區塊
-    const skillHeader = document.getElementById('nav-target-skill');
-    const skillContent = skillHeader ? skillHeader.parentElement : null;
     const collectionContent = document.getElementById('nav-target-collection');
-    if (skillContent) skillContent.style.display = 'block';
     if (collectionContent) collectionContent.style.display = 'block';
 
     // 🛡️ 核心修復：更新被動技能增益效果
@@ -7632,7 +7623,7 @@ window.closeAuthorDiary = function () {
 };
 
 window.switchCollectionTab = function (tab) {
-    const tabs = ['title', 'pet', 'arcana', 'set'];
+    const tabs = ['skill', 'title', 'pet', 'arcana', 'set'];
     tabs.forEach(t => {
         const pane = document.getElementById('col-tab-' + t);
         const btn = document.getElementById('tab-btn-col-' + t);

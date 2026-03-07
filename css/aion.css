@@ -2204,7 +2204,7 @@
         }
 
         /* 7. Responsive Adjustments */
-        @media (max-width: 768px) {
+        @media (max-width: 1024px) {
             .profile-new-header {
                 flex-direction: column;
                 align-items: center;
@@ -2341,7 +2341,7 @@
                 min-width: 0;
             }
 
-            /* 手機版：釘選區與內容上下排列 */
+            /* 平板或手機：釘選區與內容上下排列 */
             @media (max-width: 1024px) {
                 .combat-analysis-flex-container {
                     flex-direction: column !important;
@@ -2646,7 +2646,7 @@
             text-shadow: 0 0 5px var(--gold-glow);
         }
 
-        @media (max-width: 768px) {
+        @media (max-width: 1024px) {
             #mobile-quick-nav {
                 display: flex;
             }
@@ -3123,7 +3123,7 @@
             }
         }
 
-        @media (max-width: 768px) {
+        @media (max-width: 1024px) {
             .equip-layout-wrapper {
                 display: grid;
                 grid-template-columns: repeat(2, 1fr);
@@ -3429,7 +3429,7 @@
             text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
         }
 
-        @media (max-width: 768px) {
+        @media (max-width: 1024px) {
             .equip-layout-wrapper {
                 flex-direction: row;
                 /* 改回橫向排列 */
@@ -4179,7 +4179,7 @@
             filter: grayscale(0);
         }
 
-        @media (max-width: 768px) {
+        @media (max-width: 1024px) {
             .diary-float-btn {
                 right: 15px;
                 top: 15px;
@@ -4355,10 +4355,10 @@
 
             .left-column {
                 width: 100% !important;
-                display: grid !important;
-                grid-template-columns: 1fr 1fr !important;
+                display: flex !important;
+                flex-direction: column !important;
                 gap: 20px !important;
-                align-items: start !important;
+                align-items: stretch !important;
                 overflow: hidden !important;
             }
 
@@ -4379,7 +4379,7 @@
         }
 
         /* --- 手機版時恢復堆疊 --- */
-        @media (max-width: 768px) {
+        @media (max-width: 1024px) {
             .main-layout-wrapper {
                 display: flex !important;
                 flex-direction: column !important;
@@ -4410,19 +4410,33 @@
         }
 
         /* --- 768px 以下 (手機版核心) --- */
-        @media (max-width: 768px) {
+        @media (max-width: 1024px) {
             body {
                 padding: 8px !important;
             }
 
-            /* 強制單欄網格 */
             .grid-box-container,
             .stat-grid-main,
             #combat-stats-grid,
             #arcana-grid,
-            .stat-ranking-grid {
-                grid-template-columns: 1fr !important;
+            .stat-ranking-grid,
+            .rank-grid-new,
+            #p-percentile-new {
+                grid-template-columns: repeat(2, 1fr) !important;
                 gap: 12px !important;
+            }
+
+            @media (max-width: 480px) {
+
+                .grid-box-container,
+                .stat-grid-main,
+                #combat-stats-grid,
+                #arcana-grid,
+                .stat-ranking-grid,
+                .rank-grid-new,
+                #p-percentile-new {
+                    grid-template-columns: 1fr !important;
+                }
             }
 
             .card-content-padding {

@@ -125,8 +125,8 @@
     }
 }
 
-/* 平板直立 (768px 以下)：單欄 */
-@media (max-width: 768px) {
+/* 平板或手機 (1024px 以下)：單欄 */
+@media (max-width: 1024px) {
     .search-results-grid {
         grid-template-columns: 1fr;
         gap: 12px;
