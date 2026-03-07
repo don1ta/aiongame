@@ -75,6 +75,10 @@
             /* Safe padding */
         }
 
+        canvas {
+            max-width: 100% !important;
+        }
+
         .container {
             width: 100%;
             max-width: 1400px;
@@ -362,6 +366,10 @@
                 inset 0 1px 0 rgba(255, 255, 255, 0.05);
             margin-bottom: 40px;
             position: relative;
+        }
+
+        .card-content-padding {
+            padding: 25px;
         }
 
         h3 {
@@ -1334,7 +1342,7 @@
             border-collapse: separate;
             border-spacing: 0;
             width: 100%;
-            min-width: 900px;
+            /* 移除強制 min-width: 900px 以免破壞 RWD */
         }
 
         table td,
@@ -2714,7 +2722,8 @@
             padding: 20px;
             display: flex;
             flex-direction: column;
-            min-width: 400px;
+            width: 100%;
+            max-width: 100%;
             border: 1px solid rgba(255, 217, 61, 0.05);
         }
 
@@ -2820,7 +2829,8 @@
 
         .basic-tab-left {
             flex: 1;
-            min-width: 550px;
+            width: 100%;
+            max-width: 100%;
             background: rgba(20, 25, 35, 0.4);
             border-radius: 16px;
             border: 1px solid rgba(255, 255, 255, 0.05);
@@ -4343,9 +4353,18 @@
                 gap: 20px !important;
             }
 
-            .left-column,
+            .left-column {
+                width: 100% !important;
+                display: grid !important;
+                grid-template-columns: 1fr 1fr !important;
+                gap: 20px !important;
+                align-items: start !important;
+                overflow: hidden !important;
+            }
+
             .right-column {
                 width: 100% !important;
+                overflow: hidden !important;
             }
 
             .split-integrated-layout {
@@ -4356,6 +4375,21 @@
                 width: 100% !important;
                 border-right: none !important;
                 border-bottom: 1px solid var(--border) !important;
+            }
+        }
+
+        /* --- 手機版時恢復堆疊 --- */
+        @media (max-width: 768px) {
+            .main-layout-wrapper {
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 20px !important;
+            }
+
+            .left-column {
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 20px !important;
             }
         }
 
@@ -4389,6 +4423,10 @@
             .stat-ranking-grid {
                 grid-template-columns: 1fr !important;
                 gap: 12px !important;
+            }
+
+            .card-content-padding {
+                padding: 15px !important;
             }
 
             /* 技能列表：在手機上優化為 2 欄 */
@@ -4426,15 +4464,11 @@
                 height: 60px !important;
             }
 
-            /* 針對 390x840 解析度深度優化：全量區塊化佈局 */
+            /* 針對手機解析度優化：恢復彈性寬高 */
             .card,
-            #nav-target-role,
-            #nav-target-equip,
-            #nav-target-analysis,
-            #nav-target-skill,
             .full-width-card {
-                width: 390px !important;
-                height: 840px !important;
+                width: 100% !important;
+                height: auto !important;
                 margin: 0 auto 40px auto !important;
                 overflow-y: auto !important;
                 overflow-x: hidden !important;
@@ -4498,12 +4532,52 @@
 
             .card {
                 width: 100% !important;
-                height: 840px !important;
+                height: auto !important;
             }
 
             .input-area {
-                padding: 15px !important;
-                margin-bottom: 15px !important;
+                padding: 12px !important;
+                margin-bottom: 20px !important;
+                border-radius: 12px !important;
+                border: 1px solid rgba(255, 215, 0, 0.3) !important;
             }
-        }
+
+            .input-area h2 {
+                font-size: 1.1rem !important;
+                margin-bottom: 12px !important;
+                letter-spacing: 1px !important;
+            }
+
+            .api-input-group {
+                gap: 0 !important;
+                display: block !important;
+                /* 手機版強制單行全寬 */
+            }
+
+            #charNameInput {
+                font-size: 16px !important;
+                padding: 12px 15px !important;
+                width: 100% !important;
+                border-radius: 8px !important;
+                background: rgba(0, 0, 0, 0.4) !important;
+                border: 1px solid rgba(255, 255, 255, 0.1) !important;
+                box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5) !important;
+            }
+
+            #charNameInput:focus {
+                border-color: var(--gold) !important;
+                box-shadow: 0 0 15px var(--gold-glow) !important;
+            }
+
+            .import-section div:first-child {
+                font-size: 12px !important;
+                margin-bottom: 8px !important;
+                opacity: 0.8;
+            }
+
+            .import-section {
+                font-size: 10px !important;
+                line-height: 1.5 !important;
+                color: #8b949e !important;
+            }
         }

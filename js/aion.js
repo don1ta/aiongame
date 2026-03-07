@@ -534,11 +534,30 @@ async function loadCharacterData(serverId, characterId, charName = '') {
 let searchDebounceTimer = null;
 
 async function searchCharacters(keyword) {
+    const mainContent = document.getElementById('main-content');
+    const resultsContainer = document.getElementById('search-results');
+    const skillContent = document.getElementById('nav-target-skill') ? document.getElementById('nav-target-skill').parentElement : null;
+    const collectionContent = document.getElementById('nav-target-collection');
+
     if (!keyword) {
-        document.getElementById('search-results').innerHTML = '';
-        document.getElementById('search-results').style.display = 'none';
+        if (resultsContainer) {
+            resultsContainer.innerHTML = '';
+            resultsContainer.style.display = 'none';
+        }
+        // 如果先前已經有過載入成功的數據，則恢復顯示看板與下方區塊
+        if (window.__LAST_DATA_JSON__) {
+            if (mainContent) mainContent.style.display = 'block';
+            if (skillContent) skillContent.style.display = 'block';
+            if (collectionContent) collectionContent.style.display = 'block';
+        }
         return;
     }
+
+    // --- 🔍 搜尋行為立即反應：隱藏看板、下方區塊與舊結果 ---
+    if (mainContent) mainContent.style.display = 'none';
+    if (skillContent) skillContent.style.display = 'none';
+    if (collectionContent) collectionContent.style.display = 'none';
+    if (resultsContainer) resultsContainer.innerHTML = '';
 
     // Clear previous timer
     if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
@@ -553,6 +572,14 @@ async function executeSearch(keyword) {
 
     document.getElementById('loading').style.display = 'flex';
     document.getElementById('main-content').style.display = 'none';
+
+    // ⚔️ 搜尋時隱藏下方區塊
+    const skillHeader = document.getElementById('nav-target-skill');
+    const skillContent = skillHeader ? skillHeader.parentElement : null;
+    const collectionContent = document.getElementById('nav-target-collection');
+    if (skillContent) skillContent.style.display = 'none';
+    if (collectionContent) collectionContent.style.display = 'none';
+
     const resultsContainer = document.getElementById('search-results');
     resultsContainer.innerHTML = '';
     resultsContainer.style.display = 'none';
@@ -1937,6 +1964,13 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
     }
 
     document.getElementById('main-content').style.display = 'flex';
+
+    // ⚔️ 載入數據後顯示下方區塊
+    const skillHeader = document.getElementById('nav-target-skill');
+    const skillContent = skillHeader ? skillHeader.parentElement : null;
+    const collectionContent = document.getElementById('nav-target-collection');
+    if (skillContent) skillContent.style.display = 'block';
+    if (collectionContent) collectionContent.style.display = 'block';
 
     // 🛡️ 核心修復：更新被動技能增益效果
     // 只有在非「僅更新統計」的情況（如重新搜尋）才解析技能，防止勾選開關時導致數據跳回預設值。
@@ -3671,19 +3705,19 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                     </div>
                     
                     <!-- 保持原有雷達圖 -->
-                    <div style="background: rgba(0,0,0,0.2); border-radius: 12px; padding: 15px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.05);">
+                    <div style="background: rgba(0,0,0,0.2); border-radius: 12px; padding: 12px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.05); width: 100%;">
                         <div style="text-align: center; margin-bottom: 10px; color: var(--gold); font-size: 14px; font-weight: bold;">📊 能力分佈雷達圖</div>
-                        <div style="max-height: 350px; display:flex; justify-content:center;">
-                            <canvas id="radarChart"></canvas>
+                        <div style="max-height: 350px; display:flex; justify-content:center; width: 100%;">
+                            <canvas id="radarChart" style="max-width: 100%; height: auto !important;"></canvas>
                         </div>
                     </div>
 
                     <!-- 替換原本的項目列表為新設計的「指標彙整表」 -->
-                    <div style="background: rgba(255,217,61,0.08); border: 1px solid rgba(255,217,61,0.2); border-radius: 12px; padding: 14px; margin-bottom: 10px;">
+                    <div style="background: rgba(255,217,61,0.08); border: 1px solid rgba(255,217,61,0.2); border-radius: 12px; padding: 10px; margin-bottom: 10px; width: 100%;">
                         <div style="color: #ffd93d; font-weight: bold; font-size: 14px; margin-bottom: 10px; display: flex; align-items: center; gap: 8px;">
-                            <span>📊 各項指標彙整 (小計/總計/權重)</span>
+                            <span>📊 各項指標彙整 (目前/參考/權重)</span>
                         </div>
-                        <div style="display: grid; grid-template-columns: 1.5fr 1fr 1fr 1.2fr; gap: 8px; font-size: 11px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 6px; margin-bottom: 8px; color: #8b949e;">
+                        <div style="display: grid; grid-template-columns: 1.4fr 1fr 1fr 1.3fr; gap: 4px; font-size: 11px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 6px; margin-bottom: 8px; color: #8b949e;">
                             <div style="text-align: left;">判定指標</div>
                             <div>數值小計</div>
                             <div>參考總計</div>
@@ -3691,35 +3725,35 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                         </div>
                         
                         <!-- 項目行 -->
-                        <div style="display: grid; grid-template-columns: 1.5fr 1fr 1fr 1.2fr; gap: 8px; font-size: 12px; text-align: center; align-items: center; margin-bottom: 7px;">
+                        <div style="display: grid; grid-template-columns: 1.4fr 1fr 1fr 1.3fr; gap: 4px; font-size: 12px; text-align: center; align-items: center; margin-bottom: 7px;">
                             <div style="text-align: left; color: #ff6b35; font-weight: bold;">🔥 裝備強度</div>
                             <div style="color: #fff;">${scoreResult.breakdown.rarity.rawScore.toFixed(1)}</div>
                             <div style="color: #8b949e;">540</div>
                             <div style="color: #ff6b35; font-weight: bold; background: rgba(255,107,53,0.1); border-radius: 4px; padding: 1px 0;">${scoreResult.breakdown.rarity.score} / 30</div>
                         </div>
 
-                        <div style="display: grid; grid-template-columns: 1.5fr 1fr 1fr 1.2fr; gap: 8px; font-size: 12px; text-align: center; align-items: center; margin-bottom: 7px;">
+                        <div style="display: grid; grid-template-columns: 1.4fr 1fr 1fr 1.3fr; gap: 4px; font-size: 12px; text-align: center; align-items: center; margin-bottom: 7px;">
                             <div style="text-align: left; color: #3498db; font-weight: bold;">📋 板塊完成</div>
                             <div style="color: #fff;">${scoreResult.breakdown.board.rawScore}</div>
                             <div style="color: #8b949e;">${scoreResult.breakdown.board.maxRawScore}</div>
                             <div style="color: #3498db; font-weight: bold; background: rgba(52,152,219,0.1); border-radius: 4px; padding: 1px 0;">${scoreResult.breakdown.board.score} / 15</div>
                         </div>
 
-                        <div style="display: grid; grid-template-columns: 1.5fr 1fr 1fr 1.2fr; gap: 8px; font-size: 12px; text-align: center; align-items: center; margin-bottom: 7px;">
+                        <div style="display: grid; grid-template-columns: 1.4fr 1fr 1fr 1.3fr; gap: 4px; font-size: 12px; text-align: center; align-items: center; margin-bottom: 7px;">
                             <div style="text-align: left; color: #2ecc71; font-weight: bold;">🐾 寵物探險</div>
                             <div style="color: #fff;">${scoreResult.breakdown.petInsight.totalClean.toFixed(1)}</div>
                             <div style="color: #8b949e;">8</div>
                             <div style="color: #2ecc71; font-weight: bold; background: rgba(46,204,113,0.1); border-radius: 4px; padding: 1px 0;">${scoreResult.breakdown.petInsight.score} / 20</div>
                         </div>
 
-                        <div style="display: grid; grid-template-columns: 1.5fr 1fr 1fr 1.2fr; gap: 8px; font-size: 12px; text-align: center; align-items: center; margin-bottom: 7px;">
+                        <div style="display: grid; grid-template-columns: 1.4fr 1fr 1fr 1.3fr; gap: 4px; font-size: 12px; text-align: center; align-items: center; margin-bottom: 7px;">
                             <div style="text-align: left; color: #f39c12; font-weight: bold;">⚔️ 技能烙印</div>
                             <div style="color: #fff;">${scoreResult.breakdown.stigma.rawScore}</div>
                             <div style="color: #8b949e;">1200</div>
                             <div style="color: #f39c12; font-weight: bold; background: rgba(243,156,18,0.1); border-radius: 4px; padding: 1px 0;">${scoreResult.breakdown.stigma.score} / 30</div>
                         </div>
 
-                        <div style="display: grid; grid-template-columns: 1.5fr 1fr 1fr 1.2fr; gap: 8px; font-size: 12px; text-align: center; align-items: center;">
+                        <div style="display: grid; grid-template-columns: 1.4fr 1fr 1fr 1.3fr; gap: 4px; font-size: 12px; text-align: center; align-items: center;">
                             <div style="text-align: left; color: #9b59b6; font-weight: bold;">🏅 稱號收集</div>
                             <div style="color: #fff;">${scoreResult.breakdown.title.ownedCount}</div>
                             <div style="color: #8b949e;">${scoreResult.breakdown.title.maxRawScore}</div>
