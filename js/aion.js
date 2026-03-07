@@ -2042,37 +2042,7 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                         </div>
                         
                         <div class="profile-right">
-                            <div class="score-card-group" style="display:flex; gap:10px;">
-                                <div class="item-score-card">
-                                    <div class="score-header"><span class="score-icon">📏</span>遊戲裝分</div>
-                                    <div class="score-value-container"><div class="score-value" style="font-size: 26px;">${pItemLv}</div></div>
-                                </div>
-                                ${(ratingsData && ratingsData.PVE) ? (() => {
-                    const pveVal = Math.floor(ratingsData.PVE.score);
-                    // 顏色判斷：50000+ 紫, 40000+ 紅, 30000+ 金, 20000+ 藍, 10000+ 綠, 其餘白
-                    const pveColor = pveVal >= 50000 ? '#a855f7' : pveVal >= 40000 ? '#ef4444' : pveVal >= 30000 ? '#ffd700' : pveVal >= 20000 ? '#3498db' : pveVal >= 10000 ? '#2ecc71' : '#ffffff';
-                    const pveBorderColor = pveVal >= 50000 ? '#a855f7' : pveVal >= 40000 ? '#ef4444' : pveVal >= 30000 ? '#f39c12' : pveVal >= 20000 ? '#3498db' : pveVal >= 10000 ? '#2ecc71' : '#555';
-                    return `
-                                <div class="item-score-card" style="background:linear-gradient(135deg, rgba(243,156,18,0.08), rgba(0,0,0,0)); border-color:${pveBorderColor}44; border-left-color:${pveBorderColor};">
-                                    <div class="score-header"><span class="score-icon">🐲</span> PVE 裝分</div>
-                                    <div class="score-value-container"><div class="score-value pve-score" style="color:${pveColor}; text-shadow:0 0 10px ${pveColor}66;">${pveVal.toLocaleString()}</div></div>
-                                </div>`;
-                })() : ''}
-                                ${(ratingsData && ratingsData.PVP) ? (() => {
-                    const pvpVal = Math.floor(ratingsData.PVP.score);
-                    const pvpIsEmpty = pvpVal <= 0;
-                    // PVP 顏色判斷 (比照 PVE)
-                    const pvpColor = pvpVal >= 50000 ? '#a855f7' : pvpVal >= 40000 ? '#ef4444' : pvpVal >= 30000 ? '#ffd700' : pvpVal >= 20000 ? '#3498db' : pvpVal >= 10000 ? '#2ecc71' : '#a855f7';
-                    const pvpBorderColor = pvpVal >= 50000 ? '#a855f7' : pvpVal >= 40000 ? '#ef4444' : pvpVal >= 30000 ? '#f39c12' : pvpVal >= 20000 ? '#3498db' : pvpVal >= 10000 ? '#2ecc71' : '#a855f7';
-
-                    return `
-                                <div class="item-score-card" style="background:linear-gradient(135deg, rgba(168,85,247,0.08), rgba(0,0,0,0)); border-color:${pvpIsEmpty ? 'rgba(255,255,255,0.08)' : pvpBorderColor + '44'}; border-left-color:${pvpIsEmpty ? '#444' : pvpBorderColor};">
-                                    <div class="score-header"><span class="score-icon">⚔️</span> PVP 裝分</div>
-                                    <div class="score-value-container"><div class="score-value pvp-score" style="color:${pvpIsEmpty ? '#555' : pvpColor}; text-shadow:${pvpIsEmpty ? 'none' : '0 0 10px ' + pvpColor + '66'}; font-size:${pvpIsEmpty ? '14px' : 'inherit'}; font-style:${pvpIsEmpty ? 'italic' : 'normal'}">${pvpIsEmpty ? '尚未有紀錄資料' : pvpVal.toLocaleString()}</div></div>
-                                </div>`;
-                })() : ''}
-                            </div>
-                            <div class="update-time-pill" title="官方數據更新時間">
+                            <div class="update-time-pill" title="官方數據更新時間" style="margin-left: auto;">
                                 <span class="update-icon">API更新時間</span> ${updateTimeStr}
                             </div>
                         </div>
@@ -3035,18 +3005,18 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
 
                 if (baseValNum === 0 && !minVal && extraVal) {
                     return `<div class="stat-row">
-                                <span class="stat-label ${s.exceed ? 'val-exceed' : ''}">${s.name}</span>
-                                <span class="stat-value">
-                                    <span class="${s.exceed ? 'val-exceed' : 'val-enchant'}">+${extraVal}</span>
-                                </span>
+                                <span class="stat-label ${s.exceed ? 'val-orange' : ''}">${s.name}</span>
+                                <div class="stat-leader"></div>
+                                <span class="stat-value ${s.exceed ? 'val-orange' : 'val-bonus'}">+${extraVal}</span>
                             </div>`;
                 }
 
                 return `<div class="stat-row">
-                            <span class="stat-label ${s.exceed ? 'val-exceed' : ''}">${s.name}</span>
+                            <span class="stat-label ${s.exceed ? 'val-orange' : ''}">${s.name}</span>
+                            <div class="stat-leader"></div>
                             <span class="stat-value">
                                 ${baseDisplay}
-                                ${extraVal ? `<span class="${s.exceed ? 'val-exceed' : 'val-enchant'}"> (+${extraVal})</span>` : ''}
+                                ${extraVal ? `<span class="${s.exceed ? 'val-orange' : 'val-bonus'}"> (+${extraVal})</span>` : ''}
                             </span>
                         </div>`;
             }).join('')}
@@ -3058,8 +3028,9 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                 <div class="tooltip-section">
                     <div class="tooltip-section-title">隨機能力值</div>
                     ${(d.subStats).map(s => `<div class="stat-row">
-                        <span class="stat-label ${s.exceed ? 'val-exceed' : ''}">${s.name}</span>
-                        <span class="stat-value bonus ${s.exceed ? 'val-exceed' : ''}">+${s.value}</span>
+                        <span class="stat-label val-green">${s.name}</span>
+                        <div class="stat-leader"></div>
+                        <span class="stat-value val-green">+${s.value}</span>
                     </div>`).join('')}
                 </div>` : '';
 
@@ -3118,31 +3089,36 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                     ${itemSkills.map(s => {
                 const sName = s.name || (typeof window.getSkillName === 'function' ? window.getSkillName(s.id) : s.id);
                 return `<div class="stat-row">
-                            <span class="stat-label" style="color:#fff;">${sName}</span>
-                            <span class="stat-value bonus">${s.level ? `Lv.${s.level}` : ''}</span>
+                            <span class="stat-label val-bonus">${sName}</span>
+                            <div class="stat-leader"></div>
+                            <span class="stat-value val-bonus">${s.level ? `Lv.${s.level}` : ''}</span>
                         </div>`;
             }).join('')}
                 </div>` : '';
 
+            let exceedLv = originalItem.exceedLevel || d.exceedLevel || 0;
+            const exceedLabelHtml = exceedLv > 0 ? `<span class="breakthrough-label">突破 +${exceedLv}</span>` : "";
+
             let cardHtml = `
-            <div class="equip-tooltip-card tooltip-rarity-${detailRarityClass}" onclick="window.handleSlotClick(event, ${slot})" style="cursor:pointer; border-top-color: ${detailBorderColor};">
-                <div class="tooltip-header">
-                    <img class="tooltip-item-icon" src="${finalIcon}" onerror="this.src='https://questlog.gg/assets/Game/UI/Resource/Texture/Common/Icon/Icon_Default.png'">
-                    <div class="tooltip-item-info">
-                        <div class="tooltip-item-name">${d.name}</div>
-                        <div style="display:flex; align-items:center; gap:6px; margin-top:4px;">
-                            <span style="font-size:13px; color:#8b949e;">+${i.enchantLevel}</span>
-                            ${d.level ? `<span style="font-size:12px; color:#bdc3c7; background:rgba(255,255,255,0.1); padding:1px 4px; border-radius:3px; margin-left:4px;">Lv.${d.level}${d.levelValue ? ` (+${d.levelValue})` : ''}</span>` : ''}
-                            ${exceedText}
-                            ${sbText}
+            <div class="equip-tooltip-card tooltip-rarity-${detailRarityClass}" onclick="window.handleSlotClick(event, ${slot})" style="cursor:pointer; border-top: 3px solid ${detailBorderColor};">
+                <div class="tooltip-header" style="position: relative; border-bottom: 1px solid rgba(255,255,255,0.05); margin-bottom: 0;">
+                    <div class="tooltip-icon-frame"><img src="${finalIcon}" onerror="this.src='https://questlog.gg/assets/Game/UI/Resource/Texture/Common/Icon/Icon_Default.png'"></div>
+                    <div class="tooltip-title-area">
+                        <div class="tooltip-name">${originalItem.enchantLevel > 0 ? `+${originalItem.enchantLevel} ` : ''}${d.name}${exceedLabelHtml}</div>
+                        <div class="tooltip-sub-info">
+                            <span class="tooltip-grade-label" style="color:${gradeColor}">${rarityInfo ? rarityInfo.name : '一般'}</span>
+                            ${d.categoryName ? `<span>${d.categoryName}</span>` : ''}
+                            <span>Lv.${d.level || 0}${d.levelValue ? ` (+${d.levelValue})` : ''}</span>
                         </div>
                     </div>
                 </div>
-                ${mainStatsSectionHtml}
-                ${subStatsSectionHtml}
-                ${skillsSectionHtml}
-                ${stoneSectionHtml}
-                ${godStoneSectionHtml}
+                <div class="tooltip-body-static" style="padding: 10px 0;">
+                    ${mainStatsSectionHtml}
+                    ${subStatsSectionHtml}
+                    ${skillsSectionHtml}
+                    ${stoneSectionHtml}
+                    ${godStoneSectionHtml}
+                </div>
             </div>`;
 
             let gradeNameMap = { 'Myth': '神話', 'Unique': '唯一', 'Legend': '傳說', 'Epic': '史詩', 'Rare': '稀有', 'Ancient': '古代', 'myth': '神話', 'unique': '唯一', 'legend': '傳說', 'epic': '史詩', 'rare': '稀有', 'ancient': '古代', 'special': '特殊', 'common': '普通' };
@@ -3152,8 +3128,8 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
             let locGrade = gradeNumMap[parseInt(rawGrade)] || gradeNameMap[rawGrade] || rawGrade || '特殊';
             let cat = d.category || originalItem.category || '';
             let iLv = originalItem.itemLevel || d.itemLevel || 0;
-            let elv = i.enchantLevel || 0;
-            let exceedLv = originalItem.exceedLevel || d.exceedLevel || 0;
+            let elv = originalItem.enchantLevel || 0;
+            exceedLv = originalItem.exceedLevel || d.exceedLevel || 0;
             let exceedHtml = exceedLv > 0 ? ` <span style="display:inline-block; background: rgba(231, 76, 60, 0.15); border: 1px solid rgba(231, 76, 60, 0.4); padding: 1px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; color: #ff7b7b; vertical-align: middle; line-height: 1.2; margin-left: 4px; white-space: nowrap; text-shadow: none; letter-spacing: 0.5px;">突破+${exceedLv}</span>` : "";
 
             // --- 為簡易小卡建構左右兩欄內容 (V2) ---
@@ -6468,24 +6444,54 @@ window.downloadEquipScreenshot = function (mode = 'simple') {
             onclone: (clonedDoc) => {
                 const clonedArea = clonedDoc.getElementById('integrated-tab-content-area');
                 if (clonedArea) {
-                    clonedArea.style.height = 'auto';
-                    clonedArea.style.maxHeight = 'none';
-                    clonedArea.style.overflow = 'visible';
-                    clonedArea.style.width = '1100px';
-                    clonedArea.style.padding = '30px';
-                    clonedArea.style.background = '#0f172a';
+                    // 1. 注入強制網頁版排版樣式
+                    const desktopForceStyle = clonedDoc.createElement('style');
+                    desktopForceStyle.innerHTML = `
+                        #integrated-tab-content-area { 
+                            width: 1200px !important; 
+                            min-width: 1200px !important;
+                            padding: 30px !important; 
+                            display: block !important;
+                            background: #0f172a !important;
+                            height: auto !important;
+                            max-height: none !important;
+                            overflow: visible !important;
+                        }
+                        .grid-box-container, #equip-armor-list, #equip-accessory-list, 
+                        #equip-armor-list-simple, #equip-accessory-list-simple { 
+                            display: grid !important; 
+                            grid-template-columns: repeat(3, 1fr) !important; 
+                            gap: 15px !important;
+                            width: 1140px !important;
+                            margin: 0 auto !important;
+                        }
+                        .visual-layout-pure-grid {
+                            display: flex !important;
+                            flex-direction: row !important;
+                            gap: 20px !important;
+                            width: 1140px !important;
+                            margin: 0 auto !important;
+                        }
+                        .equip-grid-column { flex: 1.5 !important; }
+                        .guardian-force-column { flex: 1.2 !important; }
+                        .ranking-data-column { flex: 1 !important; }
+                        
+                        /* 隱藏截圖按鈕本身 */
+                        #btn-equip-screenshot-simple, #btn-equip-screenshot-detail, #btn-equip-screenshot {
+                            display: none !important;
+                        }
+                        /* 確保在平板/手機上也是強迫 3 欄 */
+                        @media screen {
+                            .grid-box-container, .stat-grid-main { grid-template-columns: repeat(3, 1fr) !important; }
+                        }
+                    `;
+                    clonedDoc.head.appendChild(desktopForceStyle);
+
                     clonedArea.style.display = 'block';
 
-                    const screenshotBtn1 = clonedDoc.getElementById('btn-equip-screenshot-simple');
-                    if (screenshotBtn1) screenshotBtn1.style.display = 'none';
-                    const screenshotBtn2 = clonedDoc.getElementById('btn-equip-screenshot-detail');
-                    if (screenshotBtn2) screenshotBtn2.style.display = 'none';
-                    const screenshotBtn = clonedDoc.getElementById('btn-equip-screenshot');
-                    if (screenshotBtn) screenshotBtn.style.display = 'none';
-
+                    // 2. 切換正確的分頁顯示
                     const simpleTab = clonedDoc.getElementById('equip-tab-simple');
                     const detailTab = clonedDoc.getElementById('equip-tab-detail');
-
                     if (mode === 'simple') {
                         if (simpleTab) simpleTab.style.display = 'block';
                         if (detailTab) detailTab.style.display = 'none';
@@ -6494,11 +6500,10 @@ window.downloadEquipScreenshot = function (mode = 'simple') {
                         if (detailTab) detailTab.style.display = 'block';
                     }
 
-                    const banner = clonedDoc.createElement('div');
+                    // 3. 建立頂部橫幅 (Banner)
                     const json = window.__LAST_DATA_JSON__ || {};
                     const dataObj = json.queryResult ? json.queryResult.data : (json.data ? json.data : json);
                     const profile = dataObj.profile || {};
-
                     const cName = profile.characterName || document.getElementById('stat-header-char-id')?.innerText || 'AionPlayer';
                     const cScore = document.getElementById('stat-header-score')?.innerText || '--';
                     let rawLevel = profile.characterLevel || document.querySelector('.profile-lv-badge')?.innerText?.replace('Lv.', '') || '--';
@@ -6508,6 +6513,7 @@ window.downloadEquipScreenshot = function (mode = 'simple') {
                     const cServer = profile.serverName || document.querySelector('.profile-server')?.innerText || '';
                     const cClass = profile.className || document.querySelector('.profile-job-name')?.innerText || '';
 
+                    const banner = clonedDoc.createElement('div');
                     banner.style.cssText = `
                         background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
                         padding: 30px;
@@ -6522,7 +6528,6 @@ window.downloadEquipScreenshot = function (mode = 'simple') {
                         box-sizing: border-box;
                         color: white;
                     `;
-
                     banner.innerHTML = `
                         <div style="display: flex; align-items: center; gap: 25px;">
                             <div class="character-avatar-frame" style="position: relative; width: 95px; height: 95px; flex-shrink: 0;">
@@ -6542,15 +6547,6 @@ window.downloadEquipScreenshot = function (mode = 'simple') {
                         </div>
                     `;
                     clonedArea.prepend(banner);
-
-                    const grids = clonedDoc.querySelectorAll('.grid-box-container');
-                    grids.forEach(g => {
-                        g.style.display = 'grid';
-                        g.style.gridTemplateColumns = 'repeat(3, 1fr)';
-                        g.style.gap = '15px';
-                        g.style.width = '1000px';
-                        g.style.margin = '0 auto';
-                    });
                 }
             }
         }).then(canvas => {
@@ -6592,11 +6588,32 @@ window.downloadSpecificScreenshot = function (elementId, typeName) {
         onclone: (clonedDoc) => {
             const clonedTarget = clonedDoc.getElementById(elementId);
             if (clonedTarget) {
-                clonedTarget.style.width = '1200px';
-                clonedTarget.style.display = 'grid';
-                clonedTarget.style.gridTemplateColumns = 'repeat(3, 1fr)';
-                clonedTarget.style.padding = '20px';
-                clonedTarget.style.gap = '15px';
+                // 強制截圖模式為網頁排版
+                const desktopForceStyle = clonedDoc.createElement('style');
+                desktopForceStyle.innerHTML = `
+                    #${elementId} { 
+                        width: 1200px !important; 
+                        padding: 30px !important; 
+                        background: #0f172a !important;
+                        display: block !important;
+                    }
+                    .grid-box-container, .stat-grid-main, #combat-stats-grid, #arcana-grid { 
+                        display: grid !important; 
+                        grid-template-columns: repeat(3, 1fr) !important; 
+                        gap: 20px !important;
+                    }
+                    .health-main-stats-wrapper {
+                        display: flex !important;
+                        flex-direction: row !important;
+                        gap: 15px !important;
+                    }
+                    .card { flex: 1 !important; }
+                    /* 解決手機版 1 column 問題 */
+                    @media screen {
+                        * { grid-template-columns: repeat(3, 1fr) !important; }
+                    }
+                `;
+                clonedDoc.head.appendChild(desktopForceStyle);
             }
         }
     }).then(canvas => {
@@ -7623,6 +7640,15 @@ window.closeAuthorDiary = function () {
 };
 
 window.switchCollectionTab = function (tab) {
+    const container = document.getElementById('nav-target-collection');
+    if (!container) return;
+
+    // 1. 先紀錄目前容器相對於視窗的位置，防範高度塌陷導致的跳動
+    const rect = container.getBoundingClientRect();
+    const isMobile = window.innerWidth <= 1024;
+    const currentTop = window.scrollY + rect.top;
+
+    // 2. 執行分頁切換
     const tabs = ['skill', 'title', 'pet', 'arcana', 'set'];
     tabs.forEach(t => {
         const pane = document.getElementById('col-tab-' + t);
@@ -7633,6 +7659,45 @@ window.switchCollectionTab = function (tab) {
             else btn.classList.remove('active');
         }
     });
+
+    // 3. 🛡️ 精準定位校準 (靠上對齊)
+    if (isMobile) {
+        // 完全靠上對齊
+        const offset = 0;
+
+        // 延遲執行捲動，確保內容切換後的 DOM 高度與佈局已經穩定
+        requestAnimationFrame(() => {
+            const containerAfter = document.getElementById('nav-target-collection');
+            if (containerAfter) {
+                const newRect = containerAfter.getBoundingClientRect();
+                const targetY = window.scrollY + newRect.top - offset;
+
+                // 只有當容器頂部偏離視窗頂端時才發動捲動
+                if (Math.abs(newRect.top - offset) > 5) {
+                    window.scrollTo({
+                        top: targetY,
+                        behavior: 'smooth'
+                    });
+                }
+            }
+        });
+    }
+};
+
+window.scrollToCollection = function (tab) {
+    if (typeof window.switchCollectionTab === 'function') {
+        window.switchCollectionTab(tab);
+    }
+    const container = document.getElementById('nav-target-collection');
+    if (container) {
+        const rect = container.getBoundingClientRect();
+        // 靠上對齊
+        const offset = 0;
+        window.scrollTo({
+            top: window.scrollY + rect.top - offset,
+            behavior: 'smooth'
+        });
+    }
 };
 
 window.showSkillHoverTooltip = function (el, event, mode = 'hover') {
