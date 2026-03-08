@@ -4299,10 +4299,38 @@
             #combat-stats-grid,
             #arcana-grid,
             .stat-ranking-grid,
-            .rank-grid-new,
             #p-percentile-new {
                 grid-template-columns: repeat(2, 1fr) !important;
                 gap: 12px !important;
+            }
+
+            /* 歷史趨勢在手機版維持 4 欄 */
+            .rank-grid-new {
+                grid-template-columns: repeat(4, 1fr) !important;
+                gap: 6px !important;
+            }
+
+            .rank-card-new {
+                padding: 8px 6px !important;
+                min-height: 55px !important;
+            }
+
+            .rank-card-new .rc-label {
+                font-size: 9px !important;
+                transform: scale(0.9);
+                transform-origin: left;
+                white-space: nowrap;
+            }
+
+            .rank-card-new .rc-val {
+                font-size: 14px !important;
+                margin-top: 2px !important;
+            }
+
+            .rank-card-new .rc-diff {
+                font-size: 8px !important;
+                top: 6px !important;
+                right: 4px !important;
             }
 
             @media (max-width: 480px) {
@@ -4312,7 +4340,6 @@
                 #combat-stats-grid,
                 #arcana-grid,
                 .stat-ranking-grid,
-                .rank-grid-new,
                 #p-percentile-new {
                     grid-template-columns: 1fr !important;
                 }
