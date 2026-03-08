@@ -924,23 +924,25 @@ function updatePassiveSkills(data) {
                 if (!GAIN_EFFECT_DATABASE['被動技能'].breakdowns[key]) GAIN_EFFECT_DATABASE['被動技能'].breakdowns[key] = [];
             }
 
-            // 🛡️ 安全門：如果這是一個欄位名稱帶有百分比的，但數值大於 1，這通常是解析錯誤（如抓到 3400）
-            if (key.includes('%') && Math.abs(val) >= 1) {
-                // 如果數值在 1~100 之間 (如 39)，補償性地將其除以 100 存入
-                if (Math.abs(val) < 100) {
-                    val = val / 100;
-                    // 同步更新原始 statsObj 為後續顯示使用
-                    statsObj[sName] = val;
-                } else {
-                    // 數值太大 (3400)，直接丟棄，防止顯示 340,000%
-                    continue;
-                }
+            const alwaysPercent = ['戰鬥速度', '移動速度', '攻擊速度', '飛行速度', '暴擊傷害增幅', '物理致命一擊', '魔法致命一擊', '暴擊抵抗增加', '強擊', '多段打擊', '特殊打擊', '完美擊中', '完美', '再生', '鐵壁', '冷卻時間', '傷害增幅', '傷害耐性', '武器傷害增幅', '後方傷害增幅', '技能增益效果', '異常狀態擊中', '異常狀態抵抗', '靈識', '擊中', '抵抗', '耐性'];
+            const isPercKey = key.includes('%') || alwaysPercent.some(k => key.includes(k));
+
+            // 🚨 修正：如果是百分比屬性且數值小於 1 (如 0.05 代表 5%)，則放大為百分點 (5)
+            // 如果數值已經是 5 (代表 5%)，則保持不變。
+            if (isPercKey && Math.abs(val) < 2 && Math.abs(val) > 0) {
+                val = val * 100;
+                statsObj[sName] = val;
+            }
+
+            // 🛡️ 安全門：如果這是一個欄位名稱帶有百分比的，但數值大於 200，這通常是解析錯誤（如抓到 3400）
+            if (isPercKey && Math.abs(val) >= 200) {
+                continue;
             }
 
             GAIN_EFFECT_DATABASE['被動技能'].stats[key] += val;
 
-            let displayVal = key.includes('%') ? (val * 100) : val;
-            let unit = key.includes('%') ? '%' : '';
+            let displayVal = val;
+            let unit = isPercKey ? '%' : '';
             const displayNum = Number(parseFloat(displayVal).toFixed(2));
             const sourceMark = isReal ? '' : '<span style="color:#666;font-size:10px;"> (分析中...)</span>';
 
@@ -1884,7 +1886,7 @@ function renderRankings(rankingList, gameRankings) {
 // 🟢 標準化屬性名稱 (確保 被動技能 與 主表 欄位對齊)
 function normalizeKey(name, forcePerc = null) {
     // 🚫 嚴格區分：哪些屬性「永遠」是百分比
-    const alwaysPercent = ['戰鬥速度', '移動速度', '攻擊速度', '飛行速度', '暴擊傷害增幅', '物理致命一擊', '魔法致命一擊', '暴擊抵抗增加', '強擊', '多段打擊', '完美', '再生', '鐵壁', '冷卻時間', '傷害增幅', '傷害耐性', '武器傷害增幅', '後方傷害增幅'];
+    const alwaysPercent = ['戰鬥速度', '移動速度', '攻擊速度', '飛行速度', '暴擊傷害增幅', '物理致命一擊', '魔法致命一擊', '暴擊抵抗增加', '強擊', '多段打擊', '特殊打擊', '完美擊中', '完美', '再生', '鐵壁', '冷卻時間', '傷害增幅', '傷害耐性', '武器傷害增幅', '後方傷害增幅', '技能增益效果', '異常狀態擊中', '異常狀態抵抗', '靈識', '擊中', '抵抗', '耐性'];
     const protectPercNames = ['攻擊力增加', '生命力增加', '精神力增加', '防禦力增加', '命中增加', '迴避增加', '暴擊增加', '格擋增加', '暴擊抵抗增加'];
 
     let cleanName = name.replace('%', '').replace(/\s+/g, '').trim();
@@ -1902,8 +1904,15 @@ function normalizeKey(name, forcePerc = null) {
     if (forcePerc === true) return cleanName + '%';
     if (forcePerc === false) return cleanName;
 
-    // 自動判定：僅當原始名稱含 % 才保留
-    if (name.includes('%')) {
+    // 自動判定：根據關鍵字或原始名稱含 % 判定為百分比屬性 (排除 PVE/首領 導致的誤判)
+    const isAlwaysPerc = alwaysPercent.some(k => {
+        if (k === '傷害增幅' || k === '傷害耐性') {
+            return cleanName === k || (cleanName.includes(k) && !cleanName.includes('PVE') && !cleanName.includes('首領'));
+        }
+        return cleanName.includes(k);
+    });
+
+    if (isAlwaysPerc || name.includes('%')) {
         return cleanName + '%';
     }
     return cleanName;
@@ -2288,12 +2297,12 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
         let valNum = parseFloat(s.value.toString().replace(/,/g, '').replace('%', ''));
 
         // 🚨 修正官方總值縮放 (1000 = 1% 類 vs 100 = 1% 類)
-        const scale1000Keys = ['武器傷害增幅', '後方傷害增幅', '暴擊傷害增幅', '技能增益效果'];
-        const scale100Keys = ['靈識', '強擊', '多段打擊', '特殊打擊', '完美擊中', '完美'];
+        const scale1000Keys = ['武器傷害增幅', '後方傷害增幅', '暴擊傷害增幅', '技能增益效果', '傷害增幅', '傷害耐性'];
+        const scale100Keys = ['靈識', '強擊', '多段打擊', '特殊打擊', '完美擊中', '完美', '擊中', '抵抗', '耐性'];
 
-        if (possiblePerc && scale1000Keys.some(sk => keyName.includes(sk)) && Math.abs(valNum) >= 40) {
+        if (possiblePerc && scale1000Keys.some(sk => (sk === '傷害增幅' || sk === '傷害耐性') ? (keyName === sk || (keyName.includes(sk) && !keyName.includes('PVE') && !keyName.includes('首領'))) : keyName.includes(sk)) && Math.abs(valNum) >= 40) {
             valNum = valNum / 1000;
-        } else if (possiblePerc && scale100Keys.some(sk => keyName.includes(sk)) && Math.abs(valNum) >= 20) {
+        } else if (possiblePerc && scale100Keys.some(sk => (sk === '傷害增幅' || sk === '傷害耐性') ? (keyName === sk || (keyName.includes(sk) && !keyName.includes('PVE') && !keyName.includes('首領'))) : keyName.includes(sk)) && Math.abs(valNum) >= 20) {
             valNum = valNum / 100;
         }
 
@@ -2462,12 +2471,12 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                         }
                     }
 
-                    // 🚨 修正特定板塊數值 (1000 = 1% vs 100 = 1%)
-                    const bSc1000 = ['武器傷害增幅', '後方傷害增幅', '暴擊傷害增幅', '技能增益效果'];
-                    const bSc100 = ['靈識', '強擊', '多段打擊', '特殊打擊', '完美擊中', '完美'];
-                    if (bSc1000.some(bk => n.includes(bk)) && Math.abs(v) >= 40) {
+                    // 🚨 修正 Aion Classic 特定屬性 1000 = 1% 機制 (隨機屬性部分)
+                    const bSc1000 = ['武器傷害增幅', '後方傷害增幅', '暴擊傷害增幅', '技能增益效果', '傷害增幅', '傷害耐性'];
+                    const bSc100 = ['靈識', '強擊', '多段打擊', '特殊打擊', '完美擊中', '完美', '擊中', '抵抗', '耐性'];
+                    if (bSc1000.some(bk => (bk === '傷害增幅' || bk === '傷害耐性') ? (n === bk || (n.includes(bk) && !n.includes('PVE') && !n.includes('首領'))) : n.includes(bk)) && Math.abs(v) >= 40) {
                         v = v / 1000;
-                    } else if (bSc100.some(bk => n.includes(bk)) && Math.abs(v) >= 20) {
+                    } else if (bSc100.some(bk => (bk === '傷害增幅' || bk === '傷害耐性') ? (n === bk || (n.includes(bk) && !n.includes('PVE') && !n.includes('首領'))) : n.includes(bk)) && Math.abs(v) >= 20) {
                         v = v / 100;
                     }
 
@@ -2593,12 +2602,12 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                 let v = parseFloat(vS.replace('%', ''));
 
                 // 🚨 修正稱號數值縮放 (1000 = 1% vs 100 = 1%)
-                const titleScale1000 = ['武器傷害增幅', '後方傷害增幅', '暴擊傷害增幅', '技能增益效果'];
-                const titleScale100 = ['靈識', '強擊', '多段打擊', '特殊打擊', '完美擊中', '完美'];
+                const titleScale1000 = ['武器傷害增幅', '後方傷害增幅', '暴擊傷害增幅', '技能增益效果', '傷害增幅', '傷害耐性'];
+                const titleScale100 = ['靈識', '強擊', '多段打擊', '特殊打擊', '完美擊中', '完美', '擊中', '抵抗', '耐性'];
 
-                if (titleScale1000.some(tk => n.includes(tk)) && Math.abs(v) >= 40) {
+                if (titleScale1000.some(tk => (tk === '傷害增幅' || tk === '傷害耐性') ? (n === tk || (n.includes(tk) && !n.includes('PVE') && !n.includes('首領'))) : n.includes(tk)) && Math.abs(v) >= 40) {
                     v = v / 1000;
-                } else if (titleScale100.some(tk => n.includes(tk)) && Math.abs(v) >= 20) {
+                } else if (titleScale100.some(tk => (tk === '傷害增幅' || tk === '傷害耐性') ? (n === tk || (n.includes(tk) && !n.includes('PVE') && !n.includes('首領'))) : n.includes(tk)) && Math.abs(v) >= 20) {
                     v = v / 100;
                 }
 
@@ -3012,11 +3021,11 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                 let val = parseFloat(ms.value);
 
                 // 🚨 修正聖物數值縮放 (1000 = 1% vs 100 = 1%)
-                const aSc1000 = ['武器傷害增幅', '後方傷害增幅', '暴擊傷害增幅', '技能增益效果'];
-                const aSc100 = ['靈識', '強擊', '多段打擊', '特殊打擊', '完美擊中', '完美'];
-                if (k.includes('%') && aSc1000.some(sk => ms.name.includes(sk)) && Math.abs(val) >= 40) {
+                const aSc1000 = ['武器傷害增幅', '後方傷害增幅', '暴擊傷害增幅', '技能增益效果', '傷害增幅', '傷害耐性'];
+                const aSc100 = ['靈識', '強擊', '多段打擊', '特殊打擊', '完美擊中', '完美', '擊中', '抵抗', '耐性'];
+                if (k.includes('%') && aSc1000.some(sk => (sk === '傷害增幅' || sk === '傷害耐性') ? (ms.name === sk || (ms.name.includes(sk) && !ms.name.includes('PVE') && !ms.name.includes('首領'))) : ms.name.includes(sk)) && Math.abs(val) >= 40) {
                     val = val / 1000;
-                } else if (k.includes('%') && aSc100.some(sk => ms.name.includes(sk)) && Math.abs(val) >= 20) {
+                } else if (k.includes('%') && aSc100.some(sk => (sk === '傷害增幅' || sk === '傷害耐性') ? (ms.name === sk || (ms.name.includes(sk) && !ms.name.includes('PVE') && !ms.name.includes('首領'))) : ms.name.includes(sk)) && Math.abs(val) >= 20) {
                     val = val / 100;
                 }
 
@@ -3030,11 +3039,11 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                 let val = parseFloat(ss.value.toString().replace('%', ''));
 
                 // 🚨 修正聖物隨機屬性縮放 (1000 = 1% vs 100 = 1%)
-                const asSc1000 = ['武器傷害增幅', '後方傷害增幅', '暴擊傷害增幅', '技能增益效果'];
-                const asSc100 = ['靈識', '強擊', '多段打擊', '特殊打擊', '完美擊中', '完美'];
-                if (k.includes('%') && asSc1000.some(sk => ss.name.includes(sk)) && Math.abs(val) >= 40) {
+                const asSc1000 = ['武器傷害增幅', '後方傷害增幅', '暴擊傷害增幅', '技能增益效果', '傷害增幅', '傷害耐性'];
+                const asSc100 = ['靈識', '強擊', '多段打擊', '特殊打擊', '完美擊中', '完美', '擊中', '抵抗', '耐性'];
+                if (k.includes('%') && asSc1000.some(sk => (sk === '傷害增幅' || sk === '傷害耐性') ? (ss.name === sk || (ss.name.includes(sk) && !ss.name.includes('PVE') && !ss.name.includes('首領'))) : ss.name.includes(sk)) && Math.abs(val) >= 40) {
                     val = val / 1000;
-                } else if (k.includes('%') && asSc100.some(sk => ss.name.includes(sk)) && Math.abs(val) >= 20) {
+                } else if (k.includes('%') && asSc100.some(sk => (sk === '傷害增幅' || sk === '傷害耐性') ? (ss.name === sk || (ss.name.includes(sk) && !ss.name.includes('PVE') && !ss.name.includes('首領'))) : ss.name.includes(sk)) && Math.abs(val) >= 20) {
                     val = val / 100;
                 }
 
@@ -3288,11 +3297,11 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                     let key = normalizeKey(name, isRawPerc);
 
                     // 🚨 修正 Aion Classic 特定屬性 1000 = 1% / 100 = 1% 機制
-                    const sc1000 = ['武器傷害增幅', '後方傷害增幅', '暴擊傷害增幅', '技能增益效果'];
-                    const sc100 = ['靈識', '強擊', '多段打擊', '特殊打擊', '完美擊中', '完美'];
-                    if (sc1000.some(sk => name.includes(sk)) && Math.abs(baseValue) >= 40) {
+                    const sc1000 = ['武器傷害增幅', '後方傷害增幅', '暴擊傷害增幅', '技能增益效果', '傷害增幅', '傷害耐性'];
+                    const sc100 = ['靈識', '強擊', '多段打擊', '特殊打擊', '完美擊中', '完美', '擊中', '抵抗', '耐性'];
+                    if (sc1000.some(sk => (sk === '傷害增幅' || sk === '傷害耐性') ? (name === sk || (name.includes(sk) && !name.includes('PVE') && !name.includes('首領'))) : name.includes(sk)) && Math.abs(baseValue) >= 40) {
                         baseValue = baseValue / 1000;
-                    } else if (sc100.some(sk => name.includes(sk)) && Math.abs(baseValue) >= 20) {
+                    } else if (sc100.some(sk => (sk === '傷害增幅' || sk === '傷害耐性') ? (name === sk || (name.includes(sk) && !name.includes('PVE') && !name.includes('首領'))) : name.includes(sk)) && Math.abs(baseValue) >= 20) {
                         baseValue = baseValue / 100;
                     }
 
@@ -3324,11 +3333,11 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                     let key = normalizeKey(name, isEPerc);
 
                     // 🚨 修正額外強化值縮放 (1000 = 1% / 100 = 1%)
-                    const eSc1000 = ['武器傷害增幅', '後方傷害增幅', '暴擊傷害增幅', '技能增益效果'];
-                    const eSc100 = ['靈識', '強擊', '多段打擊', '特殊打擊', '完美擊中', '完美'];
-                    if (isEPerc && eSc1000.some(sk => name.includes(sk)) && Math.abs(extraVal) >= 40) {
+                    const eSc1000 = ['武器傷害增幅', '後方傷害增幅', '暴擊傷害增幅', '技能增益效果', '傷害增幅', '傷害耐性'];
+                    const eSc100 = ['靈識', '強擊', '多段打擊', '特殊打擊', '完美擊中', '完美', '擊中', '抵抗', '耐性'];
+                    if (isEPerc && eSc1000.some(sk => (sk === '傷害增幅' || sk === '傷害耐性') ? (name === sk || (name.includes(sk) && !name.includes('PVE') && !name.includes('首領'))) : name.includes(sk)) && Math.abs(extraVal) >= 40) {
                         extraVal = extraVal / 1000;
-                    } else if (isEPerc && eSc100.some(sk => name.includes(sk)) && Math.abs(extraVal) >= 20) {
+                    } else if (isEPerc && eSc100.some(sk => (sk === '傷害增幅' || sk === '傷害耐性') ? (name === sk || (name.includes(sk) && !name.includes('PVE') && !name.includes('首領'))) : name.includes(sk)) && Math.abs(extraVal) >= 20) {
                         extraVal = extraVal / 100;
                     }
 
@@ -3376,20 +3385,14 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                 let k = normalizeKey(ss.name, rawVal.includes('%'));
                 let v = parseFloat(rawVal.replace('%', '')) || 0;
 
-                // 🛡️ 單化標準化：暴擊傷害增幅 / 傷害增幅 (某些 gear subStats 也需要)
-                if ((k.includes('暴擊傷害增幅') || k.includes('傷害增幅')) && Math.abs(v) >= 20) {
-                    v = v / 100;
-                    rawVal = v + '%';
-                }
-
                 let e = getEntry(k);
 
                 // 🚨 修正 Aion Classic 特定屬性 1000 = 1% 機制 (隨機屬性部分)
-                const sSc1000 = ['武器傷害增幅', '後方傷害增幅', '暴擊傷害增幅', '技能增益效果'];
-                const sSc100 = ['靈識', '強擊', '多段打擊', '特殊打擊', '完美擊中', '完美'];
-                if (sSc1000.some(sk => ss.name.includes(sk)) && Math.abs(v) >= 40) {
+                const sSc1000 = ['武器傷害增幅', '後方傷害增幅', '暴擊傷害增幅', '技能增益效果', '傷害增幅', '傷害耐性'];
+                const sSc100 = ['靈識', '強擊', '多段打擊', '特殊打擊', '完美擊中', '完美', '擊中', '抵抗', '耐性'];
+                if (sSc1000.some(sk => (sk === '傷害增幅' || sk === '傷害耐性') ? (ss.name === sk || (ss.name.includes(sk) && !ss.name.includes('PVE') && !ss.name.includes('首領'))) : ss.name.includes(sk)) && Math.abs(v) >= 40) {
                     v = v / 1000;
-                } else if (sSc100.some(sk => ss.name.includes(sk)) && Math.abs(v) >= 20) {
+                } else if (sSc100.some(sk => (sk === '傷害增幅' || sk === '傷害耐性') ? (ss.name === sk || (ss.name.includes(sk) && !ss.name.includes('PVE') && !ss.name.includes('首領'))) : ss.name.includes(sk)) && Math.abs(v) >= 20) {
                     v = v / 100;
                 }
 
@@ -3422,14 +3425,11 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                 let v = parseFloat(rawVal.replace('%', '')) || 0;
 
                 // 🛡️ 數值單位標準化
-                const stSc1000 = ['武器傷害增幅', '後方傷害增幅', '暴擊傷害增幅', '技能增益效果'];
-                const stSc100 = ['靈識', '強擊', '多段打擊', '特殊打擊', '完美擊中', '完美'];
-                if (stSc1000.some(sk => ms.name.includes(sk)) && Math.abs(v) >= 40) {
+                const stSc1000 = ['武器傷害增幅', '後方傷害增幅', '暴擊傷害增幅', '技能增益效果', '傷害增幅', '傷害耐性'];
+                const stSc100 = ['靈識', '強擊', '多段打擊', '特殊打擊', '完美擊中', '完美', '擊中', '抵抗', '耐性'];
+                if (stSc1000.some(sk => (sk === '傷害增幅' || sk === '傷害耐性') ? (ms.name === sk || (ms.name.includes(sk) && !ms.name.includes('PVE') && !ms.name.includes('首領'))) : ms.name.includes(sk)) && Math.abs(v) >= 40) {
                     v = v / 1000;
-                } else if (stSc100.some(sk => ms.name.includes(sk)) && Math.abs(v) >= 20) {
-                    v = v / 100;
-                } else if ((k.includes('暴擊傷害增幅') || k.includes('傷害增幅')) && Math.abs(v) >= 20) {
-                    // 舊版 100=1% 兼容
+                } else if (stSc100.some(sk => (sk === '傷害增幅' || sk === '傷害耐性') ? (ms.name === sk || (ms.name.includes(sk) && !ms.name.includes('PVE') && !ms.name.includes('首領'))) : ms.name.includes(sk)) && Math.abs(v) >= 20) {
                     v = v / 100;
                 }
 
@@ -4156,7 +4156,7 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
         const extraConfig = [
             {
                 name: "攻擊力", icon: "⚔️",
-                bases: ["攻擊力"], extras: ["額外攻擊力"], percs: ["攻擊力增加"], fixeds: ["PVE攻擊力", "首領攻擊力"]
+                bases: ["攻擊力"], extras: ["額外攻擊力"], percs: ["攻擊力增加"], fixeds: []
             },
             {
                 name: "攻擊力增加", icon: "📈",
@@ -4164,7 +4164,7 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
             },
             {
                 name: "防禦力", icon: "🛡️",
-                bases: ["防禦力"], extras: ["額外防禦力"], percs: ["防禦力增加"], fixeds: ["PVE防禦力", "PVE傷害耐性", "首領防禦力", "首領傷害耐性"]
+                bases: ["防禦力"], extras: ["額外防禦力"], percs: ["防禦力增加"], fixeds: []
             },
 
             {
@@ -4192,11 +4192,11 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
             },
             {
                 name: "命中", icon: "🎯",
-                bases: ["命中"], extras: ["額外命中"], percs: ["命中增加"], fixeds: ["PVE命中"]
+                bases: ["命中"], extras: ["額外命中"], percs: ["命中增加"], fixeds: []
             },
             {
                 name: "傷害增幅", icon: "⚡",
-                bases: ["傷害增幅"], extras: [], percs: [], fixeds: ["PVE傷害增幅", "首領傷害增幅"]
+                bases: ["傷害增幅"], extras: [], percs: [], fixeds: []
             },
             { name: "武器傷害增幅", keys: ["武器傷害增幅"], icon: "🗡️" },
             { name: "後方傷害增幅", keys: ["後方傷害增幅"], icon: "👤" },
@@ -4264,7 +4264,7 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                 let items = [];
                 let allDetails = [];
 
-                const alwaysPercKeys = ['戰鬥速度', '移動速度', '攻擊速度', '飛行速度', '暴擊傷害增幅', '冷卻時間', '傷害增幅', '傷害耐性', '武器傷害增幅', '後方傷害增幅', '強擊', '多段打擊', '完美', '再生', '鐵壁', '擊中', '抵抗', '耐性'];
+                const alwaysPercKeys = ['戰鬥速度', '移動速度', '攻擊速度', '飛行速度', '暴擊傷害增幅', '物理致命一擊', '魔法致命一擊', '暴擊抵抗增加', '強擊', '多段打擊', '特殊打擊', '完美擊中', '完美', '再生', '鐵壁', '冷卻時間', '傷害增幅', '傷害耐性', '武器傷害增幅', '後方傷害增幅', '技能增益效果', '異常狀態擊中', '異常狀態抵抗', '靈識', '擊中', '抵抗', '耐性'];
 
 
                 (keyList || []).forEach(searchKey => {
@@ -5259,8 +5259,8 @@ function renderCombatAnalysis(stats, data) {
         if (v === undefined || v === null) return '--';
         let val = parseFloat(v);
 
-        const sc1000_f = ['武器傷害增幅', '後方傷害增幅', '暴擊傷害增幅', '技能增益效果'];
-        const sc100_f = ['靈識', '強擊', '多段打擊', '特殊打擊', '完美擊中', '完美'];
+        const sc1000_f = ['武器傷害增幅', '後方傷害增幅', '暴擊傷害增幅', '技能增益效果', '傷害增幅', '傷害耐性'];
+        const sc100_f = ['靈識', '強擊', '多段打擊', '特殊打擊', '完美擊中', '完美', '擊中', '抵抗', '耐性'];
         const needsScale = keyName && (sc1000_f.some(k => keyName.includes(k)) || sc100_f.some(k => keyName.includes(k)));
 
         // 💡 智慧百分比：如果是百分比屬性，且小於 1 (如 0.06 = 6%)，自動轉為 100 倍以供 fmt 顯示
@@ -5382,12 +5382,12 @@ function renderCombatAnalysis(stats, data) {
                 let officialVal = parseFloat(valStr);
 
                 // 🚨 修正備用路徑的官方總值縮放
-                const sc1000_b = ['武器傷害增幅', '後方傷害增幅', '暴擊傷害增幅', '技能增益效果'];
-                const sc100_b = ['靈識', '強擊', '多段打擊', '特殊打擊', '完美擊中', '完美'];
+                const sc1000_b = ['武器傷害增幅', '後方傷害增幅', '暴擊傷害增幅', '技能增益效果', '傷害增幅', '傷害耐性'];
+                const sc100_b = ['靈識', '強擊', '多段打擊', '特殊打擊', '完美擊中', '完美', '擊中', '抵抗', '耐性'];
                 if (official.value.toString().includes('%')) {
-                    if (sc1000_b.some(sk => official.name.includes(sk)) && Math.abs(officialVal) >= 40) {
+                    if (sc1000_b.some(sk => (sk === '傷害增幅' || sk === '傷害耐性') ? (official.name === sk || (official.name.includes(sk) && !official.name.includes('PVE') && !official.name.includes('首領'))) : official.name.includes(sk)) && Math.abs(officialVal) >= 40) {
                         officialVal = officialVal / 1000;
-                    } else if (sc100_b.some(sk => official.name.includes(sk)) && Math.abs(officialVal) >= 20) {
+                    } else if (sc100_b.some(sk => (sk === '傷害增幅' || sk === '傷害耐性') ? (official.name === sk || (official.name.includes(sk) && !official.name.includes('PVE') && !official.name.includes('首領'))) : official.name.includes(sk)) && Math.abs(officialVal) >= 20) {
                         officialVal = officialVal / 100;
                     }
                 }
