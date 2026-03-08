@@ -4319,29 +4319,14 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                         const equipVal = (e.equipMain || 0) + wingVal + setVal;
                         const stoneVal = (e.equipSub || 0);
                         const otherVal = (e.other || 0) - wingVal - setVal;
-                        let valRaw = boardVal + equipVal + stoneVal + otherVal;
-                        let val = valRaw;
+                        let val = boardVal + equipVal + stoneVal + otherVal;
 
-                        // 🚨 修正 Aion Classic 特定屬性 1000 = 1% / 100 = 1% 機制 (Overview 縮放)
-                        const oSc1000 = ['武器傷害增幅', '後方傷害增幅', '暴擊傷害增幅', '技能增益效果'];
-                        const oSc100 = ['靈識', '強擊', '多段打擊', '特殊打擊', '完美擊中', '完美'];
-
-                        let isScaled = false;
-                        if (isPercKey && oSc1000.some(sk => statKey.includes(sk)) && Math.abs(val) >= 40) {
-                            val = val / 1000;
-                            isScaled = true;
-                        } else if (isPercKey && oSc100.some(sk => statKey.includes(sk)) && Math.abs(val) >= 20) {
-                            val = val / 100;
-                            isScaled = true;
-                        }
-
+                        // 直接累加各項已換算好的細項
                         if (Math.abs(val) > 0.001) {
                             sum += val;
                             items.push({
                                 key: statKey.replace('%', ''), // 移除 Key 中冗餘的 % 以利顯示
                                 val: val,
-                                valRaw: valRaw,
-                                isScaled: isScaled,
                                 isPerc: isPercKey,
                                 sources: { board: boardVal, equip: equipVal, stone: stoneVal, other: otherVal }
                             });
@@ -4442,7 +4427,7 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                 gatheredDetails = res.details;
                 isPerc = res.items.some(i => i.isPerc) || cfg.name.includes('%');
                 breakdownHtml = res.items.map(i => {
-                    let dispVal = i.isScaled ? `+${i.valRaw} (${parseFloat(i.val.toFixed(2))}${i.isPerc ? '%' : ''})` : `+${parseFloat(i.val.toFixed(2))}${i.isPerc ? '%' : ''}`;
+                    let dispVal = `+${parseFloat(i.val.toFixed(2))}${i.isPerc ? '%' : ''}`;
                     return `<div>${i.key} ${dispVal}${formatSourceLabel(i.sources)}</div>`;
                 }).join('');
             }
@@ -5274,18 +5259,9 @@ function renderCombatAnalysis(stats, data) {
         if (v === undefined || v === null) return '--';
         let val = parseFloat(v);
 
-        // 🚨 修正 Aion Classic 特定屬性換算機制
         const sc1000_f = ['武器傷害增幅', '後方傷害增幅', '暴擊傷害增幅', '技能增益效果'];
         const sc100_f = ['靈識', '強擊', '多段打擊', '特殊打擊', '完美擊中', '完美'];
         const needsScale = keyName && (sc1000_f.some(k => keyName.includes(k)) || sc100_f.some(k => keyName.includes(k)));
-
-        if (isPerc && needsScale && Math.abs(val) >= 20) {
-            if (sc1000_f.some(k => keyName.includes(k)) && Math.abs(val) >= 40) {
-                val = val / 1000;
-            } else if (sc100_f.some(k => keyName.includes(k))) {
-                val = val / 100;
-            }
-        }
 
         // 💡 智慧百分比：如果是百分比屬性，且小於 1 (如 0.06 = 6%)，自動轉為 100 倍以供 fmt 顯示
         // 但如果這是已經過比例縮放的特殊屬性 (scaleKeys)，則跳過此步驟，避免 0.1% 變成 10%
