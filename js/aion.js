@@ -1902,8 +1902,8 @@ function normalizeKey(name, forcePerc = null) {
     if (forcePerc === true) return cleanName + '%';
     if (forcePerc === false) return cleanName;
 
-    // 自動判定
-    if (alwaysPercent.some(k => name.includes(k)) || name.includes('%')) {
+    // 自動判定：僅當原始名稱含 % 才保留
+    if (name.includes('%')) {
         return cleanName + '%';
     }
     return cleanName;
@@ -2288,8 +2288,8 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
         let valNum = parseFloat(s.value.toString().replace(/,/g, '').replace('%', ''));
 
         // 🚨 修正官方總值縮放 (1000 = 1% 類 vs 100 = 1% 類)
-        const scale1000Keys = ['武器傷害增幅', '後方傷害增幅', '暴擊傷害增幅', '強擊', '多段打擊', '特殊打擊', '完美擊中', '技能增益效果'];
-        const scale100Keys = ['靈識'];
+        const scale1000Keys = ['武器傷害增幅', '後方傷害增幅', '暴擊傷害增幅', '技能增益效果'];
+        const scale100Keys = ['靈識', '強擊', '多段打擊', '特殊打擊', '完美擊中', '完美'];
 
         if (possiblePerc && scale1000Keys.some(sk => keyName.includes(sk)) && Math.abs(valNum) >= 40) {
             valNum = valNum / 1000;
@@ -2463,8 +2463,8 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                     }
 
                     // 🚨 修正特定板塊數值 (1000 = 1% vs 100 = 1%)
-                    const bSc1000 = ['武器傷害增幅', '後方傷害增幅', '暴擊傷害增幅', '強擊', '多段打擊', '特殊打擊', '完美擊中', '技能增益效果'];
-                    const bSc100 = ['靈識'];
+                    const bSc1000 = ['武器傷害增幅', '後方傷害增幅', '暴擊傷害增幅', '技能增益效果'];
+                    const bSc100 = ['靈識', '強擊', '多段打擊', '特殊打擊', '完美擊中', '完美'];
                     if (bSc1000.some(bk => n.includes(bk)) && Math.abs(v) >= 40) {
                         v = v / 1000;
                     } else if (bSc100.some(bk => n.includes(bk)) && Math.abs(v) >= 20) {
@@ -2593,8 +2593,8 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                 let v = parseFloat(vS.replace('%', ''));
 
                 // 🚨 修正稱號數值縮放 (1000 = 1% vs 100 = 1%)
-                const titleScale1000 = ['武器傷害增幅', '後方傷害增幅', '暴擊傷害增幅', '強擊', '多段打擊', '特殊打擊', '完美擊中', '技能增益效果'];
-                const titleScale100 = ['靈識'];
+                const titleScale1000 = ['武器傷害增幅', '後方傷害增幅', '暴擊傷害增幅', '技能增益效果'];
+                const titleScale100 = ['靈識', '強擊', '多段打擊', '特殊打擊', '完美擊中', '完美'];
 
                 if (titleScale1000.some(tk => n.includes(tk)) && Math.abs(v) >= 40) {
                     v = v / 1000;
@@ -3012,8 +3012,8 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                 let val = parseFloat(ms.value);
 
                 // 🚨 修正聖物數值縮放 (1000 = 1% vs 100 = 1%)
-                const aSc1000 = ['武器傷害增幅', '後方傷害增幅', '暴擊傷害增幅', '強擊', '多段打擊', '特殊打擊', '完美擊中', '技能增益效果'];
-                const aSc100 = ['靈識'];
+                const aSc1000 = ['武器傷害增幅', '後方傷害增幅', '暴擊傷害增幅', '技能增益效果'];
+                const aSc100 = ['靈識', '強擊', '多段打擊', '特殊打擊', '完美擊中', '完美'];
                 if (k.includes('%') && aSc1000.some(sk => ms.name.includes(sk)) && Math.abs(val) >= 40) {
                     val = val / 1000;
                 } else if (k.includes('%') && aSc100.some(sk => ms.name.includes(sk)) && Math.abs(val) >= 20) {
@@ -3030,8 +3030,8 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                 let val = parseFloat(ss.value.toString().replace('%', ''));
 
                 // 🚨 修正聖物隨機屬性縮放 (1000 = 1% vs 100 = 1%)
-                const asSc1000 = ['武器傷害增幅', '後方傷害增幅', '暴擊傷害增幅', '強擊', '多段打擊', '特殊打擊', '完美擊中', '技能增益效果'];
-                const asSc100 = ['靈識'];
+                const asSc1000 = ['武器傷害增幅', '後方傷害增幅', '暴擊傷害增幅', '技能增益效果'];
+                const asSc100 = ['靈識', '強擊', '多段打擊', '特殊打擊', '完美擊中', '完美'];
                 if (k.includes('%') && asSc1000.some(sk => ss.name.includes(sk)) && Math.abs(val) >= 40) {
                     val = val / 1000;
                 } else if (k.includes('%') && asSc100.some(sk => ss.name.includes(sk)) && Math.abs(val) >= 20) {
@@ -3288,8 +3288,8 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                     let key = normalizeKey(name, isRawPerc);
 
                     // 🚨 修正 Aion Classic 特定屬性 1000 = 1% / 100 = 1% 機制
-                    const sc1000 = ['武器傷害增幅', '後方傷害增幅', '暴擊傷害增幅', '強擊', '多段打擊', '特殊打擊', '完美擊中', '技能增益效果'];
-                    const sc100 = ['靈識'];
+                    const sc1000 = ['武器傷害增幅', '後方傷害增幅', '暴擊傷害增幅', '技能增益效果'];
+                    const sc100 = ['靈識', '強擊', '多段打擊', '特殊打擊', '完美擊中', '完美'];
                     if (sc1000.some(sk => name.includes(sk)) && Math.abs(baseValue) >= 40) {
                         baseValue = baseValue / 1000;
                     } else if (sc100.some(sk => name.includes(sk)) && Math.abs(baseValue) >= 20) {
@@ -3324,8 +3324,8 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                     let key = normalizeKey(name, isEPerc);
 
                     // 🚨 修正額外強化值縮放 (1000 = 1% / 100 = 1%)
-                    const eSc1000 = ['武器傷害增幅', '後方傷害增幅', '暴擊傷害增幅', '強擊', '多段打擊', '特殊打擊', '完美擊中', '技能增益效果'];
-                    const eSc100 = ['靈識'];
+                    const eSc1000 = ['武器傷害增幅', '後方傷害增幅', '暴擊傷害增幅', '技能增益效果'];
+                    const eSc100 = ['靈識', '強擊', '多段打擊', '特殊打擊', '完美擊中', '完美'];
                     if (isEPerc && eSc1000.some(sk => name.includes(sk)) && Math.abs(extraVal) >= 40) {
                         extraVal = extraVal / 1000;
                     } else if (isEPerc && eSc100.some(sk => name.includes(sk)) && Math.abs(extraVal) >= 20) {
@@ -3385,8 +3385,8 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                 let e = getEntry(k);
 
                 // 🚨 修正 Aion Classic 特定屬性 1000 = 1% 機制 (隨機屬性部分)
-                const sSc1000 = ['武器傷害增幅', '後方傷害增幅', '暴擊傷害增幅', '強擊', '多段打擊', '特殊打擊', '完美擊中', '技能增益效果'];
-                const sSc100 = ['靈識'];
+                const sSc1000 = ['武器傷害增幅', '後方傷害增幅', '暴擊傷害增幅', '技能增益效果'];
+                const sSc100 = ['靈識', '強擊', '多段打擊', '特殊打擊', '完美擊中', '完美'];
                 if (sSc1000.some(sk => ss.name.includes(sk)) && Math.abs(v) >= 40) {
                     v = v / 1000;
                 } else if (sSc100.some(sk => ss.name.includes(sk)) && Math.abs(v) >= 20) {
@@ -3422,8 +3422,8 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                 let v = parseFloat(rawVal.replace('%', '')) || 0;
 
                 // 🛡️ 數值單位標準化
-                const stSc1000 = ['武器傷害增幅', '後方傷害增幅', '暴擊傷害增幅', '強擊', '多段打擊', '特殊打擊', '完美擊中', '技能增益效果'];
-                const stSc100 = ['靈識'];
+                const stSc1000 = ['武器傷害增幅', '後方傷害增幅', '暴擊傷害增幅', '技能增益效果'];
+                const stSc100 = ['靈識', '強擊', '多段打擊', '特殊打擊', '完美擊中', '完美'];
                 if (stSc1000.some(sk => ms.name.includes(sk)) && Math.abs(v) >= 40) {
                     v = v / 1000;
                 } else if (stSc100.some(sk => ms.name.includes(sk)) && Math.abs(v) >= 20) {
@@ -4271,11 +4271,9 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                     Object.keys(stats).forEach(statKey => {
                         const e = stats[statKey];
                         const cleanK = statKey.replace('%', '').trim();
-                        const isPercKey = statKey.includes('%') || e.isPerc;
-
-                        // 🔍 智慧合併邏輯：
-                        // 如果搜尋的是本質上「永遠是百分比」的屬性，不管是搜尋 flat 還是 perc，都應該納入計算
+                        // 🔍 智慧判定：不只依賴 % 字元，也檢查屬性名是否屬百分比清單
                         const isInherentlyPerc = alwaysPercKeys.some(k => cleanK.includes(k));
+                        const isPercKey = statKey.includes('%') || e.isPerc || isInherentlyPerc;
 
                         let matchFound = false;
                         const possibleNames = [searchKey, '物理' + searchKey, '魔法' + searchKey, '屬性' + searchKey];
@@ -4321,19 +4319,29 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                         const equipVal = (e.equipMain || 0) + wingVal + setVal;
                         const stoneVal = (e.equipSub || 0);
                         const otherVal = (e.other || 0) - wingVal - setVal;
-                        let val = boardVal + equipVal + stoneVal + otherVal;
+                        let valRaw = boardVal + equipVal + stoneVal + otherVal;
+                        let val = valRaw;
 
-                        // 🚨 修正 Aion Classic 特定屬性 1000 = 1% 的機制 (Overview 縮放)
-                        const overviewScaleKeys = ['武器傷害增幅', '後方傷害增幅', '暴擊傷害增幅', '強擊', '多段打擊', '特殊打擊', '完美擊中', '技能增益效果'];
-                        if (isPercKey && Math.abs(val) >= 40 && overviewScaleKeys.some(sk => statKey.includes(sk))) {
+                        // 🚨 修正 Aion Classic 特定屬性 1000 = 1% / 100 = 1% 機制 (Overview 縮放)
+                        const oSc1000 = ['武器傷害增幅', '後方傷害增幅', '暴擊傷害增幅', '技能增益效果'];
+                        const oSc100 = ['靈識', '強擊', '多段打擊', '特殊打擊', '完美擊中', '完美'];
+
+                        let isScaled = false;
+                        if (isPercKey && oSc1000.some(sk => statKey.includes(sk)) && Math.abs(val) >= 40) {
                             val = val / 1000;
+                            isScaled = true;
+                        } else if (isPercKey && oSc100.some(sk => statKey.includes(sk)) && Math.abs(val) >= 20) {
+                            val = val / 100;
+                            isScaled = true;
                         }
 
                         if (Math.abs(val) > 0.001) {
                             sum += val;
                             items.push({
-                                key: statKey,
+                                key: statKey.replace('%', ''), // 移除 Key 中冗餘的 % 以利顯示
                                 val: val,
+                                valRaw: valRaw,
+                                isScaled: isScaled,
                                 isPerc: isPercKey,
                                 sources: { board: boardVal, equip: equipVal, stone: stoneVal, other: otherVal }
                             });
@@ -4433,7 +4441,10 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                 totalVal = res.total;
                 gatheredDetails = res.details;
                 isPerc = res.items.some(i => i.isPerc) || cfg.name.includes('%');
-                breakdownHtml = res.items.map(i => `<div>${i.key} +${parseFloat(i.val.toFixed(2))}${i.isPerc ? '%' : ''}${formatSourceLabel(i.sources)}</div>`).join('');
+                breakdownHtml = res.items.map(i => {
+                    let dispVal = i.isScaled ? `+${i.valRaw} (${parseFloat(i.val.toFixed(2))}${i.isPerc ? '%' : ''})` : `+${parseFloat(i.val.toFixed(2))}${i.isPerc ? '%' : ''}`;
+                    return `<div>${i.key} ${dispVal}${formatSourceLabel(i.sources)}</div>`;
+                }).join('');
             }
 
             // 去重詳細資訊
@@ -5264,8 +5275,8 @@ function renderCombatAnalysis(stats, data) {
         let val = parseFloat(v);
 
         // 🚨 修正 Aion Classic 特定屬性換算機制
-        const sc1000_f = ['武器傷害增幅', '後方傷害增幅', '暴擊傷害增幅', '強擊', '多段打擊', '特殊打擊', '完美擊中', '技能增益效果'];
-        const sc100_f = ['靈識'];
+        const sc1000_f = ['武器傷害增幅', '後方傷害增幅', '暴擊傷害增幅', '技能增益效果'];
+        const sc100_f = ['靈識', '強擊', '多段打擊', '特殊打擊', '完美擊中', '完美'];
         const needsScale = keyName && (sc1000_f.some(k => keyName.includes(k)) || sc100_f.some(k => keyName.includes(k)));
 
         if (isPerc && needsScale && Math.abs(val) >= 20) {
@@ -5395,8 +5406,8 @@ function renderCombatAnalysis(stats, data) {
                 let officialVal = parseFloat(valStr);
 
                 // 🚨 修正備用路徑的官方總值縮放
-                const sc1000_b = ['武器傷害增幅', '後方傷害增幅', '暴擊傷害增幅', '強擊', '多段打擊', '特殊打擊', '完美擊中', '技能增益效果'];
-                const sc100_b = ['靈識'];
+                const sc1000_b = ['武器傷害增幅', '後方傷害增幅', '暴擊傷害增幅', '技能增益效果'];
+                const sc100_b = ['靈識', '強擊', '多段打擊', '特殊打擊', '完美擊中', '完美'];
                 if (official.value.toString().includes('%')) {
                     if (sc1000_b.some(sk => official.name.includes(sk)) && Math.abs(officialVal) >= 40) {
                         officialVal = officialVal / 1000;
