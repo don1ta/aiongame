@@ -4156,7 +4156,7 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
         const extraConfig = [
             {
                 name: "攻擊力", icon: "⚔️",
-                bases: ["攻擊力"], extras: ["額外攻擊力"], percs: ["攻擊力增加"], fixeds: []
+                bases: ["攻擊力"], extras: ["額外攻擊力"], percs: ["攻擊力增加"], fixeds: ["PVE攻擊力", "首領攻擊力"]
             },
             {
                 name: "攻擊力增加", icon: "📈",
@@ -4164,7 +4164,7 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
             },
             {
                 name: "防禦力", icon: "🛡️",
-                bases: ["防禦力"], extras: ["額外防禦力"], percs: ["防禦力增加"], fixeds: []
+                bases: ["防禦力"], extras: ["額外防禦力"], percs: ["防禦力增加"], fixeds: ["PVE防禦力", "首領防禦力"]
             },
 
             {
@@ -4192,11 +4192,11 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
             },
             {
                 name: "命中", icon: "🎯",
-                bases: ["命中"], extras: ["額外命中"], percs: ["命中增加"], fixeds: []
+                bases: ["命中"], extras: ["額外命中"], percs: ["命中增加"], fixeds: ["PVE命中"]
             },
             {
                 name: "傷害增幅", icon: "⚡",
-                bases: ["傷害增幅"], extras: [], percs: [], fixeds: []
+                bases: ["傷害增幅"], extras: [], percs: [], fixeds: ["PVE傷害增幅", "首領傷害增幅"]
             },
             { name: "武器傷害增幅", keys: ["武器傷害增幅"], icon: "🗡️" },
             { name: "後方傷害增幅", keys: ["後方傷害增幅"], icon: "👤" },
