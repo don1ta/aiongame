@@ -920,8 +920,7 @@ function updatePassiveSkills(data) {
                 if (!GAIN_EFFECT_DATABASE['被動技能'].breakdowns[key]) GAIN_EFFECT_DATABASE['被動技能'].breakdowns[key] = [];
             }
 
-            const alwaysPercent = ['戰鬥速度', '移動速度', '攻擊速度', '飛行速度', '暴擊傷害增幅', '物理致命一擊', '魔法致命一擊', '暴擊抵抗增加', '強擊', '多段打擊', '特殊打擊', '完美擊中', '完美', '再生', '鐵壁', '冷卻時間', '傷害增幅', '傷害耐性', '武器傷害增幅', '後方傷害增幅', '技能增益效果', '異常狀態擊中', '異常狀態抵抗', '靈識', '擊中', '抵抗', '耐性'];
-            const isPercKey = key.includes('%') || alwaysPercent.some(k => key.includes(k));
+            const isPercKey = key.includes('%') || key.endsWith('增加') || key.includes('治癒增幅');
 
             // 🚨 修正：如果是百分比屬性且數值小於 1 (如 0.05 代表 5%)，則放大為百分點 (5)
             // 如果數值已經是 5 (代表 5%)，則保持不變。
@@ -1258,8 +1257,7 @@ function initGainControls() {
                             display: none;
                             position: absolute;
                             top: 130%;
-                            left: 50%;
-                            transform: translateX(-50%);
+                            left: 0;
                             background: rgba(15, 20, 25, 0.98);
                             border: 1px solid var(--border);
                             border-radius: 6px;
@@ -1277,7 +1275,7 @@ function initGainControls() {
                             <b style="color:var(--gold); display:block; border-bottom:1px solid rgba(255,255,255,0.1); margin-bottom:8px; padding-bottom:5px;">${key} 加成細項</b>
                             <div style="line-height: 1.5; word-break: break-word;">${statsInfo}</div>
                             <!-- Arrow -->
-                            <div style="position:absolute; bottom:100%; left:50%; transform:translateX(-50%); border-width:6px; border-style:solid; border-color:transparent transparent rgba(15,20,25,0.98) transparent;"></div>
+                            <div style="position:absolute; bottom:100%; left:25px; border-width:6px; border-style:solid; border-color:transparent transparent rgba(15,20,25,0.98) transparent;"></div>
                         </div>
                     </div>
                 `;
@@ -1882,7 +1880,7 @@ function renderRankings(rankingList, gameRankings) {
 // 🟢 標準化屬性名稱 (確保 被動技能 與 主表 欄位對齊)
 function normalizeKey(name, forcePerc = null) {
     // 🚫 嚴格區分：哪些屬性「永遠」是百分比
-    const alwaysPercent = ['戰鬥速度', '移動速度', '攻擊速度', '飛行速度', '暴擊傷害增幅', '物理致命一擊', '魔法致命一擊', '暴擊抵抗增加', '強擊', '多段打擊', '特殊打擊', '完美擊中', '完美', '再生', '鐵壁', '冷卻時間', '傷害增幅', '傷害耐性', '武器傷害增幅', '後方傷害增幅', '技能增益效果', '異常狀態擊中', '異常狀態抵抗', '靈識', '擊中', '抵抗', '耐性'];
+    const alwaysPercent = ['治癒增幅', '戰鬥速度', '移動速度', '攻擊速度', '飛行速度', '暴擊傷害增幅', '物理致命一擊', '魔法致命一擊', '暴擊抵抗增加', '強擊', '多段打擊', '特殊打擊', '完美擊中', '完美', '再生', '鐵壁', '冷卻時間', '傷害增幅', '傷害耐性', '武器傷害增幅', '後方傷害增幅', '技能增益效果', '異常狀態擊中', '異常狀態抵抗', '靈識', '擊中', '抵抗', '耐性'];
     const protectPercNames = ['攻擊力增加', '生命力增加', '精神力增加', '防禦力增加', '命中增加', '迴避增加', '暴擊增加', '格擋增加', '暴擊抵抗增加'];
 
     let cleanName = name.replace('%', '').replace(/\s+/g, '').trim();
@@ -2348,7 +2346,7 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                     let entry = getEntry(entryKey);
                     entry.other += value;
                     entry.subtotals.mainStat += value;
-                    entry.detailGroups.mainStat.push(`[${s.name}]轉化: ${valueStr}`);
+                    entry.detailGroups.mainStat.push(`${s.name} 轉化: ${valueStr}`);
                 }
             });
         } else {
@@ -2361,8 +2359,8 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
     // 🌟 Manual Injection of Primary Stat Conversions (Will -> Resistance, Knowledge -> Accuracy)
     // The API sometimes misses these derived stats in the breakdown or total (especially Resistance).
     const primaryStatsToProcess = [
-        { name: '意志', target: '異常狀態抵抗', ratio: 0.1, suffix: '%', label: '[意志]轉化' },
-        { name: '知識', target: '異常狀態擊中', ratio: 0.1, suffix: '%', label: '[知識]轉化' }
+        { name: '意志', target: '異常狀態抵抗', ratio: 0.1, suffix: '%', label: '意志 轉化' },
+        { name: '知識', target: '異常狀態擊中', ratio: 0.1, suffix: '%', label: '知識 轉化' }
     ];
 
     primaryStatsToProcess.forEach(p => {
@@ -2579,12 +2577,7 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
         });
     });
 
-    // 每次重新處理稱號前，清空舊角色殘留的稱號 breakdowns
-    if (GAIN_EFFECT_DATABASE['稱號']) {
-        GAIN_EFFECT_DATABASE['稱號'].breakdowns = {};
-    } else {
-        GAIN_EFFECT_DATABASE['稱號'] = { active: true, breakdowns: {} };
-    }
+
 
     (data.title?.titleList || []).forEach(t => {
 
@@ -2620,14 +2613,7 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                 e.subtotals.title += v;
                 e.detailGroups.title.push(`[${t.name}]: +${vS}`);
 
-                // 🌟 同步更新到 GAIN_EFFECT_DATABASE 以便屬性展開面板能查找到
-                if (!GAIN_EFFECT_DATABASE['稱號']) {
-                    GAIN_EFFECT_DATABASE['稱號'] = { active: true, breakdowns: {} };
-                }
-                const bd = GAIN_EFFECT_DATABASE['稱號'].breakdowns;
-                if (!bd[k]) bd[k] = [];
-                const detailStr = `[${t.name}]: +${vS}`;
-                if (!bd[k].includes(detailStr)) bd[k].push(detailStr);
+
             });
         }
     });
@@ -5553,7 +5539,7 @@ function renderCombatAnalysis(stats, data) {
                 list.forEach(str => {
                     let colonIdx = str.indexOf(':');
                     if (colonIdx > -1) {
-                        let name = str.substring(0, colonIdx).trim().replace(/^\[|\]$/g, '');
+                        let name = str.substring(0, colonIdx).trim();
                         let valPart = str.substring(colonIdx + 1).trim();
 
                         let nameStyle = `color:${color}; opacity:0.85;`;
