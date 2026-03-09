@@ -262,12 +262,8 @@ const WING_DATABASE = {
         icon: 'https://questlog.gg/assets/Game/UI/Resource/Texture/Item/Wing/Icon_WingD_004.Icon_WingD_004.png',
         equip: { '額外迴避': 35, '暴擊抵抗': 35, '精神力': 250, '精神力自然恢復': 90 },
         hold: { '飛行力': 200, '暴擊抵抗': 20, '後方暴擊抵抗': 40 }
-    },
-    '黑暗帳幕翅膀': {
-        grade: 'unique',
-        icon: 'https://questlog.gg/assets/Game/UI/Resource/Texture/Item/Wing/Icon_WingA_012.Icon_WingA_012.png',
-        equip: { '暴擊': 35, '暴擊抵抗': 95, '生命力': 500, '生命力自然恢復': 250 },
-        hold: { '飛行力': 200, '額外迴避': 20, '格擋': 10 }
+
+
     },
     '森林精靈翅膀': {
         grade: 'unique',
@@ -934,8 +930,8 @@ function updatePassiveSkills(data) {
                 statsObj[sName] = val;
             }
 
-            // 🛡️ 安全門：如果這是一個欄位名稱帶有百分比的，但數值大於 200，這通常是解析錯誤（如抓到 3400）
-            if (isPercKey && Math.abs(val) >= 200) {
+            // 🛡️ 安全門：只對明確為百分比 key（含 %）的屬性檢查，避免誤判「暴擊抵抗」等固定值大數值
+            if (key.includes('%') && Math.abs(val) >= 200) {
                 continue;
             }
 
@@ -2583,7 +2579,15 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
         });
     });
 
+    // 每次重新處理稱號前，清空舊角色殘留的稱號 breakdowns
+    if (GAIN_EFFECT_DATABASE['稱號']) {
+        GAIN_EFFECT_DATABASE['稱號'].breakdowns = {};
+    } else {
+        GAIN_EFFECT_DATABASE['稱號'] = { active: true, breakdowns: {} };
+    }
+
     (data.title?.titleList || []).forEach(t => {
+
         if (t.equipCategory) {
             let catName = t.equipCategory === "Attack" ? "⚔️ 攻擊稱號" : (t.equipCategory === "Defense" ? "🛡️ 防禦稱號" : "📘 其他稱號");
             let gradeColor = getGradeColor(t.grade || t.gradeName || t.quality || 'common');
@@ -2816,7 +2820,12 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                 }
 
                 entry.other += applyVal;
-                entry.subtotals.gainEffect += applyVal;
+                // 被動技能改加入 skill 小計，其他增益效果加入 gainEffect
+                if (effectName === '被動技能') {
+                    entry.subtotals.skill += applyVal;
+                } else {
+                    entry.subtotals.gainEffect += applyVal;
+                }
 
                 let unit = key.includes('%') ? '%' : '';
                 const displayVal = parseFloat(applyVal.toFixed(2));
@@ -2824,14 +2833,16 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                 // 特殊處理被動技能的詳細顯示
                 let breakdownFound = false;
                 if (effectName === '被動技能' && effect.breakdowns) {
-                    // 嘗試使用 normalized key 或原始 statName 查找對應的描述
-                    const descriptions = effect.breakdowns[key] || effect.breakdowns[statName];
+                    // 嘗試使用 normalized key、原始 statName 或其 % 變體查找對應的描述
+                    const variant = key.includes('%') ? key.replace('%', '') : key + '%';
+                    const descriptions = effect.breakdowns[key] || effect.breakdowns[statName] || effect.breakdowns[variant];
 
                     if (descriptions && descriptions.length > 0) {
                         breakdownFound = true;
                         descriptions.forEach(desc => {
-                            if (!entry.detailGroups.gainEffect.includes(desc)) {
-                                entry.detailGroups.gainEffect.push(desc);
+                            // 被動技能細項加入 skill 欄位（而非 gainEffect）
+                            if (!entry.detailGroups.skill.includes(desc)) {
+                                entry.detailGroups.skill.push(desc);
                             }
                         });
                     }
@@ -2839,9 +2850,16 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
 
                 // 如果沒有找到對應的細項描述 (或不是被動技能)，則顯示通用格式
                 if (!breakdownFound) {
-                    const desc = `[增益] ${effectName}: +${displayVal}${unit}`;
-                    if (!entry.detailGroups.gainEffect.includes(desc)) {
-                        entry.detailGroups.gainEffect.push(desc);
+                    if (effectName === '被動技能') {
+                        const desc = `[被動] ${effectName}: +${displayVal}${unit}`;
+                        if (!entry.detailGroups.skill.includes(desc)) {
+                            entry.detailGroups.skill.push(desc);
+                        }
+                    } else {
+                        const desc = `[增益] ${effectName}: +${displayVal}${unit}`;
+                        if (!entry.detailGroups.gainEffect.includes(desc)) {
+                            entry.detailGroups.gainEffect.push(desc);
+                        }
                     }
                 }
 
@@ -3379,8 +3397,16 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
 
                 getEntry(k).detailGroups.base.push(str);
             }
+            // 🌟 靈魂刻印去重：godStoneStat 已處理，subStats 中的對應項目不再加入 random
+            const godStoneNames = new Set((d.godStoneStat || []).map(gs => {
+                if (!gs.desc) return null;
+                return gs.desc.split(/\s*\+/)[0].trim();
+            }).filter(Boolean));
+
             (d.subStats || []).forEach(ss => {
                 if (!ss.value) return;
+                // 若此副屬性已由靈魂刻印處理，跳過（避免重複計入 random）
+                if (godStoneNames.has(ss.name)) return;
                 let rawVal = ss.value.toString();
                 let k = normalizeKey(ss.name, rawVal.includes('%'));
                 let v = parseFloat(rawVal.replace('%', '')) || 0;
@@ -3424,19 +3450,18 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                 let k = normalizeKey(ms.name, rawVal.includes('%'));
                 let v = parseFloat(rawVal.replace('%', '')) || 0;
 
-                // 🛡️ 數值單位標準化
-                const stSc1000 = ['武器傷害增幅', '後方傷害增幅', '暴擊傷害增幅', '技能增益效果', '傷害增幅', '傷害耐性'];
-                const stSc100 = ['靈識', '強擊', '多段打擊', '特殊打擊', '完美擊中', '完美', '擊中', '抵抗', '耐性'];
-                if (stSc1000.some(sk => (sk === '傷害增幅' || sk === '傷害耐性') ? (ms.name === sk || (ms.name.includes(sk) && !ms.name.includes('PVE') && !ms.name.includes('首領'))) : ms.name.includes(sk)) && Math.abs(v) >= 40) {
-                    v = v / 1000;
-                } else if (stSc100.some(sk => (sk === '傷害增幅' || sk === '傷害耐性') ? (ms.name === sk || (ms.name.includes(sk) && !ms.name.includes('PVE') && !ms.name.includes('首領'))) : ms.name.includes(sk)) && Math.abs(v) >= 20) {
+                // 🛡️ 數值單位標準化：魔石所有百分比屬性均為 100=1%（÷100）
+                const stSc100 = ['武器傷害增幅', '後方傷害增幅', '暴擊傷害增幅', '技能增益效果', '傷害增幅', '傷害耐性', '靈識', '強擊', '多段打擊', '特殊打擊', '完美擊中', '完美', '擊中', '抵抗', '耐性'];
+                if (stSc100.some(sk => (sk === '傷害增幅' || sk === '傷害耐性') ? (ms.name === sk || (ms.name.includes(sk) && !ms.name.includes('PVE') && !ms.name.includes('首領'))) : ms.name.includes(sk)) && Math.abs(v) >= 20) {
                     v = v / 100;
                 }
 
                 let e = getEntry(k);
                 e.equipSub += v;
                 e.subtotals.stone += v;
-                e.detailGroups.stone.push(`${d.name}: ${ms.value}`);
+                const msDisplayVal = Number(parseFloat(v.toFixed(3)));
+                const msUnit = k.includes('%') ? '%' : '';
+                e.detailGroups.stone.push(`${d.name}: +${msDisplayVal}${msUnit}`);
 
                 // 🔹 處理特殊格式 3(+3%)
                 let bracketMatch = rawVal.match(/\(([\+\-]?[\d\.]+)\%\)/);
@@ -3448,6 +3473,33 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                     eb.subtotals.stone += bVal;
                     eb.detailGroups.stone.push(`${d.name}(附): +${bVal}%`);
                 }
+            });
+            // 🌟 新增：godStoneStat（靈魂刻印）屬性解析，補齊來源計算
+            (d.godStoneStat || []).forEach(gs => {
+                // godStoneStat 格式: { name, grade, desc } - 需從 desc 中解析數值
+                // desc 格式例如: "暴擊抵抗 +13" 或 "暴擊 +7"
+                if (!gs.desc) return;
+                const descParts = gs.desc.split(/\s*\+/);
+                if (descParts.length < 2) return;
+                const gsName = descParts[0].trim();
+                const gsRawVal = descParts[1].trim();
+                let k = normalizeKey(gsName, gsRawVal.includes('%'));
+                let v = parseFloat(gsRawVal.replace('%', '')) || 0;
+
+                // 🛡️ 數值單位標準化：靈魂刻印所有百分比屬性均為 100=1%（÷100）
+                const gsSc100 = ['武器傷害增幅', '後方傷害增幅', '暴擊傷害增幅', '技能增益效果', '傷害增幅', '傷害耐性', '靈識', '強擊', '多段打擊', '特殊打擊', '完美擊中', '完美', '擊中', '抵抗', '耐性'];
+                if (gsSc100.some(sk => (sk === '傷害增幅' || sk === '傷害耐性') ? (gsName === sk || (gsName.includes(sk) && !gsName.includes('PVE') && !gsName.includes('首領'))) : gsName.includes(sk)) && Math.abs(v) >= 20) {
+                    v = v / 100;
+                }
+
+                let e = getEntry(k);
+                e.equipSub += v;
+                e.subtotals.stone += v;
+                // 顯示：裝備名稱 + 靈魂刻印封號，方便使用者辨識
+                const gsLabel = gs.name ? `${gs.name}(靈魂刻印)` : '靈魂刻印';
+                const gsDisplayVal = Number(parseFloat(v.toFixed(3)));
+                const gsUnit = k.includes('%') ? '%' : '';
+                e.detailGroups.stone.push(`${d.name}[${gsLabel}]: +${gsDisplayVal}${gsUnit}`);
             });
         }
     });
@@ -3697,7 +3749,15 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
     console.log("DEBUG: Final stigmaList for scoring:", stigmaList);
 
     const skillData = { stigma: stigmaList }; // 技能烙印數據
-    const titleData = data.title || {}; // 稱號數據
+    // 稱號數據：補算 ownedCount（若 API 未提供，改用 titleList 長度）
+    const titleRaw = data.title || {};
+    const titleOwnedCount = titleRaw.ownedCount != null
+        ? titleRaw.ownedCount
+        : (Array.isArray(titleRaw.titleList) ? titleRaw.titleList.length : 0);
+    const titleData = {
+        ...titleRaw,
+        ownedCount: titleOwnedCount
+    };
 
     const scoreResult = calculateEquipmentScore(
         data.itemDetails || [],
@@ -4264,7 +4324,7 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                 let items = [];
                 let allDetails = [];
 
-                const alwaysPercKeys = ['戰鬥速度', '移動速度', '攻擊速度', '飛行速度', '暴擊傷害增幅', '物理致命一擊', '魔法致命一擊', '暴擊抵抗增加', '強擊', '多段打擊', '特殊打擊', '完美擊中', '完美', '再生', '鐵壁', '冷卻時間', '傷害增幅', '傷害耐性', '武器傷害增幅', '後方傷害增幅', '技能增益效果', '異常狀態擊中', '異常狀態抵抗', '靈識', '擊中', '抵抗', '耐性'];
+                const alwaysPercKeys = ['戰鬥速度', '移動速度', '攻擊速度', '飛行速度', '暴擊傷害增幅', '暴擊抵抗增加', '強擊', '多段打擊', '特殊打擊', '完美擊中', '完美', '再生', '鐵壁', '冷卻時間', '傷害增幅', '傷害耐性', '武器傷害增幅', '後方傷害增幅', '技能增益效果', '異常狀態擊中', '異常狀態抵抗'];
 
 
                 (keyList || []).forEach(searchKey => {
@@ -4390,7 +4450,7 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                     // 只在第一個 cfg 時清空（避免每次 cfg 都重置）
                     if (!flagItem.__resetDone) { flagItem._excludedStats = {}; flagItem.__resetDone = true; }
                     const excludedKeys = (cfg.fixeds || []).filter(k => PVE_BOSS_PREFIXES.some(p => k.startsWith(p)));
-                    const excludedRes = getSumOf(excludedKeys, 'flat');
+                    const excludedRes = getSumOf(excludedKeys, 'any');
                     excludedRes.items.forEach(item => {
                         const label = `${cfg.name} - ${item.key}`;
                         flagItem._excludedStats[label] = (flagItem._excludedStats[label] || 0) + item.val;
@@ -4399,7 +4459,7 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                 const effectiveFixeds = window.isExcludePveBoss()
                     ? (cfg.fixeds || []).filter(k => !PVE_BOSS_PREFIXES.some(p => k.startsWith(p)))
                     : cfg.fixeds;
-                const fixedRes = getSumOf(effectiveFixeds, 'flat');
+                const fixedRes = getSumOf(effectiveFixeds, 'any');
 
 
                 gatheredDetails = [...baseRes.details, ...extraRes.details, ...percRes.details, ...fixedRes.details];
@@ -5361,9 +5421,12 @@ function renderCombatAnalysis(stats, data) {
                                 entry.detailGroups[targetGk].push(str);
 
                                 // 同步累加 subtotal 以更新 Header 數值
-                                const m = str.match(/:\s*\+?([\d\.]+)/);
-                                if (m) {
-                                    entry.subtotals[targetGk] += parseFloat(m[1]);
+                                // ⚠️ 「稱號」與「被動技能」已在 processData 中累加過 subtotals，這裡跳過避免雙倍
+                                if (cat !== '稱號' && cat !== '被動技能') {
+                                    const m = str.match(/:\s*\+?([\d\.]+)/);
+                                    if (m) {
+                                        entry.subtotals[targetGk] += parseFloat(m[1]);
+                                    }
                                 }
                             }
                         });
@@ -5948,7 +6011,7 @@ function renderCombatAnalysis(stats, data) {
                                             ${canExpand && leftKey ? `<span id="${rowIconId}" style="color:#58a6ff; font-size:10px; transition:transform 0.2s; transform:rotate(-90deg); width:12px; display:inline-block;">▶</span>` : ''}
                                             ${renderStatLabelWithTooltip(leftKey)}
                                         </div>
-                                        <span style="font-size:13px; font-weight:bold; color:#fff;">${(leftKey && hasLeftVal) ? fmt(leftEntry.total, leftKey.includes('%'), leftKey) : (leftKey ? '--' : '')}</span>
+                                        <span style="font-size:13px; font-weight:bold; color:#fff;">${(leftKey && hasLeftVal) ? fmt(leftEntry.total, normalizeKey(leftKey).includes('%') || leftKey.endsWith('增加'), leftKey) : (leftKey ? '--' : '')}</span>
                                     </div>
 
                                     <!-- Spacer -->
@@ -5957,7 +6020,7 @@ function renderCombatAnalysis(stats, data) {
                                     <!-- Right Column -->
                                     <div style="flex:1; display:flex; justify-content:space-between; align-items:center;">
                                         ${renderStatLabelWithTooltip(rightKey)}
-                                        <span style="font-size:13px; font-weight:bold; color:#fff;">${(rightKey && hasRightVal) ? fmt(rightEntry.total, rightKey.includes('%'), rightKey) : (rightKey ? '--' : '')}</span>
+                                        <span style="font-size:13px; font-weight:bold; color:#fff;">${(rightKey && hasRightVal) ? fmt(rightEntry.total, normalizeKey(rightKey).includes('%') || rightKey.endsWith('增加'), rightKey) : (rightKey ? '--' : '')}</span>
                                     </div>
                                 </div>
 
