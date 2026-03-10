@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Aion2 角色數據分析系統 - 核心邏輯檔案 (aion.js)
  * 
  * 此檔案為整個系統的中樞，負責：
@@ -7054,7 +7054,7 @@ window.showEquipTooltip = function (slotId, mode = 'modal', event = null) {
     }
 
     let skillsHtml = '';
-    const itemSkills = [...(d.skills || []), ...(d.itemSkills || []), ...(d.extraSkills || [])];
+    const itemSkills = [...(d.skills || []), ...(d.subSkills || []), ...(d.itemSkills || []), ...(d.extraSkills || [])];
     if (itemSkills.length > 0) {
         skillsHtml = `<div class="tooltip-section"><div class="tooltip-section-title">裝備技能</div>${itemSkills.map(s => {
             const sName = s.name || (typeof window.getSkillName === 'function' ? window.getSkillName(s.id) : s.id);
@@ -7451,7 +7451,7 @@ window.renderStatsTab = async function (json, initialActiveKey = null) {
                     matchGradeColor = result.gradeColor;
                 }
             } else {
-                const itemSkills = d_user.skills || d_user.itemSkills || d_user.extraSkills || [];
+                const itemSkills = [...(d_user.skills || []), ...(d_user.subSkills || []), ...(d_user.itemSkills || []), ...(d_user.extraSkills || [])];
 
                 isMatch = userSubStats.some(s => {
                     if (!s || !s.name) return false;
