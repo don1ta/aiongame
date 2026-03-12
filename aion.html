@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-Hant-TW">
 
 <head>
@@ -330,6 +330,64 @@
                 </div>
             </div>
 
+            <!-- 🏆 裝備來源區塊 -->
+            <div class="card full-width-card" id="equip-source-block"
+                style="margin-top: 20px; padding:0; overflow:hidden; display: none;">
+                <div
+                    style="padding: 20px 25px; border-bottom: 1px solid rgba(255,255,255,0.05); background: rgba(0,0,0,0.2);">
+                    <h2 style="margin:0; color:var(--gold-bright); display:flex; align-items:center; gap:10px;">
+                        <span style="font-size:24px;">🏆</span> 裝備評分明細
+                    </h2>
+                </div>
+
+                <!-- 左1右2 佈局 -->
+                <div style="display:flex; align-items:stretch; min-height: 400px;">
+
+                    <!-- 左側統計欄 -->
+                    <div id="equip-source-stats-panel"
+                        style="width:260px; flex-shrink:0; background:rgba(0,0,0,0.25); border-right:1px solid rgba(255,255,255,0.07); padding:20px 18px;">
+                        <!-- 統計內容由 JS 動態填充 -->
+                    </div>
+
+                    <!-- 右側分頁欄 -->
+                    <div style="flex:1; display:flex; flex-direction:column; min-width:0;">
+                        <!-- 分頁標題列 -->
+                        <div class="stat-tabs-header integrated-tabs"
+                            style="margin:0; padding:10px 20px; background:rgba(0,0,0,0.15); border-bottom:1px solid rgba(255,255,255,0.07); overflow-x:auto; white-space:nowrap;">
+                            <div id="esc-tab-btn-equip" class="stat-tab-btn active"
+                                onclick="switchEquipSourceTab('equip')">⚔️ 裝備等級</div>
+                            <div id="esc-tab-btn-board" class="stat-tab-btn"
+                                onclick="switchEquipSourceTab('board')">🛡️ 守護力獲取</div>
+                            <div id="esc-tab-btn-misc" class="stat-tab-btn"
+                                onclick="switchEquipSourceTab('misc')">📦 其他 (預留)</div>
+                        </div>
+
+                        <!-- 分頁內容 -->
+                        <div style="flex:1; padding:20px; overflow:auto;">
+                            <!-- 分頁1：裝備等級 -->
+                            <div id="esc-tab-equip" style="display:block;">
+                                <div id="esc-equip-content">
+                                    <div style="color:#666; text-align:center; padding:40px;">尚無資料</div>
+                                </div>
+                            </div>
+                            <!-- 分頁2：守護力獲取 -->
+                            <div id="esc-tab-board" style="display:none;">
+                                <div id="esc-board-content">
+                                    <div style="color:#666; text-align:center; padding:40px;">尚無資料</div>
+                                </div>
+                            </div>
+                            <!-- 分頁3：預留 -->
+                            <div id="esc-tab-misc" style="display:none;">
+                                <div style="color:#666; text-align:center; padding:60px 40px;">
+                                    <div style="font-size:40px; margin-bottom:15px;">🚧</div>
+                                    <div style="font-size:16px; color:#8b949e;">此分頁尚在規劃中，敬請期待</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- 手機版快速導覽列 (因 CSS 已包含 #mobile-quick-nav 設定，所以會自動在手機版顯示並置底) -->
             <div id="mobile-quick-nav">
                 <a href="#nav-target-search" class="nav-btn">
@@ -365,6 +423,7 @@
     <script src="js/stat_descriptions.js"></script>
     <script src="js/stats_static_data.js"></script>
     <script src="js/aion.js?v=v_tooltip_godstone_v6"></script>
+    <script src="js/equip-source.js?v=v1"></script>
     <!-- 裝備詳情彈窗 -->
     <div id="equip-tooltip-overlay" class="tooltip-overlay" onclick="closeEquipTooltip(event)">
         <div class="equip-tooltip" id="equip-tooltip-content" onclick="event.stopPropagation()">

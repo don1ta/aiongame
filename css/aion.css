@@ -1,4 +1,4 @@
-﻿        /* 保留你原本的所有 CSS 樣式 */
+        /* 保留你原本的所有 CSS 樣式 */
         /* Global Reset */
         * {
             box-sizing: border-box;
@@ -60,6 +60,17 @@
             --card-bg: linear-gradient(145deg, rgba(26, 35, 50, 0.6), rgba(15, 25, 34, 0.4));
             --accent-gradient: linear-gradient(135deg, var(--primary), var(--gold));
             --glow-gradient: radial-gradient(circle at center, var(--primary-glow), transparent);
+        }
+
+        /* 🛡️ 守護力板塊稀有度格子顏色 */
+        .rarity-val-legend { color: var(--gold) !important; font-weight: bold; }
+        .rarity-val-unique { color: #3498db !important; font-weight: bold; }
+        .rarity-val-rare { color: #2ecc71 !important; font-weight: bold; }
+        .rarity-val-common { color: #adb5bd !important; }
+
+        .esc-equip-table tfoot td {
+            border-top: 1px solid rgba(255,215,0,0.3);
+            background: rgba(255,215,0,0.02);
         }
 
         body {
@@ -4506,3 +4517,121 @@
                 color: #8b949e !important;
             }
         }
+
+/* ============================================================
+   🏆 裝備來源評分明細 - 樣式
+   ============================================================ */
+
+/* 裝備等級明細表格 */
+.esc-equip-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.esc-equip-table thead tr {
+    background: rgba(0, 0, 0, 0.3);
+    border-bottom: 2px solid rgba(255, 215, 0, 0.2);
+}
+
+.esc-equip-table th {
+    padding: 10px 12px;
+    color: #8b949e;
+    font-weight: 700;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.esc-equip-table td {
+    padding: 9px 12px;
+    vertical-align: middle;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.esc-equip-row:hover td {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.esc-equip-row:last-child td {
+    border-bottom: none;
+}
+
+.esc-total-row td {
+    padding: 10px 12px;
+    background: rgba(255, 215, 0, 0.04);
+    border-top: 2px solid rgba(255, 215, 0, 0.15);
+    border-bottom: none;
+}
+
+/* 品階圓點 */
+.esc-rarity-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+/* 石頭徽章 */
+.esc-stone-badge {
+    display: inline-block;
+    border: 1px solid;
+    border-radius: 4px;
+    padding: 1px 5px;
+    font-size: 11px;
+    font-weight: 700;
+    font-family: 'Inter', sans-serif;
+    margin: 1px 2px;
+    white-space: nowrap;
+}
+
+/* 板塊卡片 */
+.esc-board-card {
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-left: 4px solid;
+    border-radius: 10px;
+    padding: 14px 16px;
+    transition: all 0.2s ease;
+}
+
+.esc-board-card:hover {
+    background: rgba(255, 255, 255, 0.03);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+}
+
+/* 進度條 */
+.esc-progress-bg {
+    width: 100%;
+    height: 7px;
+    background: rgba(255, 255, 255, 0.07);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.esc-progress-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 左側統計欄 RWD */
+@media (max-width: 768px) {
+    #equip-source-block > div:last-child {
+        flex-direction: column;
+    }
+    #equip-source-stats-panel {
+        width: 100% !important;
+        border-right: none !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    }
+    .esc-equip-table th,
+    .esc-equip-table td {
+        padding: 7px 8px;
+        font-size: 12px;
+    }
+}
