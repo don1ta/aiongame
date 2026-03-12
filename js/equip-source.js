@@ -169,15 +169,30 @@ async function loadDaevanionScoreDetails(rawData) {
 
     const deBoardList = findDataByKey(rawData, 'daevanionBoardList') || [];
     const deDetailsList = findDataByKey(rawData, 'daevanionDetails') || [];
+    
+    // 取得職業名稱
+    const charProfile = findDataByKey(rawData, 'profile') || {};
+    const className = charProfile.className || "";
+
+    // 取得被動技能資料庫 (用於判斷綠色/藍色)
+    const passiveDB = window.PASSIVE_SKILLS_DB || {};
+    // 取得該職業特定的被動技能 Set
+    const classPassives = (className && passiveDB[className]) ? new Set(Object.keys(passiveDB[className])) : new Set();
+    
+    // 備用：所有職業的被動 (防止 API 給的名稱與 DB 不完全匹配)
+    const allPassives = new Set();
+    Object.values(passiveDB).forEach(cls => {
+        Object.keys(cls).forEach(skillName => allPassives.add(skillName));
+    });
 
     const boardConfig = {
-        71: { name: '奈薩肯', s: ['戰鬥速度', '冷卻時間減少'], v: 2.5 },
-        72: { name: '吉凱爾', s: ['傷害耐性', '傷害增幅'], v: 5 },
-        73: { name: '白傑爾', s: ['暴擊傷害增幅', '暴擊傷害耐性'], v: 5 },
-        74: { name: '崔妮爾', s: ['多段打擊抵抗', '多段打擊擊中'], v: 3 },
-        75: { name: '艾瑞爾', s: ['PVE傷害增幅', 'PVE傷害抵抗'], v: 2.5 },
-        76: { name: '阿斯佩爾', s: ['PVP傷害增幅', 'PVP傷害抵抗'], v: 2.5 },
-        77: { name: '瑪爾庫坦', s: ['武器傷害增幅', '武器傷害耐性'], v: 2.5 }
+        71: { name: '奈薩肯', s: ['戰鬥速度', '冷卻時間減少'], v: 2.5, tOra: 4, tBlu: 10, tGre: 12, tMax: 88 },
+        72: { name: '吉凱爾', s: ['傷害耐性', '傷害增幅'], v: 5, tOra: 4, tBlu: 10, tGre: 12, tMax: 88 },
+        73: { name: '白傑爾', s: ['暴擊傷害增幅', '暴擊傷害耐性'], v: 5, tOra: 4, tBlu: 10, tGre: 12, tMax: 88 },
+        74: { name: '崔妮爾', s: ['多段打擊抵抗', '多段打擊擊中'], v: 3, tOra: 6, tBlu: 12, tGre: 10, tMax: 116 },
+        75: { name: '艾瑞爾', s: ['PVE傷害增幅', 'PVE傷害抵抗'], v: 2.5, b: ['首領傷害耐性', '首領傷害增幅'], tOra: 8, tBlu: 16, tGre: 24, tMax: 152 },
+        76: { name: '阿斯佩爾', s: ['PVP傷害增幅', 'PVP傷害抵抗'], v: 2.5, b: ['異常狀態抵抗', '異常狀態擊中'], tOra: 8, tBlu: 16, tGre: 24, tMax: 152 },
+        77: { name: '瑪爾庫坦', s: ['武器傷害增幅', '武器傷害耐性'], v: 2.5, b: ['再生', '鐵壁', '再生貫穿', '鐵壁貫穿'], tOra: 8, tBlu: 16, tGre: 24, tMax: 152 }
     };
 
     let rows = '', totalSum = 0;
@@ -185,43 +200,134 @@ async function loadDaevanionScoreDetails(rawData) {
         const cfg = boardConfig[id];
         const deBoard = deBoardList.find(b => b.id == id);
         const deDetailItem = deDetailsList.find(d => d.boardId == id || d.board_id == id);
-        const max = deBoard ? deBoard.totalNodeCount : 88;
+        
+        const maxNodes = cfg.tMax; 
         const opened = deBoard ? deBoard.openNodeCount : 0;
 
+        const tOra = cfg.tOra;
+        const tBlu = cfg.tBlu;
+        const tGre = cfg.tGre;
+        const tWhi = maxNodes - tOra - tBlu - tGre;
+        const maxScore = (tOra * 4) + (tBlu * 3) + (tGre * 2) + (tWhi * 1);
+
         if (!deDetailItem || opened === 0) {
-            rows += `<tr class="esc-equip-row"><td>${id}</td><td>${cfg.name}</td><td style="text-align:center;">${max}</td><td style="text-align:center;">0</td><td colspan="4" style="text-align:center; color:#444;">未開通</td><td style="text-align:right; color:#444;">0</td></tr>`;
+            rows += `<tr class="esc-equip-row"><td>${id}</td><td>${cfg.name}</td><td style="text-align:center;">${maxNodes}</td><td style="text-align:center;">0</td><td colspan="4" style="text-align:center; color:#444;">未開通</td><td style="text-align:right; color:#444;">0 / ${maxScore}</td></tr>`;
             return;
         }
 
         const d = deDetailItem.detail || deDetailItem;
-        let ora = 1, blu = 0, gre = 0, whi = 0;
+        let ora = 0, blu = 0, gre = 0, whi = 0;
+
+        // 1. 計算橘色 (特殊屬性) 與 藍色屬性 (艾/阿/瑪) - 去重取最大值
+        const oraMap = {};
+        const bluStatMap = {}; 
         (d.openStatEffectList || []).forEach(s => {
             const dc = (s.desc || "").trim();
-            if (cfg.s.some(k => dc.includes(k))) {
-                const m = dc.match(/([\d\.]+)/);
-                if (m) ora += Math.round(parseFloat(m[1]) / cfg.v);
-            } else whi++;
+            // 檢查橘色關鍵字
+            cfg.s.forEach(key => {
+                if (dc.includes(key)) {
+                    const m = dc.match(/([\d\.]+)/);
+                    if (m) {
+                        const val = parseFloat(m[1]);
+                        if (!oraMap[key] || val > oraMap[key]) oraMap[key] = val;
+                    }
+                }
+            });
+            // 檢查特定藍色屬性關鍵字 (75-77)
+            if (cfg.b) {
+                cfg.b.forEach(key => {
+                    if (dc.includes(key)) {
+                        const m = dc.match(/([\d\.]+)/);
+                        if (m) {
+                            const val = parseFloat(m[1]);
+                            if (!bluStatMap[key] || val > bluStatMap[key]) bluStatMap[key] = val;
+                        }
+                    }
+                });
+            }
         });
+        Object.values(oraMap).forEach(v => ora += Math.round(v / cfg.v));
+        Object.values(bluStatMap).forEach(v => blu += Math.round(v)); // 1% = 1點
+        
+        ora = Math.min(ora, tOra); // 限制橘色上限
+
+        // 2. 計算藍色與綠色 (技能) - 去重取最大值 (+N)
+        const skillMap = {};
         (d.openSkillEffectList || []).forEach(sk => {
             const dc = (sk.desc || "").trim();
-            if (dc.includes('被動') || dc.includes('加護')) gre++; else blu++;
+            const countMatch = dc.match(/\+(\d+)/);
+            const count = countMatch ? parseInt(countMatch[1]) : 1;
+            const skillName = dc.replace(/\+\d+/, "").trim();
+
+            if (!skillMap[skillName] || count > skillMap[skillName].count) {
+                const isPassive = classPassives.has(skillName) || 
+                                  allPassives.has(skillName) ||
+                                  dc.includes('被動') || dc.includes('加護') || 
+                                  dc.includes('恩寵') || dc.includes('強化') || 
+                                  dc.includes('帳幕') || dc.includes('修練');
+                skillMap[skillName] = { count, isPassive };
+            }
         });
 
-        const score = (ora + blu + gre + whi) + (ora * 3) + (blu * 2) + (gre * 1);
+        Object.values(skillMap).forEach(item => {
+            if (item.isPassive) gre += item.count; else blu += item.count;
+        });
+
+        // 限制上限
+        blu = Math.min(blu, tBlu);
+        gre = Math.min(gre, tGre);
+
+        // 3. 計算渲染顯示格式 (處理 75-77 的潛在評分)
+        let score = 0;
+        let scoreDisp = '';
+        let greDisp = '';
+        let whiDisp = '';
+
+        if (id >= 75) {
+            // 高級板塊 (75-77) 特殊處理：綠色無法辨識，暫記為白色
+            if (opened >= maxNodes) {
+                // 獲取數滿格，視為全部拿滿
+                ora = tOra; blu = tBlu; gre = tGre; whi = tWhi;
+                score = maxScore;
+                scoreDisp = `${score} / ${maxScore}`;
+                greDisp = `${tGre} / ${tGre}`;
+                whiDisp = `${tWhi} / ${tWhi}`;
+            } else {
+                gre = 0; // 設為 0，併入白色計算
+                whi = opened - ora - blu; 
+                if (whi < 0) whi = 0;
+                // 分數計算：將所有獲取但非藍橘的格數視為白色 (1分)
+                const currentScore = (ora * 4) + (blu * 3) + (whi * 1);
+                score = currentScore; // 用於總分累加
+                scoreDisp = `${currentScore} (+${tGre}) / ${maxScore}`;
+                greDisp = `- / ${tGre}`;
+                whiDisp = `${whi} / ${tWhi}`;
+            }
+        } else {
+            // 普通板塊 (71-74)
+            whi = opened - ora - blu - gre;
+            if (whi < 0) whi = 0;
+            whi = Math.min(whi, tWhi);
+            score = (ora * 4) + (blu * 3) + (gre * 2) + (whi * 1);
+            scoreDisp = `${score} / ${maxScore}`;
+            greDisp = `${gre} / ${tGre}`;
+            whiDisp = `${whi} / ${tWhi}`;
+        }
+
         totalSum += score;
 
         rows += `<tr class="esc-equip-row">
             <td>${id}</td><td style="color:var(--gold); font-weight:bold;">${cfg.name}</td>
-            <td style="text-align:center;">${max}</td><td style="text-align:center; font-weight:bold; color:#fff;">${ora + blu + gre + whi}</td>
-            <td class="rarity-val-legend" style="text-align:center;">${ora}</td>
-            <td class="rarity-val-unique" style="text-align:center;">${blu}</td>
-            <td class="rarity-val-rare" style="text-align:center;">${gre}</td>
-            <td class="rarity-val-common" style="text-align:center;">${whi}</td>
-            <td style="text-align:right; color:#ffe66d; font-weight:bold; font-size:16px;">${score}</td>
+            <td style="text-align:center;">${maxNodes}</td><td style="text-align:center; font-weight:bold; color:#fff;">${Math.min(opened, maxNodes)}</td>
+            <td class="rarity-val-legend" style="text-align:center;">${ora} / ${tOra}</td>
+            <td class="rarity-val-unique" style="text-align:center;">${blu} / ${tBlu}</td>
+            <td class="rarity-val-rare" style="text-align:center;">${greDisp}</td>
+            <td class="rarity-val-common" style="text-align:center;">${whiDisp}</td>
+            <td style="text-align:right; color:#ffe66d; font-weight:bold; font-size:16px;">${scoreDisp}</td>
         </tr>`;
     });
 
-    container.innerHTML = `<table class="esc-equip-table"><thead><tr><th>ID</th><th>板塊</th><th>總格</th><th>獲取</th><th class="rarity-val-legend">橘</th><th class="rarity-val-unique">藍</th><th class="rarity-val-rare">綠</th><th class="rarity-val-common">白</th><th style="text-align:right;">評分</th></tr></thead><tbody>${rows}</tbody></table>`;
+    container.innerHTML = `<table class="esc-equip-table"><thead><tr><th>ID</th><th>板塊</th><th>總格</th><th>獲取</th><th class="rarity-val-legend">橘 (特殊)</th><th class="rarity-val-unique">藍 (主動)</th><th class="rarity-val-rare">綠 (被動)</th><th class="rarity-val-common">白 (普通)</th><th style="text-align:right;">評分</th></tr></thead><tbody>${rows}</tbody></table>`;
     return { total: totalSum };
 }
 
