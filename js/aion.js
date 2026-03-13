@@ -2619,8 +2619,12 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
     });
     document.getElementById('title-grid').innerHTML = titleHtml || "<div style='color:#8b949e; padding:10px;'>未裝備稱號</div>";
 
-    // 處理寵物與翅膀
+    // 處理寵物與披風/翅膀
     let petwingHtml = "";
+    
+    // 預先檢查是否有披風 (Slot 19)
+    const cloakInfo = (data.itemDetails || []).find(i => i.slotPos === 19);
+    
     if (data.petwing) {
         // 處理寵物
         if (data.petwing.pet) {
@@ -2648,7 +2652,25 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                     </div>`;
         }
 
-        // 處理翅膀
+        // 優先顯示披風 (若有)
+        if (cloakInfo) {
+            const cloakName = cloakInfo.name || "暫無";
+            const cloakEnchant = (cloakInfo.enchantLevel > 0) ? `+${cloakInfo.enchantLevel}` : "";
+            const cloakGradeColor = getGradeColor(cloakInfo.grade || 'unique');
+            const cloakIcon = cloakInfo.icon ? getCorrectIcon(cloakInfo.icon) : "";
+
+            petwingHtml += `<div class="equip-item-card" style="border-color: ${cloakGradeColor}; border-top-color: ${cloakGradeColor}; box-shadow: 0 0 10px ${cloakGradeColor}44; display:block; padding:15px; height:100%;">
+                        <div class="box-header" style="color:${cloakGradeColor}; border-bottom:1px solid rgba(255,255,255,0.1); margin-bottom:10px; padding-bottom:5px;">🧥 披風：${cloakEnchant} ${cloakName}</div>
+                        <div style="display: flex; gap: 12px; align-items: flex-start;">
+                            ${cloakIcon ? `<img src="${cloakIcon}" style="width: 64px; height: 64px; border-radius: 8px; border: 2px solid ${cloakGradeColor}; flex-shrink: 0;">` : ''}
+                            <div style="flex: 1;">
+                                <div style="font-size:12px; color:#8b949e; margin-bottom:5px;">[全身裝備 Slot 19]</div>
+                            </div>
+                        </div>
+                    </div>`;
+        }
+
+        // 處理翅膀 (使用者要求：若有披風則可隱藏或換成披風，這裡暫且根據名稱判斷標籤)
         if (data.petwing.wing) {
             const wing = data.petwing.wing;
             const wingName = wing.name || "暫無";
@@ -2717,8 +2739,18 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                 }
             }
 
-            petwingHtml += `<div class="equip-item-card" style="border-color: ${gradeColor}; border-top-color: ${gradeColor}; box-shadow: 0 0 10px ${gradeColor}44; display:block; padding:15px; height:100%;">
-                        <div class="box-header" style="color:${gradeColor}; border-bottom:1px solid rgba(255,255,255,0.1); margin-bottom:10px; padding-bottom:5px;">🪽 翅膀：${wingEnchant} ${wingName}</div>
+            // 使用者要求：佈覽與此區塊應優先顯示披風
+            // 判斷是否為披風 (根據名稱或 slot)
+            const isActuallyCloak = wingName.includes('披風');
+            const categoryIcon = isActuallyCloak ? '🧥' : '🪽';
+            const categoryName = isActuallyCloak ? '披風' : '翅膀';
+
+            // 統計區塊應顯示所有資訊，但避免重複顯示相同的披風
+            const shouldShowWingCard = isActuallyCloak ? !cloakInfo : true;
+
+            if (shouldShowWingCard) {
+                petwingHtml += `<div class="equip-item-card" style="border-color: ${gradeColor}; border-top-color: ${gradeColor}; box-shadow: 0 0 10px ${gradeColor}44; display:block; padding:15px; height:100%;">
+                        <div class="box-header" style="color:${gradeColor}; border-bottom:1px solid rgba(255,255,255,0.1); margin-bottom:10px; padding-bottom:5px;">${categoryIcon} ${categoryName}：${wingEnchant} ${wingName}</div>
                         <div style="display: flex; gap: 12px; align-items: flex-start;">
                             ${wingIcon ? `<img src="${wingIcon}" style="width: 64px; height: 64px; border-radius: 8px; border: 2px solid ${gradeColor}; flex-shrink: 0;">` : ''}
                             <div style="flex: 1;">
@@ -2727,7 +2759,7 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
                             </div>
                         </div>
                     </div>`;
-
+            }
             // 🪽 自動將裝備中的翅膀加入「翅膀收藏」已勾選清單
             const wingCollect = GAIN_EFFECT_DATABASE['翅膀收藏'];
             if (wingCollect) {
@@ -6406,8 +6438,12 @@ window.renderLayoutTab = function (json) {
     if (data.equipment && data.equipment.equipmentList) {
         data.equipment.equipmentList.forEach(item => { if (!equipMap[item.slotPos]) equipMap[item.slotPos] = item; });
     }
-    if (data.petwing && data.petwing.wing && !equipMap[21]) {
-        equipMap[21] = { detail: data.petwing.wing, enchantLevel: data.petwing.wing.enchantLevel || 0, icon: data.petwing.wing.icon, grade: data.petwing.wing.grade };
+    if (data.petwing && data.petwing.wing) {
+        const isActuallyCloak = data.petwing.wing.name?.includes('披風');
+        const targetSlot = isActuallyCloak ? 19 : 21;
+        if (!equipMap[targetSlot]) {
+            equipMap[targetSlot] = { detail: data.petwing.wing, enchantLevel: data.petwing.wing.enchantLevel || 0, icon: data.petwing.wing.icon, grade: data.petwing.wing.grade };
+        }
     }
     window.__EQUIP_MAP__ = equipMap;
 
@@ -6535,7 +6571,7 @@ window.renderLayoutTab = function (json) {
 
     // --- 5. Final Render ---
     if (container) {
-        const leftSlots = [[1, 2], [3, 4], [5, 17], [6, 7], [21, 8]];
+        const leftSlots = [[1, 2], [3, 4], [5, 17], [6, 7], [19, 8]];
         const rightSlots = [[10, 15], [11, 12], [13, 14], [16, 23], [24, 22]];
         const generateSlotBtn = (item, slotId) => {
             if (!item) return `<div class="slot-item empty"></div>`;
@@ -7235,7 +7271,7 @@ window.getPartKey = (i) => {
         return 'Bracelet';
     }
 
-    if (cat.includes('武器') || name.includes('劍') || name.includes('弓') || name.includes('杖') || name.includes('書') || name.includes('珠')) return 'MainHand';
+    if (cat.includes('武器') || name.includes('劍') || name.includes('弓') || name.includes('杖') || name.includes('書') || name.includes('珠') || name.includes('釘錘') || name.includes('槌')) return 'MainHand';
     if (cat.includes('盾') || cat.includes('臂甲') || name.includes('臂甲') || name.includes('盾')) return 'SubHand';
     if (cat.includes('頭盔') || cat.includes('頭飾') || name.includes('頭盔') || name.includes('頭飾')) return 'Helmet';
     if (name.includes('肩') || cat.includes('肩')) return 'Shoulder';
@@ -7246,25 +7282,25 @@ window.getPartKey = (i) => {
     if (cat.includes('披風') || cat.includes('翅膀') || name.includes('披風') || name.includes('斗篷') || name.includes('翅')) return 'Cape';
     if (name.includes('項鍊') || cat === '項鍊') return 'Necklace';
 
-    if (['11', 'Earring1'].includes(s)) return 'Earring1';
-    if (['12', 'Earring2'].includes(s)) return 'Earring2';
-    if (['14', 'Ring1'].includes(s)) return 'Ring1';
-    if (['16', '15', 'Ring2'].includes(s)) return 'Ring2';
+    if (['10', 'Earring1'].includes(s)) return 'Earring1';
+    if (['11', 'Earring2'].includes(s)) return 'Earring2';
+    if (['12', 'Ring1'].includes(s)) return 'Ring1';
+    if (['13', 'Ring2'].includes(s)) return 'Ring2';
 
     if (cat === '耳環') return 'Earring';
     if (cat === '戒指') return 'Ring';
 
-    // Slot ID Fallback
-    if (['0', 'MainHand'].includes(s)) return 'MainHand';
-    if (['1', 'SubHand'].includes(s)) return 'SubHand';
-    if (['2', 'Helmet'].includes(s)) return 'Helmet';
-    if (['3', 'Torso'].includes(s)) return 'Torso';
-    if (['4', 'Pants'].includes(s)) return 'Pants';
-    if (['5', 'Shoulder'].includes(s)) return 'Shoulder';
-    if (['6', 'Gloves'].includes(s)) return 'Gloves';
-    if (['7', 'Boots'].includes(s)) return 'Boots';
-    if (['10', 'Cape', 'Wings'].includes(s)) return 'Cape';
-    if (['13', 'Necklace'].includes(s)) return 'Necklace';
+    // Slot ID Fallback (基於 getSlotDisplayName 的 1-indexed 映射)
+    if (['1', 'MainHand'].includes(s)) return 'MainHand';
+    if (['2', 'SubHand'].includes(s)) return 'SubHand';
+    if (['3', 'Helmet'].includes(s)) return 'Helmet';
+    if (['4', 'Shoulder'].includes(s)) return 'Shoulder';
+    if (['5', 'Torso'].includes(s)) return 'Torso';
+    if (['6', 'Pants'].includes(s)) return 'Pants';
+    if (['7', 'Gloves'].includes(s)) return 'Gloves';
+    if (['8', 'Boots'].includes(s)) return 'Boots';
+    if (['19', 'Cape', 'Wings'].includes(s)) return 'Cape';
+    if (['9', 'Necklace'].includes(s)) return 'Necklace';
 
     return null;
 };
@@ -7787,20 +7823,20 @@ window.switchEquipTab = function (tab) {
 
     if (tab === 'layout') {
         // --- 佈覽分頁 ---
-        area.style.height = 'auto'; 
+        area.style.height = 'auto';
         area.style.maxHeight = 'none';
         area.style.overflowY = 'visible';
-        
+
         layoutTab.style.display = 'block';
         detailTab.style.display = 'none';
         simpleTab.style.display = 'none';
         statsTab.style.display = 'none';
         if (btnLayout) btnLayout.classList.add('active');
-        
+
         if (window.__LAST_DATA_JSON__ && typeof window.renderLayoutTab === 'function') {
             window.renderLayoutTab(window.__LAST_DATA_JSON__);
         }
-        
+
         // 重要：在佈覽渲染後，抓取它撐開的真實高度
         setTimeout(() => {
             // 使用 scrollHeight 確保抓到完整內容高度
@@ -7837,7 +7873,7 @@ window.switchEquipTab = function (tab) {
         area.style.height = targetH + 'px';
         area.style.maxHeight = targetH + 'px'; // 雙重保險
         area.style.overflowY = 'auto'; // 開啟內部捲軸
-        
+
         // 確保切換後捲軸回到頂部
         area.scrollTop = 0;
     }
