@@ -2621,10 +2621,10 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
 
     // 處理寵物與披風/翅膀
     let petwingHtml = "";
-    
+
     // 預先檢查是否有披風 (Slot 19)
     const cloakInfo = (data.itemDetails || []).find(i => i.slotPos === 19);
-    
+
     if (data.petwing) {
         // 處理寵物
         if (data.petwing.pet) {
@@ -6523,6 +6523,13 @@ window.renderLayoutTab = function (json) {
                 </div>
                 <div style="flex: 1; margin: 0 15px; position: relative;">
                     <div style="width: 100%; height: 14px; background: rgba(0,0,0,0.5); border-radius: 4px; border: 1px solid rgba(255,255,255,0.08); overflow: hidden; display: flex; position: relative;">
+                        <!-- 數值文字：僅在滿格時蓋在條上，沒滿則維持原始外觀 -->
+                        ${isCompleted ? `
+                        <div style="position: absolute; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; z-index: 10; font-size: 10px; font-weight: 900; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.9); pointer-events: none; letter-spacing: 1px;">
+                            ${count} / ${total}
+                        </div>
+                        ` : ''}
+                        
                         <div style="position: absolute; left: 0; width: 2px; background: rgba(255,255,255,0.3); top:0; bottom:0; z-index: 1;"></div>
                         <div style="position: absolute; left: 50%; width: 1px; background: rgba(255,255,255,0.15); top:4px; bottom:4px; z-index: 1;"></div>
                         <div style="position: absolute; right: 0; width: 2px; background: rgba(255,255,255,0.3); top:0; bottom:0; z-index: 1;"></div>
@@ -6531,7 +6538,7 @@ window.renderLayoutTab = function (json) {
                 </div>
                 <div style="text-align: right; min-width: 85px; display: flex; justify-content: flex-end;">
                     ${isCompleted ?
-                `<span style="background: rgba(58, 28, 29, 0.9); border: 1px solid #ff5c5c; color: #ff7b7b; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; text-shadow: 0 0 2px rgba(255,123,123,0.5);">完成度 100%</span>` :
+                `<span style="background: rgba(58, 28, 29, 0.9); border: 1px solid #ff5c5c; color: #ff7b7b; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; text-shadow: 0 0 2px rgba(255,123,123,0.5);">完成度 100%</span>` :
                 `<span style="font-size: 14px; font-weight: 800; color: #fff;">${count}</span><span style="font-size: 11px; color: rgba(255,255,255,0.3); margin-left:2px;">/${total}</span>`
             }
                 </div>
@@ -7825,7 +7832,7 @@ window.switchEquipTab = function (tab) {
         area.style.height = 'auto';
         area.style.maxHeight = 'none';
         area.style.overflowY = 'visible';
-        
+
         layoutTab.style.display = 'block';
         detailTab.style.display = 'none';
         simpleTab.style.display = 'none';
