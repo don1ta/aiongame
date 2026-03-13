@@ -4673,11 +4673,6 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
 
     renderCombatAnalysis(stats, data);
 
-    // Render Equipment Source block
-    if (typeof renderEquipSourceGrid === 'function' && !statsOnly) {
-        renderEquipSourceGrid(data);
-    }
-
     // 📌 如果戰力指標已釘選，同步更新釘選面板
     if (window._statsPinned && typeof window._renderPinnedPreview === 'function') {
         window._renderPinnedPreview();
@@ -4686,7 +4681,7 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
         renderTrendChart(json, 'itemLevel'); // 預設顯示裝備等級
     }
 
-    // 📌 更新裝備評分明細區塊
+    // 📌 更新裝備評分明細區塊 (傳遞完整 JSON 確保能找到板塊資料)
     if (typeof renderEquipSourceGrid === 'function') {
         renderEquipSourceGrid(json);
     }
