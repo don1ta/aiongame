@@ -7815,18 +7815,19 @@ window.switchEquipTab = function (tab) {
 
     if (!layoutTab || !detailTab || !simpleTab || !statsTab || !area) return;
 
-    // 定義一個合理的預設高度 (如果還沒抓到佈覽高度或角色尚未查詢)
     const fallbackHeight = 650;
+    const targetH = fallbackHeight; // 統一使用固定高度，確保內部捲軸正常運作
 
     // 移除所有 active class
     [btnLayout, btnDetail, btnSimple, btnStats].forEach(btn => btn && btn.classList.remove('active'));
 
-    if (tab === 'layout') {
-        // --- 佈覽分頁 ---
-        area.style.height = 'auto';
-        area.style.maxHeight = 'none';
-        area.style.overflowY = 'visible';
+    // 固定設定容器高度與捲軸（不論哪種模式，除非截圖時才由 html2canvas 特殊處理）
+    area.style.height = targetH + 'px';
+    area.style.maxHeight = targetH + 'px';
+    area.style.overflowY = 'auto';
+    area.scrollTop = 0;
 
+    if (tab === 'layout') {
         layoutTab.style.display = 'block';
         detailTab.style.display = 'none';
         simpleTab.style.display = 'none';
@@ -7836,18 +7837,7 @@ window.switchEquipTab = function (tab) {
         if (window.__LAST_DATA_JSON__ && typeof window.renderLayoutTab === 'function') {
             window.renderLayoutTab(window.__LAST_DATA_JSON__);
         }
-
-        // 重要：在佈覽渲染後，抓取它撐開的真實高度
-        setTimeout(() => {
-            // 使用 scrollHeight 確保抓到完整內容高度
-            // 也考慮到 padding
-            const h = layoutTab.scrollHeight;
-            if (h > 100) {
-                window.__LAYOUT_TAB_HEIGHT__ = h;
-            }
-        }, 300);
     } else {
-        // --- 非佈覽分頁（簡易、完整、統計） ---
         layoutTab.style.display = 'none';
         detailTab.style.display = 'none';
         simpleTab.style.display = 'none';
@@ -7859,7 +7849,6 @@ window.switchEquipTab = function (tab) {
         } else if (tab === 'stats') {
             statsTab.style.display = 'block';
             if (btnStats) btnStats.classList.add('active');
-            // 恢復被遺漏的統計渲染呼叫
             if (window.__LAST_DATA_JSON__ && typeof window.renderStatsTab === 'function') {
                 window.renderStatsTab(window.__LAST_DATA_JSON__);
             }
@@ -7867,15 +7856,6 @@ window.switchEquipTab = function (tab) {
             simpleTab.style.display = 'block';
             if (btnSimple) btnSimple.classList.add('active');
         }
-
-        // 同步高度：強制將容器高度設為與佈覽一致，並開啟捲軸
-        const targetH = window.__LAYOUT_TAB_HEIGHT__ || fallbackHeight;
-        area.style.height = targetH + 'px';
-        area.style.maxHeight = targetH + 'px'; // 雙重保險
-        area.style.overflowY = 'auto'; // 開啟內部捲軸
-
-        // 確保切換後捲軸回到頂部
-        area.scrollTop = 0;
     }
 };
 
