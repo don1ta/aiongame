@@ -90,9 +90,6 @@
                                     簡易</div>
                                 <div id="tab-btn-equip-detail" class="stat-tab-btn" onclick="switchEquipTab('detail')">
                                     完整</div>
-                                <button class="esc-tab-btn" id="esc-tab-btn-misc" onclick="switchEquipSourceTab('misc')">
-                            <span style="margin-right:4px;">📖</span> 評分說明
-                        </button>
                                 <div id="tab-btn-equip-stats" class="stat-tab-btn" onclick="switchEquipTab('stats')">統計
                                 </div>
                             </div>
@@ -339,7 +336,7 @@
                 <div
                     style="padding: 20px 25px; border-bottom: 1px solid rgba(255,255,255,0.05); background: rgba(0,0,0,0.2);">
                     <h2 style="margin:0; color:var(--gold-bright); display:flex; align-items:center; gap:10px;">
-                        <span style="font-size:24px;">🏆</span> 裝備評分明細
+                        <span style="font-size:24px;">🏆</span> 裝備評分明細(本區塊還在設計中)
                     </h2>
                 </div>
 
@@ -359,10 +356,10 @@
                             style="margin:0; padding:10px 20px; background:rgba(0,0,0,0.15); border-bottom:1px solid rgba(255,255,255,0.07); overflow-x:auto; white-space:nowrap;">
                             <div id="esc-tab-btn-equip" class="stat-tab-btn active"
                                 onclick="switchEquipSourceTab('equip')">⚔️ 裝備等級</div>
-                            <div id="esc-tab-btn-board" class="stat-tab-btn"
-                                onclick="switchEquipSourceTab('board')">🛡️ 守護力獲取</div>
-                            <div id="esc-tab-btn-misc" class="stat-tab-btn"
-                                onclick="switchEquipSourceTab('misc')">📦 其他 (預留)</div>
+                            <div id="esc-tab-btn-board" class="stat-tab-btn" onclick="switchEquipSourceTab('board')">🛡️
+                                守護力獲取</div>
+                            <div id="esc-tab-btn-misc" class="stat-tab-btn" onclick="switchEquipSourceTab('misc')">📖
+                                評分說明</div>
                         </div>
 
                         <!-- 分頁內容 -->

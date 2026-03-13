@@ -26,6 +26,30 @@ function getSlotDisplayName(slot) {
     return '其他';
 }
 
+// ============================================================
+// 🧪 手動校正 (Calibration) 系統
+// ============================================================
+window.__ESC_CALIB_CACHE__ = JSON.parse(localStorage.getItem('ESC_CALIB_V1') || '{}');
+
+/**
+ * 更新校正值並觸發重新渲染
+ */
+window.updateEscCalibration = function (charId, boardId, val) {
+    if (!charId) return;
+    if (!window.__ESC_CALIB_CACHE__[charId]) window.__ESC_CALIB_CACHE__[charId] = {};
+
+    const numVal = Math.max(0, parseInt(val) || 0);
+    window.__ESC_CALIB_CACHE__[charId][boardId] = numVal;
+
+    // 儲存至本地
+    localStorage.setItem('ESC_CALIB_V1', JSON.stringify(window.__ESC_CALIB_CACHE__));
+
+    // 觸發重新渲染 (僅統計部分)
+    if (window.__LAST_DATA_JSON__) {
+        renderEquipSourceGrid(window.__LAST_DATA_JSON__);
+    }
+};
+
 function getGodStoneScore(grade) {
     const g = (grade || '').toString().toLowerCase();
     const gNum = parseInt(g);
@@ -188,49 +212,39 @@ function renderScoreExplanation() {
                             <li style="margin-bottom:8px;"><b style="color:#adb5bd;">總格/獲取：</b> 已開啟節點佔板塊總格數的比例。</li>
                             <li style="margin-bottom:8px;"><b class="rarity-val-legend">橘 (特殊屬性)：</b> 最強節點，權重最高 (<span style="color:#ffe66d;">4分/點</span>)。</li>
                             <li style="margin-bottom:8px;"><b class="rarity-val-unique">藍 (主動/特化1)：</b> 關鍵節點 (<span style="color:#ffe66d;">3分/點</span>)。</li>
-                            <li style="margin-bottom:8px;"><b class="rarity-val-rare">綠 (被動/特化2)：</b> 屬性型板塊不計入基礎分，列為潛力分。</li>
+                            <li style="margin-bottom:8px;"><b class="rarity-val-rare">綠 (被動/特化2)：</b> 具備特化屬性的格子。在屬性板塊中預設為白色 (1分)，可透過校正改為 <span style="color:#ffe66d;">2分/點</span>。</li>
                             <li style="margin-bottom:8px;"><b class="rarity-val-common">白 (普通屬性)：</b> 基礎能力節點 (<span style="color:#ffe66d;">1分/點</span>)。</li>
-                            <li style="margin-bottom:8px;"><b style="color:#ff4d4d;">未開格：</b> 尚未獲得的格子數，作為「減項」呈現。</li>
+                            <li style="margin-bottom:8px;"><b style="color:#ff4d4d;">未開格：</b> 尚未獲得的格子數。</li>
                         </ul>
                     </div>
                     
                     <div style="background:rgba(0,0,0,0.2); border-radius:8px; padding:15px; border-left:4px solid #ffe66d;">
-                        <h4 style="color:#fff; margin-bottom:10px;">🧮 計算範例 (艾瑞爾)</h4>
+                        <h4 style="color:#fff; margin-bottom:10px;">🧮 評分權重摘要</h4>
                         <div style="font-family:monospace; font-size:12px;">
-                            <div style="margin-bottom:5px;">● 已開啟：127 格 / 未開：25 格</div>
+                            <div style="color:#ff781f; margin-bottom:4px;">● 橘色節點：4 分</div>
+                            <div style="color:#3498db; margin-bottom:4px;">● 藍色節點：3 分</div>
+                            <div style="color:#2ecc71; margin-bottom:4px;">● 綠色節點：2 分 (校正後)</div>
+                            <div style="color:#adb5bd; margin-bottom:4px;">● 白色節點：1 分</div>
                             <hr style="border:0; border-top:1px solid rgba(255,255,255,0.05); margin:8px 0;">
-                            <div style="color:#ff781f;">橘色分：6 點 × 4 = 24</div>
-                            <div style="color:#3498db;">藍色分：15 點 × 3 = 45</div>
-                            <div style="color:#adb5bd;">白色分：106 點 × 1 = 106</div>
-                            <div style="color:#ff4d4d; margin-top:5px;">未開項：-25 (減項)</div>
-                            <hr style="border:0; border-top:1px solid rgba(255,255,255,0.05); margin:8px 0;">
-                            <div style="font-size:16px; color:#ffe66d; font-weight:bold;">
-                                實拿評分 = 24 + 45 + 106 = 160
-                            </div>
-                            <div style="font-size:12px; color:#2ecc71; margin-top:5px;">
-                                呈現結果：160 (+24潛力) / 226
+                            <div style="font-size:11px; color:#8b949e; line-height:1.4;">
+                                ※ 總分為以上各項相加之總和。<br>
+                                ※ 目前部分板塊的綠色格需手動輸入校正。
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <div style="margin-top:20px; background:rgba(76, 209, 55, 0.1); padding:15px; border-radius:8px; font-size:13px; color:#cbd5e1; border-left:4px solid #4cd137;">
-                    <strong style="color:#4cd137;">📢 綠色/被動格特別說明：</strong><br>
-                    由於系統目前無法從遊戲 API 中自動計算「艾瑞爾、阿斯佩爾、瑪爾庫坦」的具體<span style="color:#4cd137;">綠色格</span>數量，
-                    因此這三塊板塊的綠色格**預設皆以白色格 (1分) 計算**。<br>
-                    <span style="display:block; margin-top:5px; color:#adb5bd;">
-                        💡 <b>手動校正法：</b>如果您清楚自己開了幾格綠色，可以自行在總分上面「每一格 +1 分」即為您的真實戰力分數。
-                    </span>
-                </div>
-
-                <div style="margin-top:15px; background:rgba(255,215,0,0.05); padding:15px; border-radius:8px; font-size:13px; color:#cbd5e1;">
-                    <strong style="color:#ffe66d;">💡 重點筆記：</strong> 
-                    評分不僅看「格子數」(肝度)，更看「屬性顏色」(品質)。若您的板塊等級很高但分數較低，代表可能需要透過屬性變更來提升橘/藍節點的比例。
+                    <strong style="color:#4cd137;">📢 綠色格校正系統：</strong><br>
+                    由於 API 限制，屬性板塊的<span style="color:#4cd137;">綠色格</span>需手動校正。輸入後白色格也會同步扣除，確保格數分配正確。
                 </div>
             </div>
         </div>
     `;
 }
+
+
+
 
 /**
  * 🏰 守護力獲取 (明細表格)
@@ -262,6 +276,7 @@ async function loadDaevanionScoreDetails(json) {
 
     // 取得職業 (ClassName)，用於判斷被動技能
     const charProfile = (data && data.charProfile) || (data && data.profile) || (data && data.info) || deepSearch(json, 'charProfile') || deepSearch(json, 'profile') || {};
+    const charId = charProfile.characterId || charProfile.id || "";
     const className = (charProfile.className || charProfile.class_name || "").toString().trim().replace(/\s/g, '');
 
     // 取得被動技能資料庫 (用於判斷綠色/藍色)
@@ -338,10 +353,12 @@ async function loadDaevanionScoreDetails(json) {
                 // 如果是滿格則給滿分，其餘給已開格數
                 if (opened >= maxNodes) score = maxScore;
             }
-            
-            let scoreDisp = `${score} / ${maxScore}`;
-            if (isStatBoard && opened > 0 && opened < maxNodes) {
-                scoreDisp = `${score} (+${tGre}) / ${maxScore}`;
+
+            let scoreText = (opened >= maxNodes) ? score : '-';
+            let scoreDisp = `${scoreText} / ${maxScore}`;
+            if (opened < maxNodes) {
+                // 不論是否為屬性板塊，只要未滿就顯示潛力分
+                scoreDisp = `${scoreText} (+${tGre}) / ${maxScore}`;
             }
 
             rows += `<tr class="esc-equip-row">
@@ -482,9 +499,6 @@ async function loadDaevanionScoreDetails(json) {
         // 點數封頂與計算邏輯
         ora = Math.min(ora, tOra);
         blu = Math.min(blu, tBlu);
-        gre = Math.min(gre, tGre);
-        whi = Math.max(0, opened - ora - blu - gre);
-        whi = Math.min(whi, tWhi);
 
         // 3. 計算結果
         const isStatBoard = (actualBoardId % 10) >= 5;
@@ -493,16 +507,72 @@ async function loadDaevanionScoreDetails(json) {
         const unopenedDisp = unopenedDeduct > 0 ? `<span style="color:#ff4d4d;">-${unopenedDeduct}</span>` : '0';
 
         if (isStatBoard) {
-            // ⚔️ 屬性板塊 (75-77)：實拿分數 = 橘4 藍3 綠2 白1
-            score = (ora * 4) + (blu * 3) + (whi * 1);
-            scoreDisp = `${score} (+${tGre}) / ${maxScore}`;
-            greDisp = `- / ${tGre}`;
+            // ⚔️ 屬性板塊 (75-77)：實拿分數 = 橘4 藍3 綠(校正)2 白1
+            const calib = (charId && window.__ESC_CALIB_CACHE__[charId]) ? window.__ESC_CALIB_CACHE__[charId] : null;
+            const hasInput = calib && calib.hasOwnProperty(actualBoardId.toString());
+            let finalGre = hasInput ? (calib[actualBoardId] || 0) : 0;
+
+            // 💡 盲區修復：綠色校正值不能超過「目前已開啟格數」扣除橘、藍後的剩餘空間
+            const currentAvailableSlots = Math.max(0, opened - ora - blu);
+            finalGre = Math.min(finalGre, tGre, currentAvailableSlots);
+
+            // 白色格 = 目前已開啟 - 橘 - 藍 - 綠(校正)
+            whi = Math.max(0, opened - ora - blu - finalGre);
+
+            if (opened >= maxNodes) {
+                // 滿貫處理
+                ora = tOra; blu = tBlu; finalGre = tGre; whi = tWhi;
+                score = maxScore;
+                scoreDisp = `${maxScore} / ${maxScore}`;
+                greDisp = `<span style="color:#2ecc71; font-weight:bold;">${tGre} / ${tGre}</span>`;
+            } else {
+                // 實拿分數計算 (綠色為 2 分)
+                score = (ora * 4) + (blu * 3) + (finalGre * 2) + (whi * 1);
+                
+                // 使用者要求：完全沒輸入顯示潛力，有輸入則隱藏
+                let potVal = 0;
+                let scoreText = score;
+                if (!hasInput) {
+                    potVal = tGre;
+                    scoreText = '-';
+                }
+                
+                scoreDisp = `${scoreText}${potVal > 0 ? ' (+' + potVal + ')' : ''} / ${maxScore}`;
+
+                // 動態限制輸入框的最大值 (根據目前的進度)
+                greDisp = `<div style="display:flex; align-items:center; justify-content:center; gap:4px;">
+                    <input type="number" min="0" max="${currentAvailableSlots}" value="${hasInput ? finalGre : ''}" 
+                        onchange="window.updateEscCalibration('${charId}', ${actualBoardId}, this.value)"
+                        style="width: 42px; background: rgba(0,0,0,0.4); border: 1px solid rgba(46, 204, 113, 0.4); color: #2ecc71; text-align: center; border-radius: 4px; padding: 2px 0; font-size: 12px; font-weight: bold; outline: none;"
+                        placeholder="-"
+                        title="請輸入目前的綠色特化格數 (最高 ${currentAvailableSlots} )">
+                    <span style="color:#666;">/ ${tGre}</span>
+                </div>`;
+            }
             whiDisp = `${whi} / ${tWhi}`;
-            if (opened >= maxNodes) scoreDisp = `${maxScore} / ${maxScore}`;
+
         } else {
-            // 🛡️ 技能板塊 (71-74)：原有邏輯
-            score = (ora * 4) + (blu * 3) + (gre * 2) + (whi * 1);
-            scoreDisp = `${score} / ${maxScore}`;
+            // 🛡️ 技能板塊 (71-74)：加強滿貫判定與評分公式
+            gre = Math.min(gre, tGre);
+            whi = Math.max(0, opened - ora - blu - gre);
+
+            if (opened >= maxNodes) {
+                ora = tOra; blu = tBlu; gre = tGre; whi = tWhi;
+                score = maxScore;
+                scoreDisp = `${maxScore} / ${maxScore}`;
+            } else {
+                score = (ora * 4) + (blu * 3) + (gre * 2) + (whi * 1);
+                
+                // 技能板塊為自動判定：若 API 沒抓到 green，顯示潛力提示
+                let potVal = 0;
+                let scoreText = score;
+                if (gre === 0) {
+                    potVal = tGre;
+                    scoreText = '-';
+                }
+                
+                scoreDisp = `${scoreText}${potVal > 0 ? ' (+' + potVal + ')' : ''} / ${maxScore}`;
+            }
             greDisp = `${gre} / ${tGre}`;
             whiDisp = `${whi} / ${tWhi}`;
         }
@@ -535,7 +605,7 @@ async function loadDaevanionScoreDetails(json) {
         <td style="text-align:center;">${sumMaxNodes}</td>
         <td style="text-align:center; color:#fff;">${sumOpened}</td>
         <td colspan="5"></td>
-        <td style="text-align:right; color:#ffe66d; font-size:18px;">${totalSum}${sumPotential > 0 ? ' (+' + sumPotential + ')' : ''} / ${sumMaxScore}</td>
+        <td style="text-align:right; color:#ffe66d; font-size:18px;">${Math.round(totalSum * 10) / 10}${sumPotential > 0 ? ' (+' + sumPotential + ')' : ''} / ${sumMaxScore}</td>
     </tr>`;
 
     container.innerHTML = `<table class="esc-equip-table"><thead><tr><th>ID</th><th>板塊</th><th>總格</th><th>獲取</th><th class="rarity-val-legend">橘 (特殊)</th><th class="rarity-val-unique">藍 (主動)</th><th class="rarity-val-rare">綠 (被動)</th><th class="rarity-val-common">白 (普通)</th><th>未開格</th><th style="text-align:right;">評分</th></tr></thead><tbody>${rows}</tbody></table>`;
@@ -596,7 +666,7 @@ async function renderEquipSourceGrid(json) {
     const boardTotal = Math.round(boardRes.total * 10) / 10;
     const boardPot = boardRes.potential || 0;
     const grandTotal = Math.round((equipTotal + boardTotal) * 10) / 10;
-    
+
     // 🟠 渲染說明分頁
     renderScoreExplanation();
 
