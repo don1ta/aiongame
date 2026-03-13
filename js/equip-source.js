@@ -727,7 +727,7 @@ async function renderEquipSourceGrid(json) {
             t += `<tr class="esc-equip-row">
                 <td style="color:#8b949e; font-size:11px; vertical-align:middle;">${s.slotName}</td>
                 <td style="text-align:left; vertical-align:middle;">
-                    <div style="color:${s.color}; font-weight:700; font-size:13px;">
+                    <div style="color:${s.color}; font-weight:700; font-size:16px;">
                         ${s.enchantLevel > 0 ? '+' + s.enchantLevel : ''}${s.name} <span style="font-size:11px; opacity:0.8; font-weight:normal;">Lv.${s.level}</span>
                     </div>
                 </td>
