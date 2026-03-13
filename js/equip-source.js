@@ -53,13 +53,31 @@ function getCardScore(grade) {
     return 20;
 }
 
-function getEscGradeColor(grade) {
-    const g = (grade || '').toString().toLowerCase();
+function getEscGradeColor(grade, itemName = "") {
+    if (!grade) return '#adb5bd';
+    const g = grade.toString().toLowerCase();
     const gNum = parseInt(g);
-    if (gNum >= 51 || g.includes('myth')) return '#e67e22';
-    if (gNum >= 41 || g.includes('unique')) return '#f1c40f';
-    if (gNum >= 31 || g.includes('legend')) return '#3498db';
-    if (gNum >= 21 || g.includes('rare')) return '#2ecc71';
+
+    // 強制判定：高等級特定套裝橘色
+    if (itemName.includes('被侵蝕') || itemName.includes('古代') || itemName.includes('天龍王')) return '#ff781f';
+    if (itemName.includes('鳴龍王') || itemName.includes('阿沛爾')) return '#ffd93d';
+
+    // 數字判定 (對齊：5=橙, 4=金, 3=藍)
+    if (!isNaN(gNum)) {
+        if (gNum === 6 || gNum >= 61) return '#ff4757'; // 究極 (紅)
+        if (gNum === 5 || gNum >= 51 || gNum === 11) return '#ff781f'; // 神話/古代 (橙)
+        if (gNum === 4 || gNum >= 41) return '#ffd93d'; // 傳說/唯一 (金)
+        if (gNum === 3 || gNum >= 31) return '#3498db'; // 史詩/英雄 (藍)
+        if (gNum === 2 || gNum >= 21) return '#2ecc71'; // 稀有 (綠)
+    }
+
+    // 關鍵字判定
+    if (g.includes('myth') || g.includes('神話') || g.includes('ancient') || g.includes('古代') || g.includes('eternal')) return '#ff781f';
+    if (g.includes('legend') || g.includes('傳說') || g.includes('unique') || g.includes('唯一') || g.includes('獨特')) return '#ffd93d';
+    if (g.includes('hero') || g.includes('英雄') || g.includes('epic') || g.includes('史詩')) return '#3498db';
+    if (g.includes('rare') || g.includes('稀有')) return '#2ecc71';
+    if (g.includes('special')) return '#00ffcc';
+
     return '#adb5bd';
 }
 
@@ -114,13 +132,16 @@ function calcItemDetailScore(item, equipMap) {
     // 總分計算
     const total = Math.round((baseScore + enchantScore + breakthroughScore + godStoneScore + magicStoneScore) * 10) / 10;
 
+    const itemGrade = d.grade || d.itemGrade || d.quality || d.itemQuality || item.grade || item.itemGrade;
+    const itemName = d.name || '未知';
+
     return {
-        name: d.name || '未知',
+        name: itemName,
         slot: slot,
         level: d.level || 0,
         enchantLevel: enchantLv,
         exceedLevel: exceedLv,
-        color: getEscGradeColor(d.grade || d.quality),
+        color: getEscGradeColor(itemGrade, itemName),
         levelScore: baseScore,
         enchantScore: enchantScore,
         breakthroughScore: breakthroughScore,
@@ -145,6 +166,73 @@ window.switchEquipSourceTab = function (tab) {
 };
 
 /**
+ * 📖 渲染評分說明 (分頁3)
+ */
+function renderScoreExplanation() {
+    const container = document.getElementById('esc-tab-misc');
+    if (!container) return;
+
+    container.innerHTML = `
+        <div style="padding:20px; color:#cbd5e1; line-height:1.6; font-size:14px;">
+            <div style="background:rgba(255,255,255,0.03); border-radius:12px; padding:20px; border:1px solid rgba(255,255,255,0.06);">
+                <h3 style="color:#ffe66d; margin-top:0; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:10px; display:flex; align-items:center;">
+                    <span style="margin-right:10px;">🛡️</span> 守護力板塊評分表說明
+                </h3>
+                
+                <p style="margin-bottom:20px; color:#8b949e;">此表格將您的各個板塊進度依據「節點稀有度」轉換為具體評分，幫助您判斷各板塊的優化空間。</p>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+                    <div>
+                        <h4 style="color:#fff; margin-bottom:10px;">📍 欄位定義</h4>
+                        <ul style="list-style:none; padding:0; margin:0;">
+                            <li style="margin-bottom:8px;"><b style="color:#adb5bd;">總格/獲取：</b> 已開啟節點佔板塊總格數的比例。</li>
+                            <li style="margin-bottom:8px;"><b class="rarity-val-legend">橘 (特殊屬性)：</b> 最強節點，權重最高 (<span style="color:#ffe66d;">4分/點</span>)。</li>
+                            <li style="margin-bottom:8px;"><b class="rarity-val-unique">藍 (主動/特化1)：</b> 關鍵節點 (<span style="color:#ffe66d;">3分/點</span>)。</li>
+                            <li style="margin-bottom:8px;"><b class="rarity-val-rare">綠 (被動/特化2)：</b> 屬性型板塊不計入基礎分，列為潛力分。</li>
+                            <li style="margin-bottom:8px;"><b class="rarity-val-common">白 (普通屬性)：</b> 基礎能力節點 (<span style="color:#ffe66d;">1分/點</span>)。</li>
+                            <li style="margin-bottom:8px;"><b style="color:#ff4d4d;">未開格：</b> 尚未獲得的格子數，作為「減項」呈現。</li>
+                        </ul>
+                    </div>
+                    
+                    <div style="background:rgba(0,0,0,0.2); border-radius:8px; padding:15px; border-left:4px solid #ffe66d;">
+                        <h4 style="color:#fff; margin-bottom:10px;">🧮 計算範例 (艾瑞爾)</h4>
+                        <div style="font-family:monospace; font-size:12px;">
+                            <div style="margin-bottom:5px;">● 已開啟：127 格 / 未開：25 格</div>
+                            <hr style="border:0; border-top:1px solid rgba(255,255,255,0.05); margin:8px 0;">
+                            <div style="color:#ff781f;">橘色分：6 點 × 4 = 24</div>
+                            <div style="color:#3498db;">藍色分：15 點 × 3 = 45</div>
+                            <div style="color:#adb5bd;">白色分：106 點 × 1 = 106</div>
+                            <div style="color:#ff4d4d; margin-top:5px;">未開項：-25 (減項)</div>
+                            <hr style="border:0; border-top:1px solid rgba(255,255,255,0.05); margin:8px 0;">
+                            <div style="font-size:16px; color:#ffe66d; font-weight:bold;">
+                                實拿評分 = 24 + 45 + 106 = 160
+                            </div>
+                            <div style="font-size:12px; color:#2ecc71; margin-top:5px;">
+                                呈現結果：160 (+24潛力) / 226
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top:20px; background:rgba(76, 209, 55, 0.1); padding:15px; border-radius:8px; font-size:13px; color:#cbd5e1; border-left:4px solid #4cd137;">
+                    <strong style="color:#4cd137;">📢 綠色/被動格特別說明：</strong><br>
+                    由於系統目前無法從遊戲 API 中自動計算「艾瑞爾、阿斯佩爾、瑪爾庫坦」的具體<span style="color:#4cd137;">綠色格</span>數量，
+                    因此這三塊板塊的綠色格**預設皆以白色格 (1分) 計算**。<br>
+                    <span style="display:block; margin-top:5px; color:#adb5bd;">
+                        💡 <b>手動校正法：</b>如果您清楚自己開了幾格綠色，可以自行在總分上面「每一格 +1 分」即為您的真實戰力分數。
+                    </span>
+                </div>
+
+                <div style="margin-top:15px; background:rgba(255,215,0,0.05); padding:15px; border-radius:8px; font-size:13px; color:#cbd5e1;">
+                    <strong style="color:#ffe66d;">💡 重點筆記：</strong> 
+                    評分不僅看「格子數」(肝度)，更看「屬性顏色」(品質)。若您的板塊等級很高但分數較低，代表可能需要透過屬性變更來提升橘/藍節點的比例。
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+/**
  * 🏰 守護力獲取 (明細表格)
  */
 async function loadDaevanionScoreDetails(json) {
@@ -164,14 +252,14 @@ async function loadDaevanionScoreDetails(json) {
 
     // 🏆 超級寬容路徑：對齊 aion.js 並增加深度搜尋備案
     const data = json.queryResult ? json.queryResult.data : (json.data ? json.data : json);
-    const deBoardList = (data && data.daevanionBoardList) || 
-                       (json.queryResult && json.queryResult.daevanionBoardList) || 
-                       deepSearch(json, 'daevanionBoardList') || [];
+    const deBoardList = (data && data.daevanionBoardList) ||
+        (json.queryResult && json.queryResult.daevanionBoardList) ||
+        deepSearch(json, 'daevanionBoardList') || [];
 
-    const deDetailsList = (data && data.daevanionDetails) || 
-                         (json.queryResult && json.queryResult.daevanionDetails) || 
-                         deepSearch(json, 'daevanionDetails') || [];
-    
+    const deDetailsList = (data && data.daevanionDetails) ||
+        (json.queryResult && json.queryResult.daevanionDetails) ||
+        deepSearch(json, 'daevanionDetails') || [];
+
     // 取得職業 (ClassName)，用於判斷被動技能
     const charProfile = (data && data.charProfile) || (data && data.profile) || (data && data.info) || deepSearch(json, 'charProfile') || deepSearch(json, 'profile') || {};
     const className = (charProfile.className || charProfile.class_name || "").toString().trim().replace(/\s/g, '');
@@ -196,27 +284,27 @@ async function loadDaevanionScoreDetails(json) {
 
     let rows = '', totalSum = 0;
     let sumMaxNodes = 0, sumOpened = 0, sumPotential = 0, sumMaxScore = 0;
-    
+
     // 遍歷所有預定義的板塊名稱，確保順序固定且不漏抓
     Object.keys(boardConfigMap).forEach(bName => {
         const cfg = boardConfigMap[bName];
         const id = cfg.id; // 這是我們畫面上顯示的 ID 順序
 
         // 👑 寬鬆搜尋：優先找名稱匹配的數據 (解決不同職業 boardId 不同的問題)
-        const deBoard = deBoardList.find(b => 
+        const deBoard = deBoardList.find(b =>
             (b.boardName && b.boardName.includes(bName)) ||
             (b.name && b.name.includes(bName)) ||
             (b.boardId == id || b.id == id)
         );
-        const deDetailItem = deDetailsList.find(d => 
+        const deDetailItem = deDetailsList.find(d =>
             (d.boardName && d.boardName.includes(bName)) ||
             (d.name && d.name.includes(bName)) ||
             (d.boardId == id || d.id == id)
         );
-        
+
         const actualBoardId = (deDetailItem && (deDetailItem.boardId || deDetailItem.id)) || (deBoard && (deBoard.boardId || deBoard.id)) || id;
         const isSkillBoard = (actualBoardId % 10) <= 4;
-        
+
         // 修正：技能板塊的總開啟數應為 屬性節點 + 技能節點
         let opened = 0;
         if (deBoard) {
@@ -229,7 +317,7 @@ async function loadDaevanionScoreDetails(json) {
             }
         }
 
-        const maxNodes = cfg.tMax; 
+        const maxNodes = cfg.tMax;
         const tOra = cfg.tOra;
         const tBlu = cfg.tBlu;
         const tGre = cfg.tGre;
@@ -238,14 +326,23 @@ async function loadDaevanionScoreDetails(json) {
         sumMaxScore += maxScore;
 
         if (!deDetailItem || opened === 0) {
-            // 預設一分在白色邏輯：當有開格數但沒明細時，分數 = 已開格數 + 橘藍加成。若開 0 格則 0 分。
+            // 🔄 恢復原有 Fallback 邏輯，增加未開格欄位
             const isStatBoard = (actualBoardId % 10) >= 5;
             let score = opened;
-            if (isStatBoard && opened > 0) score = (maxScore - tGre); 
+            const unopenedDeduct = maxNodes - opened;
+            const unopenedDisp = unopenedDeduct > 0 ? `<span style="color:#ff4d4d;">-${unopenedDeduct}</span>` : '0';
+
+            // 實拿分邏輯：若為屬性板塊且無明細，我們預設為基礎分 (opened)
+            // 這裡遵循「不加補償分」原則
+            if (isStatBoard && opened > 0) {
+                // 如果是滿格則給滿分，其餘給已開格數
+                if (opened >= maxNodes) score = maxScore;
+            }
             
-            let scoreDisp = `${opened} / ${maxScore}`;
-            if (isStatBoard && opened > 0) scoreDisp = `${score} (+${tGre}) / ${maxScore}`;
-            if (opened >= maxNodes) { score = maxScore; scoreDisp = `${maxScore} / ${maxScore}`; }
+            let scoreDisp = `${score} / ${maxScore}`;
+            if (isStatBoard && opened > 0 && opened < maxNodes) {
+                scoreDisp = `${score} (+${tGre}) / ${maxScore}`;
+            }
 
             rows += `<tr class="esc-equip-row">
                 <td>${actualBoardId}</td>
@@ -256,12 +353,11 @@ async function loadDaevanionScoreDetails(json) {
                 <td class="rarity-val-unique" style="text-align:center;">- / ${tBlu}</td>
                 <td class="rarity-val-rare" style="text-align:center;">- / ${tGre}</td>
                 <td class="rarity-val-common" style="text-align:center;">${Math.min(opened, tWhi)} / ${tWhi}</td>
+                <td style="text-align:center;">${unopenedDisp}</td>
                 <td style="text-align:right; color:#ffe66d; font-weight:bold; font-size:16px;">${scoreDisp}</td>
             </tr>`;
             totalSum += score;
-            if (scoreDisp.includes('(+')) {
-                sumPotential += tGre;
-            }
+            if (scoreDisp.includes('(+')) sumPotential += tGre;
             sumMaxNodes += maxNodes;
             sumOpened += Math.min(opened, maxNodes);
             return;
@@ -295,7 +391,7 @@ async function loadDaevanionScoreDetails(json) {
         // 換算點數：橘色依係數 v，藍色屬性直接 1:1
         Object.values(oraStats).forEach(v => ora += Math.round(v / cfg.v));
         Object.values(bluStats).forEach(v => blu += Math.round(v));
-        
+
         ora = Math.min(ora, tOra);
 
         // --- 核心分流判定邏輯：1-4 為技能分頁，5-7 為屬性分頁 ---
@@ -316,14 +412,14 @@ async function loadDaevanionScoreDetails(json) {
                 const deepSkills = deepSearch(json, 'skills') || deepSearch(json, 'skillList') || [];
                 allApiSkills = Array.isArray(deepSkills) ? deepSkills : getSkillsFromData(deepSkills);
             }
-            
+
             const skillDB = window.SKILL_NAMES_DB || {};
-            
+
             (d.openSkillEffectList || []).forEach(sk => {
                 const dc = (sk.desc || "").trim();
                 const countMatch = dc.match(/(\d+)(?!.*\d)/);
                 const count = countMatch ? parseInt(countMatch[1]) : 1;
-                
+
                 let nodeId = (sk.skillId || sk.id || "").toString();
                 // 🔄 職業專屬反查：基於角色真實的板塊 ID 段 (例如守護 2x, 劍星 1x) 定位技能
                 if (!nodeId) {
@@ -334,7 +430,7 @@ async function loadDaevanionScoreDetails(json) {
                     };
                     const pfx = prefixMap[bGroup];
                     const cleanName = dc.replace(/[\d\+\s]/g, '').trim();
-                    
+
                     for (const sid in skillDB) {
                         if (pfx && !sid.startsWith(pfx)) continue;
                         if (skillDB[sid].replace(/\s/g, '') === cleanName) { nodeId = sid; break; }
@@ -368,7 +464,7 @@ async function loadDaevanionScoreDetails(json) {
                     });
                     if (skillEntry && skillEntry.category === "Passive") isPassive = true;
                 }
-                
+
                 if (isPassive) gre += count; else blu += count;
             });
         } else {
@@ -391,24 +487,20 @@ async function loadDaevanionScoreDetails(json) {
         whi = Math.min(whi, tWhi);
 
         // 3. 計算結果
-        let score = 0, scoreDisp = '', greDisp = '', whiDisp = '';
         const isStatBoard = (actualBoardId % 10) >= 5;
+        let score = 0, scoreDisp = '', greDisp = '', whiDisp = '';
+        const unopenedDeduct = maxNodes - opened;
+        const unopenedDisp = unopenedDeduct > 0 ? `<span style="color:#ff4d4d;">-${unopenedDeduct}</span>` : '0';
 
         if (isStatBoard) {
-            if (opened >= maxNodes) {
-                ora = tOra; blu = tBlu; gre = tGre; whi = tWhi;
-                scoreDisp = `${maxScore} / ${maxScore}`;
-                greDisp = `${tGre} / ${tGre}`;
-                whiDisp = `${tWhi} / ${tWhi}`;
-            } else {
-                // 點數權重：橘4 藍3 綠2 白1
-                const currentScore = (ora * 4) + (blu * 3) + (whi * 1) + (maxNodes - opened); 
-                score = currentScore;
-                scoreDisp = `${currentScore} (+${tGre}) / ${maxScore}`;
-                greDisp = `- / ${tGre}`;
-                whiDisp = `${whi} / ${tWhi}`;
-            }
+            // ⚔️ 屬性板塊 (75-77)：實拿分數 = 橘4 藍3 綠2 白1
+            score = (ora * 4) + (blu * 3) + (whi * 1);
+            scoreDisp = `${score} (+${tGre}) / ${maxScore}`;
+            greDisp = `- / ${tGre}`;
+            whiDisp = `${whi} / ${tWhi}`;
+            if (opened >= maxNodes) scoreDisp = `${maxScore} / ${maxScore}`;
         } else {
+            // 🛡️ 技能板塊 (71-74)：原有邏輯
             score = (ora * 4) + (blu * 3) + (gre * 2) + (whi * 1);
             scoreDisp = `${score} / ${maxScore}`;
             greDisp = `${gre} / ${tGre}`;
@@ -432,20 +524,21 @@ async function loadDaevanionScoreDetails(json) {
             <td class="rarity-val-unique" style="text-align:center;">${blu} / ${tBlu}</td>
             <td class="rarity-val-rare" style="text-align:center;">${greDisp}</td>
             <td class="rarity-val-common" style="text-align:center;">${whiDisp}</td>
+            <td style="text-align:center;">${unopenedDisp}</td>
             <td style="text-align:right; color:#ffe66d; font-weight:bold; font-size:16px;">${scoreDisp}</td>
         </tr>`;
     });
 
-    // 🏆 合計橫列：總上限修正為 1248
+    // 🏆 合計橫列
     rows += `<tr style="background:rgba(255,255,255,0.05); font-weight:bold; border-top:1px solid rgba(255,255,255,0.1);">
         <td colspan="2" style="text-align:center; color:#adb5bd;">合計小計</td>
         <td style="text-align:center;">${sumMaxNodes}</td>
         <td style="text-align:center; color:#fff;">${sumOpened}</td>
-        <td colspan="4"></td>
+        <td colspan="5"></td>
         <td style="text-align:right; color:#ffe66d; font-size:18px;">${totalSum}${sumPotential > 0 ? ' (+' + sumPotential + ')' : ''} / ${sumMaxScore}</td>
     </tr>`;
 
-    container.innerHTML = `<table class="esc-equip-table"><thead><tr><th>ID</th><th>板塊</th><th>總格</th><th>獲取</th><th class="rarity-val-legend">橘 (特殊)</th><th class="rarity-val-unique">藍 (主動)</th><th class="rarity-val-rare">綠 (被動)</th><th class="rarity-val-common">白 (普通)</th><th style="text-align:right;">評分</th></tr></thead><tbody>${rows}</tbody></table>`;
+    container.innerHTML = `<table class="esc-equip-table"><thead><tr><th>ID</th><th>板塊</th><th>總格</th><th>獲取</th><th class="rarity-val-legend">橘 (特殊)</th><th class="rarity-val-unique">藍 (主動)</th><th class="rarity-val-rare">綠 (被動)</th><th class="rarity-val-common">白 (普通)</th><th>未開格</th><th style="text-align:right;">評分</th></tr></thead><tbody>${rows}</tbody></table>`;
     return { total: totalSum, potential: sumPotential };
 }
 
@@ -489,14 +582,23 @@ async function renderEquipSourceGrid(json) {
         if (res) itemScores.push(res);
     });
 
-    let L = 0, B = 0, G = 0, M = 0;
-    itemScores.forEach(s => { L += s.levelScore; B += s.breakthroughScore; G += s.godStoneScore; M += s.magicStoneScore; });
+    let L = 0, E = 0, B = 0, G = 0, M = 0;
+    itemScores.forEach(s => {
+        L += s.levelScore;
+        E += s.enchantScore;
+        B += s.breakthroughScore;
+        G += s.godStoneScore;
+        M += s.magicStoneScore;
+    });
 
-    const equipTotal = Math.round((L + B + G + M) * 10) / 10;
+    const equipTotal = Math.round((L + E + B + G + M) * 10) / 10;
     const boardRes = await loadDaevanionScoreDetails(json);
     const boardTotal = Math.round(boardRes.total * 10) / 10;
     const boardPot = boardRes.potential || 0;
     const grandTotal = Math.round((equipTotal + boardTotal) * 10) / 10;
+    
+    // 🟠 渲染說明分頁
+    renderScoreExplanation();
 
     // 左側統計
     let statHtml = '<div style="font-size:12px; color:#8b949e; font-weight:700; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:8px; margin-bottom:10px;">📊 評分統計</div>';
@@ -508,11 +610,12 @@ async function renderEquipSourceGrid(json) {
     }
     statHtml += row('⚔️ 裝備評分', equipTotal, '#f1c40f', false);
     statHtml += row('　品階等級', L, '#adb5bd', true);
+    statHtml += row('　強化加成', E, '#4cd137', true);
     statHtml += row('　突破加成', B, '#ff7b7b', true);
     statHtml += row('　神石加成', G, '#f39c12', true);
     statHtml += row('　磨石加成', M, '#3498db', true);
     statHtml += '<div style="height:1px; background:rgba(255,255,255,0.06); margin:8px 0;"></div>';
-    
+
     // 🛡️ 守護力評分顯示同步 (+N)
     const boardValueDisp = boardPot > 0 ? `${boardTotal} <span style="font-size:11px; opacity:0.8;">(+${boardPot})</span>` : boardTotal;
     statHtml += row('🛡️ 守護力評分', boardValueDisp, '#00d4ff', false);
@@ -543,21 +646,40 @@ async function renderEquipSourceGrid(json) {
             + '</tr></thead><tbody>';
 
         itemScores.forEach(s => {
+            const enchantDisp = s.enchantLevel > 0 ? `<div style="color:#4cd137; font-weight:bold;">+${s.enchantLevel}</div><div style="font-size:10px; opacity:0.6;">(+${s.enchantLevel}pt)</div>` : '-';
+            const exceedDisp = s.exceedLevel > 0 ? `<div style="color:#ff7b7b; font-weight:bold;">★${s.exceedLevel}</div><div style="font-size:10px; opacity:0.6;">(+${s.breakthroughScore}pt)</div>` : '-';
+
+            let stonesHtml = '';
+            if (s.magicStoneScore > 0) stonesHtml += `<div style="color:#3498db; font-size:11px;">磨石: ${s.magicStoneScore}pt</div>`;
+            if (s.godStoneScore > 0) stonesHtml += `<div style="color:#f39c12; font-size:11px;">神石: ${s.godStoneScore}pt</div>`;
+            if (!stonesHtml) stonesHtml = '-';
+
             t += `<tr class="esc-equip-row">
-                <td style="color:#8b949e; font-size:11px;">${s.slotName}</td>
-                <td style="text-align:left;">
-                    <div style="color:${s.color}; font-weight:700;">${s.name}</div>
-                    <div style="font-size:11px; color:#6b7a90;">Lv.${s.level} (${s.levelScore})</div>
+                <td style="color:#8b949e; font-size:11px; vertical-align:middle;">${s.slotName}</td>
+                <td style="text-align:left; vertical-align:middle;">
+                    <div style="color:${s.color}; font-weight:700; font-size:13px;">
+                        ${s.enchantLevel > 0 ? '+' + s.enchantLevel : ''}${s.name} <span style="font-size:11px; opacity:0.8; font-weight:normal;">Lv.${s.level}</span>
+                    </div>
                 </td>
-                <td style="text-align:center; font-weight:bold; color:#4cd137;">${s.enchantLevel > 0 ? '+' + s.enchantLevel : '-'}</td>
-                <td style="text-align:center; color:#ff7b7b; font-weight:bold;">${s.exceedLevel > 0 ? '★' + s.exceedLevel : '-'}</td>
-                <td style="text-align:center;">
-                    <div style="font-size:11px; color:#3498db;">${s.magicStoneScore > 0 ? '🔹' + s.magicStoneScore : ''}</div>
-                    <div style="font-size:11px; color:#f39c12;">${s.godStoneScore > 0 ? '🔸' + s.godStoneScore : ''}</div>
-                </td>
-                <td style="text-align:right; font-weight:bold; color:#fff;">${s.total}</td>
+                <td style="text-align:center; vertical-align:middle;">${enchantDisp}</td>
+                <td style="text-align:center; vertical-align:middle;">${exceedDisp}</td>
+                <td style="text-align:center; vertical-align:middle;">${stonesHtml}</td>
+                <td style="text-align:right; vertical-align:middle; font-weight:900; color:#ffe66d; font-size:16px;">${s.total}</td>
             </tr>`;
         });
+
+        // 🟢 新增：列表小計行
+        t += `<tr style="background:rgba(255,255,255,0.03); border-top:2px solid rgba(255,255,255,0.1);">
+            <td colspan="2" style="text-align:right; font-weight:bold; color:#8b949e; padding-right:15px; vertical-align:middle;">小計</td>
+            <td style="text-align:center; vertical-align:middle; color:#4cd137; font-weight:bold;">+${E}pt</td>
+            <td style="text-align:center; vertical-align:middle; color:#ff7b7b; font-weight:bold;">+${B}pt</td>
+            <td style="text-align:center; vertical-align:middle; color:#cbd5e1; font-size:11px;">
+                <div style="color:#3498db;">磨石: ${M}pt</div>
+                <div style="color:#f39c12;">神石: ${G}pt</div>
+            </td>
+            <td style="text-align:right; vertical-align:middle; font-weight:900; color:#ffe66d; font-size:18px;">${equipTotal}</td>
+        </tr>`;
+
         t += '</tbody></table>';
         equipContent.innerHTML = t;
     }
