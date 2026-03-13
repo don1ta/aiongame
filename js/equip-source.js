@@ -172,8 +172,9 @@ async function loadDaevanionScoreDetails(json) {
                          (json.queryResult && json.queryResult.daevanionDetails) || 
                          deepSearch(json, 'daevanionDetails') || [];
     
-    const charProfile = (data && data.profile) || deepSearch(json, 'profile') || {};
-    const className = charProfile.className || "";
+    // 取得職業 (ClassName)，用於判斷被動技能
+    const charProfile = (data && data.charProfile) || (data && data.profile) || (data && data.info) || deepSearch(json, 'charProfile') || deepSearch(json, 'profile') || {};
+    const className = (charProfile.className || charProfile.class_name || "").toString().trim().replace(/\s/g, '');
 
     // 取得被動技能資料庫 (用於判斷綠色/藍色)
     const passiveDB = window.PASSIVE_SKILLS_DB || {};
@@ -183,52 +184,72 @@ async function loadDaevanionScoreDetails(json) {
         Object.keys(cls).forEach(skillName => allPassives.add(skillName));
     });
 
-    const boardConfig = {
-        71: { name: '奈薩肯', s: ['戰鬥速度', '冷卻時間減少'], v: 2.5, tOra: 4, tBlu: 10, tGre: 12, tMax: 88 },
-        72: { name: '吉凱爾', s: ['傷害耐性', '傷害增幅'], v: 5, tOra: 4, tBlu: 10, tGre: 12, tMax: 88 },
-        73: { name: '白傑爾', s: ['暴擊傷害增幅', '暴擊傷害耐性'], v: 5, tOra: 4, tBlu: 10, tGre: 12, tMax: 88 },
-        74: { name: '崔妮爾', s: ['多段打擊抵抗', '多段打擊擊中'], v: 3, tOra: 6, tBlu: 12, tGre: 10, tMax: 116 },
-        75: { name: '艾瑞爾', s: ['PVE傷害增幅', 'PVE傷害抵抗', 'PVE傷害耐性'], b: ['首領傷害耐性', '首領傷害增幅'], v: 2.5, tOra: 6, tBlu: 16, tGre: 24, tMax: 152 },
-        76: { name: '阿斯佩爾', s: ['PVP傷害增幅', 'PVP傷害抵抗', 'PVP傷害耐性'], b: ['異常狀態抵抗', '異常狀態擊中'], v: 2.5, tOra: 6, tBlu: 16, tGre: 24, tMax: 152 },
-        77: { name: '瑪爾庫坦', s: ['武器傷害增幅', '武器傷害耐性'], b: ['再生', '鐵壁', '再生貫穿', '鐵壁貫穿'], v: 2.5, tOra: 8, tBlu: 16, tGre: 24, tMax: 152 }
+    const boardConfigMap = {
+        '奈薩肯': { id: 71, s: ['戰鬥速度', '冷卻時間減少'], v: 2.5, tOra: 4, tBlu: 12, tGre: 10, tMax: 88 },
+        '吉凱爾': { id: 72, s: ['傷害耐性', '傷害增幅'], v: 5, tOra: 4, tBlu: 12, tGre: 10, tMax: 88 },
+        '白傑爾': { id: 73, s: ['暴擊傷害增幅', '暴擊傷害耐性'], v: 5, tOra: 4, tBlu: 12, tGre: 10, tMax: 88 },
+        '崔妮爾': { id: 74, s: ['多段打擊抵抗', '多段打擊擊中'], v: 3, tOra: 6, tBlu: 12, tGre: 10, tMax: 116 },
+        '艾瑞爾': { id: 75, s: ['PVE傷害增幅', 'PVE傷害抵抗', 'PVE傷害耐性'], b: ['首領傷害耐性', '首領傷害增幅'], v: 2.5, tOra: 6, tBlu: 16, tGre: 24, tMax: 152 },
+        '阿斯佩爾': { id: 76, s: ['PVP傷害增幅', 'PVP傷害抵抗', 'PVP傷害耐性'], b: ['異常狀態抵抗', '異常狀態擊中'], v: 2.5, tOra: 6, tBlu: 16, tGre: 24, tMax: 152 },
+        '瑪爾庫坦': { id: 77, s: ['武器傷害增幅', '武器傷害耐性'], b: ['再生', '鐵壁', '再生貫穿', '鐵壁貫穿'], v: 2.5, tOra: 8, tBlu: 16, tGre: 24, tMax: 152 }
     };
 
     let rows = '', totalSum = 0;
-    let sumMaxNodes = 0, sumOpened = 0, sumPotential = 0;
-    boardIds.forEach(id => {
-        const cfg = boardConfig[id];
+    let sumMaxNodes = 0, sumOpened = 0, sumPotential = 0, sumMaxScore = 0;
+    
+    // 遍歷所有預定義的板塊名稱，確保順序固定且不漏抓
+    Object.keys(boardConfigMap).forEach(bName => {
+        const cfg = boardConfigMap[bName];
+        const id = cfg.id; // 這是我們畫面上顯示的 ID 順序
+
+        // 👑 寬鬆搜尋：優先找名稱匹配的數據 (解決不同職業 boardId 不同的問題)
         const deBoard = deBoardList.find(b => 
-            (b.id == id || b.boardId == id || b.board_id == id) || 
-            (b.name && (b.name.includes(cfg.name) || cfg.name.includes(b.name))) ||
-            (b.boardName && b.boardName.includes(cfg.name))
+            (b.boardName && b.boardName.includes(bName)) ||
+            (b.name && b.name.includes(bName)) ||
+            (b.boardId == id || b.id == id)
         );
         const deDetailItem = deDetailsList.find(d => 
-            (d.boardId == id || d.board_id == id || d.id == id) ||
-            (d.name && (d.name.includes(cfg.name) || cfg.name.includes(d.name))) ||
-            (d.boardName && d.boardName.includes(cfg.name))
+            (d.boardName && d.boardName.includes(bName)) ||
+            (d.name && d.name.includes(bName)) ||
+            (d.boardId == id || d.id == id)
         );
         
-        const maxNodes = cfg.tMax; 
-        const opened = deBoard ? (deBoard.openNodeCount !== undefined ? deBoard.openNodeCount : (deBoard.detail?.openStatEffectList?.length || 0)) : 0;
+        const actualBoardId = (deDetailItem && (deDetailItem.boardId || deDetailItem.id)) || (deBoard && (deBoard.boardId || deBoard.id)) || id;
+        const isSkillBoard = (actualBoardId % 10) <= 4;
+        
+        // 修正：技能板塊的總開啟數應為 屬性節點 + 技能節點
+        let opened = 0;
+        if (deBoard) {
+            if (deBoard.openNodeCount !== undefined) {
+                opened = deBoard.openNodeCount;
+            } else {
+                const statCount = deBoard.detail?.openStatEffectList?.length || 0;
+                const skillCount = isSkillBoard ? (deBoard.detail?.openSkillEffectList?.length || 0) : 0;
+                opened = statCount + skillCount;
+            }
+        }
 
+        const maxNodes = cfg.tMax; 
         const tOra = cfg.tOra;
         const tBlu = cfg.tBlu;
         const tGre = cfg.tGre;
         const tWhi = maxNodes - tOra - tBlu - tGre;
         const maxScore = (tOra * 4) + (tBlu * 3) + (tGre * 2) + (tWhi * 1);
+        sumMaxScore += maxScore;
 
         if (!deDetailItem || opened === 0) {
-            // 預設一分在白色邏輯：基礎分 = 總格數 (全白) + 橘/藍差額，加成 = 綠色差額
-            const oraBonus = tOra * 3; // 橘(4)-白(1)=3分差
-            const bluBonus = tBlu * 2; // 藍(3)-白(1)=2分差
-            let score = id >= 75 ? (maxNodes + oraBonus + bluBonus - tGre) : opened; 
+            // 預設一分在白色邏輯：當有開格數但沒明細時，分數 = 已開格數 + 橘藍加成。若開 0 格則 0 分。
+            const isStatBoard = (actualBoardId % 10) >= 5;
+            let score = opened;
+            if (isStatBoard && opened > 0) score = (maxScore - tGre); 
+            
             let scoreDisp = `${opened} / ${maxScore}`;
-            if (id >= 75) scoreDisp = `${score} (+${tGre}) / ${maxScore}`;
+            if (isStatBoard && opened > 0) scoreDisp = `${score} (+${tGre}) / ${maxScore}`;
             if (opened >= maxNodes) { score = maxScore; scoreDisp = `${maxScore} / ${maxScore}`; }
 
             rows += `<tr class="esc-equip-row">
-                <td>${id}</td>
-                <td style="color:var(--gold); font-weight:bold;">${cfg.name}</td>
+                <td>${actualBoardId}</td>
+                <td style="color:var(--gold); font-weight:bold;">${bName}</td>
                 <td style="text-align:center;">${maxNodes}</td>
                 <td style="text-align:center; font-weight:bold; color:#fff;">${Math.min(opened, maxNodes)}</td>
                 <td class="rarity-val-legend" style="text-align:center;">- / ${tOra}</td>
@@ -238,6 +259,11 @@ async function loadDaevanionScoreDetails(json) {
                 <td style="text-align:right; color:#ffe66d; font-weight:bold; font-size:16px;">${scoreDisp}</td>
             </tr>`;
             totalSum += score;
+            if (scoreDisp.includes('(+')) {
+                sumPotential += tGre;
+            }
+            sumMaxNodes += maxNodes;
+            sumOpened += Math.min(opened, maxNodes);
             return;
         }
 
@@ -272,45 +298,110 @@ async function loadDaevanionScoreDetails(json) {
         
         ora = Math.min(ora, tOra);
 
-        // 2. 計算技能 (藍/綠)
-        const skillMap = {};
-        (d.openSkillEffectList || []).forEach(sk => {
-            const dc = (sk.desc || "").trim();
-            const countMatch = dc.match(/\+(\d+)/);
-            const count = countMatch ? parseInt(countMatch[1]) : 1;
-            const skillName = dc.split('+')[0].trim(); // 移除後面的 +N
+        // --- 核心分流判定邏輯：1-4 為技能分頁，5-7 為屬性分頁 ---
+        const bType = actualBoardId % 10;
+        if (bType <= 4) {
+            // 🛡️ 71-74 板塊：確保與「附加與收集系統」分頁的類別完全一致
+            // 整合所有可能的 API 路徑
+            const getSkillsFromData = (obj) => {
+                if (!obj) return [];
+                if (Array.isArray(obj)) return obj;
+                if (obj.skillList && Array.isArray(obj.skillList)) return obj.skillList;
+                if (obj.skills && Array.isArray(obj.skills)) return obj.skills;
+                return [];
+            };
 
-            if (!skillMap[skillName] || count > skillMap[skillName].count) {
-                const isPassive = classPassives.has(skillName) || 
-                                  allPassives.has(skillName) ||
-                                  dc.includes('被動') || dc.includes('加護') || 
-                                  dc.includes('恩寵') || dc.includes('強化') || 
-                                  dc.includes('帳幕') || dc.includes('修練');
-                skillMap[skillName] = { count, isPassive };
+            let allApiSkills = getSkillsFromData(data.skills) || getSkillsFromData(data.skill) || getSkillsFromData(json.skills) || [];
+            if (allApiSkills.length === 0) {
+                const deepSkills = deepSearch(json, 'skills') || deepSearch(json, 'skillList') || [];
+                allApiSkills = Array.isArray(deepSkills) ? deepSkills : getSkillsFromData(deepSkills);
             }
-        });
+            
+            const skillDB = window.SKILL_NAMES_DB || {};
+            
+            (d.openSkillEffectList || []).forEach(sk => {
+                const dc = (sk.desc || "").trim();
+                const countMatch = dc.match(/(\d+)(?!.*\d)/);
+                const count = countMatch ? parseInt(countMatch[1]) : 1;
+                
+                let nodeId = (sk.skillId || sk.id || "").toString();
+                // 🔄 職業專屬反查：基於角色真實的板塊 ID 段 (例如守護 2x, 劍星 1x) 定位技能
+                if (!nodeId) {
+                    const bGroup = Math.floor(actualBoardId / 10);
+                    const prefixMap = {
+                        1: '11', 2: '12', 3: '14', 4: '13',
+                        5: '16', 6: '15', 7: '17', 8: '18'
+                    };
+                    const pfx = prefixMap[bGroup];
+                    const cleanName = dc.replace(/[\d\+\s]/g, '').trim();
+                    
+                    for (const sid in skillDB) {
+                        if (pfx && !sid.startsWith(pfx)) continue;
+                        if (skillDB[sid].replace(/\s/g, '') === cleanName) { nodeId = sid; break; }
+                    }
+                }
 
-        Object.values(skillMap).forEach(item => {
-            if (item.isPassive) gre += item.count; else blu += item.count;
-        });
+                const dbName = skillDB[nodeId] || "";
 
+                // 1. ID 判定：Aion 官方規範板塊被動 ID 區段 (xx71 - xx80 100% 為綠色)
+                let isPassive = false;
+                if (nodeId.length >= 4) {
+                    const sub = nodeId.substring(2, 4);
+                    // 官方板塊專屬技能 (包含體力強化 71, 守護印章 75, 生存意志 79 等)
+                    if (sub >= '71' && sub <= '80') isPassive = true;
+                }
+
+                // 2. 職業判定：比對該職業專屬的被動技能清單 (PASSIVE_SKILLS_DB)
+                if (!isPassive && classPassives.size > 0) {
+                    const nameToTest = (dbName || dc).replace(/[\d\+\s]/g, '').trim();
+                    // 只要在職業被動庫中 (如: 體力強化, 銅牆鐵壁, 激昂)，即判定為綠色
+                    if (classPassives.has(nameToTest)) isPassive = true;
+                }
+
+                // 3. API 判定：搜尋 API 原始數據中的官方分類
+                if (!isPassive) {
+                    const skillEntry = allApiSkills.find(s => {
+                        if (nodeId && s.id && nodeId === s.id.toString()) return true;
+                        const cleanSName = (s.name || "").replace(/\s/g, '');
+                        const cleanTest = (dbName || dc).replace(/[\d\+\s]/g, '');
+                        return cleanSName && cleanTest === cleanSName.replace(/[\d\+\s]/g, '');
+                    });
+                    if (skillEntry && skillEntry.category === "Passive") isPassive = true;
+                }
+                
+                if (isPassive) gre += count; else blu += count;
+            });
+        } else {
+            // ⚔️ 75-77 板塊：綠色來自「特化屬性 2 (cfg.b)」
+            const secondaryStats = cfg.b || [];
+            Object.keys(bluStats).forEach(sName => {
+                if (secondaryStats.some(s => sName.includes(s))) {
+                    gre += Math.round(bluStats[sName]);
+                } else {
+                    blu += Math.round(bluStats[sName]);
+                }
+            });
+        }
+
+        // 點數封頂與計算邏輯
+        ora = Math.min(ora, tOra);
         blu = Math.min(blu, tBlu);
         gre = Math.min(gre, tGre);
+        whi = Math.max(0, opened - ora - blu - gre);
+        whi = Math.min(whi, tWhi);
 
         // 3. 計算結果
         let score = 0, scoreDisp = '', greDisp = '', whiDisp = '';
+        const isStatBoard = (actualBoardId % 10) >= 5;
 
-        if (id >= 75) {
+        if (isStatBoard) {
             if (opened >= maxNodes) {
                 ora = tOra; blu = tBlu; gre = tGre; whi = tWhi;
-                score = maxScore;
-                scoreDisp = `${score} / ${maxScore}`;
+                scoreDisp = `${maxScore} / ${maxScore}`;
                 greDisp = `${tGre} / ${tGre}`;
                 whiDisp = `${tWhi} / ${tWhi}`;
             } else {
-                gre = 0; whi = opened - ora - blu; 
-                if (whi < 0) whi = 0;
-                // 預設一分在白色底：基礎分包含所有未開格數的 1 分
+                // 點數權重：橘4 藍3 綠2 白1
                 const currentScore = (ora * 4) + (blu * 3) + (whi * 1) + (maxNodes - opened); 
                 score = currentScore;
                 scoreDisp = `${currentScore} (+${tGre}) / ${maxScore}`;
@@ -318,9 +409,6 @@ async function loadDaevanionScoreDetails(json) {
                 whiDisp = `${whi} / ${tWhi}`;
             }
         } else {
-            whi = opened - ora - blu - gre;
-            if (whi < 0) whi = 0;
-            whi = Math.min(whi, tWhi);
             score = (ora * 4) + (blu * 3) + (gre * 2) + (whi * 1);
             scoreDisp = `${score} / ${maxScore}`;
             greDisp = `${gre} / ${tGre}`;
@@ -336,8 +424,8 @@ async function loadDaevanionScoreDetails(json) {
         sumOpened += Math.min(opened, maxNodes);
 
         rows += `<tr class="esc-equip-row">
-            <td>${id}</td>
-            <td style="color:var(--gold); font-weight:bold;">${cfg.name}</td>
+            <td>${actualBoardId}</td>
+            <td style="color:var(--gold); font-weight:bold;">${bName}</td>
             <td style="text-align:center;">${maxNodes}</td>
             <td style="text-align:center; font-weight:bold; color:#fff;">${Math.min(opened, maxNodes)}</td>
             <td class="rarity-val-legend" style="text-align:center;">${ora} / ${tOra}</td>
@@ -348,17 +436,17 @@ async function loadDaevanionScoreDetails(json) {
         </tr>`;
     });
 
-    // 🏆 新增小計橫列
+    // 🏆 合計橫列：總上限修正為 1248
     rows += `<tr style="background:rgba(255,255,255,0.05); font-weight:bold; border-top:1px solid rgba(255,255,255,0.1);">
         <td colspan="2" style="text-align:center; color:#adb5bd;">合計小計</td>
         <td style="text-align:center;">${sumMaxNodes}</td>
         <td style="text-align:center; color:#fff;">${sumOpened}</td>
         <td colspan="4"></td>
-        <td style="text-align:right; color:#ffe66d; font-size:18px;">${totalSum}${sumPotential > 0 ? ' (+' + sumPotential + ')' : ''} / 1216</td>
+        <td style="text-align:right; color:#ffe66d; font-size:18px;">${totalSum}${sumPotential > 0 ? ' (+' + sumPotential + ')' : ''} / ${sumMaxScore}</td>
     </tr>`;
 
     container.innerHTML = `<table class="esc-equip-table"><thead><tr><th>ID</th><th>板塊</th><th>總格</th><th>獲取</th><th class="rarity-val-legend">橘 (特殊)</th><th class="rarity-val-unique">藍 (主動)</th><th class="rarity-val-rare">綠 (被動)</th><th class="rarity-val-common">白 (普通)</th><th style="text-align:right;">評分</th></tr></thead><tbody>${rows}</tbody></table>`;
-    return { total: totalSum };
+    return { total: totalSum, potential: sumPotential };
 }
 
 /**
@@ -407,6 +495,7 @@ async function renderEquipSourceGrid(json) {
     const equipTotal = Math.round((L + B + G + M) * 10) / 10;
     const boardRes = await loadDaevanionScoreDetails(json);
     const boardTotal = Math.round(boardRes.total * 10) / 10;
+    const boardPot = boardRes.potential || 0;
     const grandTotal = Math.round((equipTotal + boardTotal) * 10) / 10;
 
     // 左側統計
@@ -423,10 +512,14 @@ async function renderEquipSourceGrid(json) {
     statHtml += row('　神石加成', G, '#f39c12', true);
     statHtml += row('　磨石加成', M, '#3498db', true);
     statHtml += '<div style="height:1px; background:rgba(255,255,255,0.06); margin:8px 0;"></div>';
-    statHtml += row('🛡️ 守護力評分', boardTotal, '#00d4ff', false);
+    
+    // 🛡️ 守護力評分顯示同步 (+N)
+    const boardValueDisp = boardPot > 0 ? `${boardTotal} <span style="font-size:11px; opacity:0.8;">(+${boardPot})</span>` : boardTotal;
+    statHtml += row('🛡️ 守護力評分', boardValueDisp, '#00d4ff', false);
+
     statHtml += `<div style="margin-top:14px; padding:15px; background:rgba(255,215,0,0.05); border:1px solid rgba(255,215,0,0.2); border-radius:12px; text-align:center;">
         <div style="font-size:11px; color:#adb5bd;">🏆 總裝備分</div>
-        <div style="font-size:32px; font-weight:900; color:#ffe66d;">${grandTotal}</div>
+        <div style="font-size:32px; font-weight:900; color:#ffe66d;">${grandTotal}${boardPot > 0 ? `<span style="font-size:16px; opacity:0.7;">(+${boardPot})</span>` : ''}</div>
     </div>`;
     statsPanel.innerHTML = statHtml;
 
