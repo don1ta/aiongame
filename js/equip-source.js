@@ -354,21 +354,18 @@ async function loadDaevanionScoreDetails(json) {
                 if (opened >= maxNodes) score = maxScore;
             }
 
-            let scoreText = (opened >= maxNodes) ? score : '-';
-            let scoreDisp = `${scoreText} / ${maxScore}`;
-            if (opened < maxNodes) {
-                // 不論是否為屬性板塊，只要未滿就顯示潛力分
-                scoreDisp = `${scoreText} (+${tGre}) / ${maxScore}`;
-            }
+            let scoreText = (opened === 0) ? 0 : ((opened >= maxNodes) ? score : '-');
+            let potVal = (opened > 0 && opened < maxNodes) ? tGre : 0;
+            let scoreDisp = `${scoreText}${potVal > 0 ? ' (+' + potVal + ')' : ''} / ${maxScore}`;
 
             rows += `<tr class="esc-equip-row">
                 <td>${actualBoardId}</td>
                 <td style="color:var(--gold); font-weight:bold;">${bName}</td>
                 <td style="text-align:center;">${maxNodes}</td>
                 <td style="text-align:center; font-weight:bold; color:#fff;">${Math.min(opened, maxNodes)}</td>
-                <td class="rarity-val-legend" style="text-align:center;">- / ${tOra}</td>
-                <td class="rarity-val-unique" style="text-align:center;">- / ${tBlu}</td>
-                <td class="rarity-val-rare" style="text-align:center;">- / ${tGre}</td>
+                <td class="rarity-val-legend" style="text-align:center;">0 / ${tOra}</td>
+                <td class="rarity-val-unique" style="text-align:center;">0 / ${tBlu}</td>
+                <td class="rarity-val-rare" style="text-align:center;">0 / ${tGre}</td>
                 <td class="rarity-val-common" style="text-align:center;">${Math.min(opened, tWhi)} / ${tWhi}</td>
                 <td style="text-align:center;">${unopenedDisp}</td>
                 <td style="text-align:right; color:#ffe66d; font-weight:bold; font-size:16px;">${scoreDisp}</td>
@@ -528,15 +525,19 @@ async function loadDaevanionScoreDetails(json) {
             } else {
                 // 實拿分數計算 (綠色為 2 分)
                 score = (ora * 4) + (blu * 3) + (finalGre * 2) + (whi * 1);
-                
-                // 使用者要求：完全沒輸入顯示潛力，有輸入則隱藏
+
+                // 使用者要求：完全沒輸入顯示潛力，有輸入則隱藏；若進度為0則不顯示潛力
                 let potVal = 0;
                 let scoreText = score;
                 if (!hasInput) {
-                    potVal = tGre;
-                    scoreText = '-';
+                    if (opened > 0) {
+                        potVal = tGre;
+                        scoreText = '-';
+                    } else {
+                        scoreText = 0;
+                    }
                 }
-                
+
                 scoreDisp = `${scoreText}${potVal > 0 ? ' (+' + potVal + ')' : ''} / ${maxScore}`;
 
                 // 動態限制輸入框的最大值 (根據目前的進度)
@@ -562,15 +563,19 @@ async function loadDaevanionScoreDetails(json) {
                 scoreDisp = `${maxScore} / ${maxScore}`;
             } else {
                 score = (ora * 4) + (blu * 3) + (gre * 2) + (whi * 1);
-                
-                // 技能板塊為自動判定：若 API 沒抓到 green，顯示潛力提示
+
+                // 技能板塊為自動判定：若 API 沒抓到 green，顯示潛力提示 (僅限進度 > 0)
                 let potVal = 0;
                 let scoreText = score;
                 if (gre === 0) {
-                    potVal = tGre;
-                    scoreText = '-';
+                    if (opened > 0) {
+                        potVal = tGre;
+                        scoreText = '-';
+                    } else {
+                        scoreText = 0;
+                    }
                 }
-                
+
                 scoreDisp = `${scoreText}${potVal > 0 ? ' (+' + potVal + ')' : ''} / ${maxScore}`;
             }
             greDisp = `${gre} / ${tGre}`;
