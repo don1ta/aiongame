@@ -83,8 +83,8 @@ function getEscGradeColor(grade, itemName = "") {
     const gNum = parseInt(g);
 
     // 強制判定：高等級特定套裝橘色
-    if (itemName.includes('被侵蝕') || itemName.includes('古代') || itemName.includes('天龍王')) return '#ff781f';
-    if (itemName.includes('鳴龍王') || itemName.includes('阿沛爾')) return '#ffd93d';
+    if (itemName.includes('被侵蝕') || itemName.includes('古代') || itemName.includes('天龍王') || itemName.includes('應龍王') || itemName.includes('軍團長')) return '#ff781f';
+    if (itemName.includes('鳴龍王') || itemName.includes('阿沛爾') || itemName.includes('百夫長') || itemName.includes('千夫長')) return '#ffd93d';
 
     // 數字判定 (對齊：5=橙, 4=金, 3=藍)
     if (!isNaN(gNum)) {
