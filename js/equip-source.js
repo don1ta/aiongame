@@ -199,12 +199,7 @@ function renderScoreExplanation() {
     container.innerHTML = `
         <div style="padding:20px; color:#cbd5e1; line-height:1.6; font-size:14px;">
             <div style="background:rgba(255,255,255,0.03); border-radius:12px; padding:20px; border:1px solid rgba(255,255,255,0.06);">
-                <h3 style="color:#ffe66d; margin-top:0; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:10px; display:flex; align-items:center;">
-                    <span style="margin-right:10px;">🛡️</span> 守護力板塊評分表說明
-                </h3>
-                
-                <p style="margin-bottom:20px; color:#8b949e;">此表格將您的各個板塊進度依據「節點稀有度」轉換為具體評分，幫助您判斷各板塊的優化空間。</p>
-
+              
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
                     <div>
                         <h4 style="color:#fff; margin-bottom:10px;">📍 欄位定義</h4>

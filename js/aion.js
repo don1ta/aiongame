@@ -92,7 +92,7 @@ if (window.WINGS_DATA_DB) {
     });
     // [翅膀資料庫] 已預載資訊已移除
 } else {
-    console.warn('[翅膀資料庫] 未找到預載資料，將使用靜態資料庫');
+    // console.warn('[翅膀資料庫] 未找到預載資料，將使用靜態資料庫');
 }
 
 /**
@@ -3601,6 +3601,14 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
     // ✅ NEW: Render the visual layout tab
     if (typeof window.renderLayoutTab === 'function') {
         window.renderLayoutTab(json);
+        // 初始記錄佈覽高度，供其他分頁同步
+        setTimeout(() => {
+            const layoutTab = document.getElementById('equip-tab-layout');
+            if (layoutTab) {
+                const h = layoutTab.offsetHeight;
+                if (h > 100) window.__LAYOUT_TAB_HEIGHT__ = h;
+            }
+        }, 300);
     }
 
 
@@ -3724,15 +3732,15 @@ function processData(json, skipScroll = false, skipWingRender = false, statsOnly
         stigmaList = Object.values(stigmaList);
     }
 
-    console.log("DEBUG: Original data.skill:", data.skill);
-    console.log("DEBUG: Original data.stigmaList:", data.stigmaList);
+    // console.log("DEBUG: Original data.skill:", data.skill);
+    // console.log("DEBUG: Original data.stigmaList:", data.stigmaList);
 
     // 如果從全體技能抓來的，要先主動過濾掉非烙印技能
     if (Array.isArray(stigmaList)) {
         stigmaList = stigmaList.filter(s => s.category !== 'Active' && s.category !== 'Passive');
     }
 
-    console.log("DEBUG: Final stigmaList for scoring:", stigmaList);
+    // console.log("DEBUG: Final stigmaList for scoring:", stigmaList);
 
     const skillData = { stigma: stigmaList }; // 技能烙印數據
     // 稱號數據：補算 ownedCount（若 API 未提供，改用 titleList 長度）
@@ -7758,6 +7766,7 @@ window.renderStatsTab = async function (json, initialActiveKey = null) {
 };
 
 window.switchEquipTab = function (tab) {
+    const area = document.getElementById('integrated-tab-content-area');
     const layoutTab = document.getElementById('equip-tab-layout');
     const detailTab = document.getElementById('equip-tab-detail');
     const simpleTab = document.getElementById('equip-tab-simple');
@@ -7768,37 +7777,69 @@ window.switchEquipTab = function (tab) {
     const btnSimple = document.getElementById('tab-btn-equip-simple');
     const btnStats = document.getElementById('tab-btn-equip-stats');
 
-    if (!layoutTab || !detailTab || !simpleTab || !statsTab) return;
+    if (!layoutTab || !detailTab || !simpleTab || !statsTab || !area) return;
 
-    // Hide all tab contents
-    layoutTab.style.display = 'none';
-    detailTab.style.display = 'none';
-    simpleTab.style.display = 'none';
-    statsTab.style.display = 'none';
+    // 定義一個合理的預設高度 (如果還沒抓到佈覽高度或角色尚未查詢)
+    const fallbackHeight = 650;
 
-    if (btnLayout) btnLayout.classList.remove('active');
-    if (btnDetail) btnDetail.classList.remove('active');
-    if (btnSimple) btnSimple.classList.remove('active');
-    if (btnStats) btnStats.classList.remove('active');
+    // 移除所有 active class
+    [btnLayout, btnDetail, btnSimple, btnStats].forEach(btn => btn && btn.classList.remove('active'));
 
-    if (tab === 'detail') {
-        detailTab.style.display = 'block';
-        if (btnDetail) btnDetail.classList.add('active');
-    } else if (tab === 'layout') {
+    if (tab === 'layout') {
+        // --- 佈覽分頁 ---
+        area.style.height = 'auto'; 
+        area.style.maxHeight = 'none';
+        area.style.overflowY = 'visible';
+        
         layoutTab.style.display = 'block';
+        detailTab.style.display = 'none';
+        simpleTab.style.display = 'none';
+        statsTab.style.display = 'none';
         if (btnLayout) btnLayout.classList.add('active');
+        
         if (window.__LAST_DATA_JSON__ && typeof window.renderLayoutTab === 'function') {
             window.renderLayoutTab(window.__LAST_DATA_JSON__);
         }
-    } else if (tab === 'stats') {
-        statsTab.style.display = 'block';
-        if (btnStats) btnStats.classList.add('active');
-        if (window.__LAST_DATA_JSON__ && typeof window.renderStatsTab === 'function') {
-            window.renderStatsTab(window.__LAST_DATA_JSON__);
-        }
+        
+        // 重要：在佈覽渲染後，抓取它撐開的真實高度
+        setTimeout(() => {
+            // 使用 scrollHeight 確保抓到完整內容高度
+            // 也考慮到 padding
+            const h = layoutTab.scrollHeight;
+            if (h > 100) {
+                window.__LAYOUT_TAB_HEIGHT__ = h;
+            }
+        }, 300);
     } else {
-        simpleTab.style.display = 'block';
-        if (btnSimple) btnSimple.classList.add('active');
+        // --- 非佈覽分頁（簡易、完整、統計） ---
+        layoutTab.style.display = 'none';
+        detailTab.style.display = 'none';
+        simpleTab.style.display = 'none';
+        statsTab.style.display = 'none';
+
+        if (tab === 'detail') {
+            detailTab.style.display = 'block';
+            if (btnDetail) btnDetail.classList.add('active');
+        } else if (tab === 'stats') {
+            statsTab.style.display = 'block';
+            if (btnStats) btnStats.classList.add('active');
+            // 恢復被遺漏的統計渲染呼叫
+            if (window.__LAST_DATA_JSON__ && typeof window.renderStatsTab === 'function') {
+                window.renderStatsTab(window.__LAST_DATA_JSON__);
+            }
+        } else {
+            simpleTab.style.display = 'block';
+            if (btnSimple) btnSimple.classList.add('active');
+        }
+
+        // 同步高度：強制將容器高度設為與佈覽一致，並開啟捲軸
+        const targetH = window.__LAYOUT_TAB_HEIGHT__ || fallbackHeight;
+        area.style.height = targetH + 'px';
+        area.style.maxHeight = targetH + 'px'; // 雙重保險
+        area.style.overflowY = 'auto'; // 開啟內部捲軸
+        
+        // 確保切換後捲軸回到頂部
+        area.scrollTop = 0;
     }
 };
 

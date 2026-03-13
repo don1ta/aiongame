@@ -74,9 +74,9 @@
 
                     <!-- 右側動態欄：分頁切換內容 -->
                     <div class="equip-main-content" id="nav-target-equip"
-                        style="flex: 1; display: flex; flex-direction: column; padding: 25px; scroll-margin-top: 20px;">
+                        style="flex: 1; display: flex; flex-direction: column; padding: 0; scroll-margin-top: 20px;">
                         <div class="integrated-equip-header" id="nav-target-role"
-                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; scroll-margin-top: 35px;">
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0; padding: 20px 25px; background: #161b22; border-bottom: 1px solid rgba(255,255,255,0.07); position: relative; z-index: 10; scroll-margin-top: 35px;">
                             <div class="header-title" style="display: flex; align-items: center; gap: 10px;">
                                 <span class="icon" style="font-size: 25px;">💫</span>
                                 <h3 id="integrated-header-title"
@@ -97,7 +97,7 @@
 
 
                         <div id="integrated-tab-content-area"
-                            style="flex: 1; position: relative; overflow-y: auto; overflow-x: hidden; padding-right: 5px;">
+                            style="flex: 1; position: relative; height: 650px; overflow-y: auto; overflow-x: hidden; padding: 0 25px 25px 25px;">
                             <!-- 基本佈覽 -->
                             <div id="equip-tab-layout" style="display:block;"></div>
 
@@ -341,7 +341,7 @@
                 </div>
 
                 <!-- 左1右2 佈局 -->
-                <div style="display:flex; align-items:stretch; min-height: 400px;">
+                <div style="display:flex; align-items:stretch; min-height: 550px;">
 
                     <!-- 左側統計欄 -->
                     <div id="equip-source-stats-panel"
@@ -353,30 +353,30 @@
                     <div style="flex:1; display:flex; flex-direction:column; min-width:0;">
                         <!-- 分頁標題列 -->
                         <div class="stat-tabs-header integrated-tabs"
-                            style="margin:0; padding:10px 20px; background:rgba(0,0,0,0.15); border-bottom:1px solid rgba(255,255,255,0.07); overflow-x:auto; white-space:nowrap;">
-                            <div id="esc-tab-btn-equip" class="stat-tab-btn active"
-                                onclick="switchEquipSourceTab('equip')">⚔️ 裝備等級</div>
-                            <div id="esc-tab-btn-board" class="stat-tab-btn" onclick="switchEquipSourceTab('board')">🛡️
-                                守護力獲取</div>
+                            style="margin:0; padding:12px 20px; background:#161b22; border-bottom:1px solid rgba(255,255,255,0.07); overflow-x:auto; white-space:nowrap; z-index: 11; position: relative;">
+                            <div id="esc-tab-btn-board" class="stat-tab-btn active"
+                                onclick="switchEquipSourceTab('board')">🛡️ 守護力獲取</div>
+                            <div id="esc-tab-btn-equip" class="stat-tab-btn" onclick="switchEquipSourceTab('equip')">⚔️
+                                裝備等級</div>
                             <div id="esc-tab-btn-misc" class="stat-tab-btn" onclick="switchEquipSourceTab('misc')">📖
                                 評分說明</div>
                         </div>
 
                         <!-- 分頁內容 -->
-                        <div style="flex:1; padding:20px; overflow:auto;">
-                            <!-- 分頁1：裝備等級 -->
-                            <div id="esc-tab-equip" style="display:block;">
-                                <div id="esc-equip-content">
-                                    <div style="color:#666; text-align:center; padding:40px;">尚無資料</div>
-                                </div>
-                            </div>
-                            <!-- 分頁2：守護力獲取 -->
-                            <div id="esc-tab-board" style="display:none;">
+                        <div style="height: 520px; padding: 0 20px 20px 20px; overflow-y:auto; min-height:520px;">
+                            <!-- 分頁1：守護力獲取 -->
+                            <div id="esc-tab-board" style="display:block;">
                                 <div id="esc-board-content">
                                     <div style="color:#666; text-align:center; padding:40px;">尚無資料</div>
                                 </div>
                             </div>
-                            <!-- 分頁3：預留 -->
+                            <!-- 分頁2：裝備等級 -->
+                            <div id="esc-tab-equip" style="display:none;">
+                                <div id="esc-equip-content">
+                                    <div style="color:#666; text-align:center; padding:40px;">尚無資料</div>
+                                </div>
+                            </div>
+                            <!-- 分頁3：評分說明 -->
                             <div id="esc-tab-misc" style="display:none;">
                                 <div style="color:#666; text-align:center; padding:60px 40px;">
                                     <div style="font-size:40px; margin-bottom:15px;">🚧</div>
@@ -415,6 +415,7 @@
     </div>
 
     <!-- 引入核心功能腳本 -->
+    <script src="js/skill-names.js"></script>
     <script src="js/skill-api.js?v=99"></script>
     <script src="js/equipment-score.js?v=UI_FIX_FINAL"></script>
     <script src="js/health_check.js"></script>
@@ -422,6 +423,7 @@
     <script src="js/passive_skills.js"></script>
     <script src="js/stat_descriptions.js"></script>
     <script src="js/stats_static_data.js"></script>
+    <script src="js/wings_data.js"></script>
     <script src="js/aion.js?v=v_tooltip_godstone_v6"></script>
     <script src="js/equip-source.js?v=v1"></script>
     <!-- 裝備詳情彈窗 -->

@@ -15,6 +15,37 @@
             overscroll-behavior-x: none;
         }
 
+        /* 🎨 自定義捲軸樣式 (更現代與深色主題契合) */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 217, 61, 0.2); /* 使用金色的透明版 */
+            border-radius: 10px;
+            border: 2px solid transparent;
+            background-clip: padding-box;
+            transition: background 0.3s;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 217, 61, 0.5);
+            border: 2px solid transparent;
+            background-clip: padding-box;
+        }
+
+        /* 針對 Firefox 的捲軸樣式 */
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 217, 61, 0.2) rgba(0, 0, 0, 0.1);
+        }
+
         :root {
             /* 🎨 現代深色主題配色 */
             --bg: #0a0e17;
@@ -2562,7 +2593,7 @@
         /* 分頁標籤改版：藥丸形狀與深色背景 */
         .integrated-tabs.stat-tabs-header {
             display: flex;
-            background: rgba(10, 15, 25, 0.8);
+            background: #161b22;
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 30px;
             overflow: hidden;
@@ -4527,6 +4558,7 @@
     width: 100%;
     border-collapse: collapse;
     font-size: 13px;
+    margin-top: 15px; /* 增加上方間距，不與標籤列緊貼 */
 }
 
 .esc-equip-table thead tr {
@@ -4535,7 +4567,11 @@
 }
 
 .esc-equip-table th {
-    padding: 10px 12px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: #1c212e; /* 固定的深色背景，防止捲動時透出 */
+    padding: 12px;
     color: #8b949e;
     font-weight: 700;
     font-size: 11px;
@@ -4543,6 +4579,7 @@
     letter-spacing: 0.5px;
     text-align: center;
     white-space: nowrap;
+    border-bottom: 2px solid rgba(255, 215, 0, 0.2);
 }
 
 .esc-equip-table td {

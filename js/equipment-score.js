@@ -640,11 +640,11 @@ function calculateStigmaScore(skillData) {
 
             // 排除等級為 0 的技能
             if (!level || level <= 0) {
-                console.log(`DEBUG: Skill ${skill.name} skipped (level 0)`);
+                // console.log(`DEBUG: Skill ${skill.name} skipped (level 0)`);
                 return;
             }
 
-            console.log(`DEBUG: Processing stigma ${skill.name} with level ${level}`);
+            // console.log(`DEBUG: Processing stigma ${skill.name} with level ${level}`);
 
             allSkills.push({
                 name: skill.name,
